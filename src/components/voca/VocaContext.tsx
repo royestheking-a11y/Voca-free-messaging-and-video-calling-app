@@ -41,6 +41,9 @@ interface VocaContextType {
     handleMessageDelivered: (chatId: string, messageId: string) => void;
     handleMessageRead: (chatId: string, messageId: string) => void;
 
+    // Socket call handler
+    handleIncomingCall: (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: User }) => void;
+
     // Status
     createStatus: (content: string, type: 'text' | 'image', color?: string) => Promise<void>;
     deleteStatus: (statusId: string) => Promise<void>;
@@ -111,27 +114,18 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
 
     const isAdmin = currentUser?.role === 'admin';
 
-    // Listen for incoming calls
-    // Note: Message socket listeners are handled in SocketContext
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.on('call:incoming', ({ from, offer, callType, caller }) => {
-            const participant = users.find(u => u.id === from) || caller;
-            if (participant) {
-                setActiveCall({
-                    type: callType as 'voice' | 'video',
-                    isIncoming: true,
-                    participant,
-                    offer
-                });
-            }
-        });
-
-        return () => {
-            socket.off('call:incoming');
-        };
-    }, [socket, users]);
+    // Socket call handler - called by SocketContext when call events are received
+    const handleIncomingCall = (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: User }) => {
+        const participant = users.find(u => u.id === data.from) || data.caller;
+        if (participant) {
+            setActiveCall({
+                type: data.callType,
+                isIncoming: true,
+                participant,
+                offer: data.offer
+            });
+        }
+    };
 
     // Load initial data on mount
     useEffect(() => {
@@ -959,6 +953,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         handleIncomingMessage,
         handleMessageDelivered,
         handleMessageRead,
+        handleIncomingCall,
 
         createStatus,
         deleteStatus,

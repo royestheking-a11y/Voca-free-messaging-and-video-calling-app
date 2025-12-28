@@ -35,7 +35,7 @@ const SocketContext = createContext<SocketContextType>({
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { currentUser, chats, handleIncomingMessage, handleMessageDelivered, handleMessageRead } = useVoca();
+    const { currentUser, chats, handleIncomingMessage, handleMessageDelivered, handleMessageRead, handleIncomingCall } = useVoca();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState<Map<string, UserStatus>>(new Map());
@@ -133,6 +133,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         newSocket.on('message:read', (data: { chatId: string; messageId: string }) => {
             console.log('👁️ SocketContext: Read receipt received');
             handleMessageRead(data.chatId, data.messageId);
+        });
+
+        // Listen for incoming calls
+        newSocket.on('call:incoming', (data: { from: string; offer: RTCSessionDescriptionInit; callType: 'voice' | 'video'; caller?: any }) => {
+            console.log('📞 SocketContext: Incoming call, forwarding to VocaContext');
+            handleIncomingCall(data);
         });
 
         setSocket(newSocket);
