@@ -24,7 +24,7 @@ interface VocaContextType {
     updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
 
     // Chat
-    sendMessage: (chatId: string, content: string, type?: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call', mediaUrl?: string, duration?: string, replyToId?: string) => Promise<void>;
+    sendMessage: (chatId: string, content: string, type?: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call', mediaUrl?: string, duration?: string, replyToId?: string) => Promise<Message | undefined>;
     deleteMessage: (chatId: string, messageId: string, forEveryone: boolean) => Promise<void>;
     starMessage: (chatId: string, messageId: string) => void;
     setActiveChatId: (id: string | null) => Promise<void>;
@@ -318,8 +318,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const sendMessage = async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' = 'text', mediaUrl?: string, duration?: string, replyToId?: string) => {
-        if (!currentUser) return;
+    const sendMessage = async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' = 'text', mediaUrl?: string, duration?: string, replyToId?: string): Promise<Message | undefined> => {
+        if (!currentUser) return undefined;
         try {
             const message = await chatsAPI.sendMessage(chatId, content, type, mediaUrl);
 
@@ -334,19 +334,12 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 return chat;
             }));
 
-            // Emit socket event to notify recipient immediately
-            const chat = chats.find(c => c.id === chatId);
-            const recipient = chat?.participants.find(p => p.id !== currentUser.id);
-            if (recipient) {
-                socket?.emit('message:send', {
-                    chatId,
-                    recipientId: recipient.id,
-                    message
-                });
-            }
+            // Return message so caller can emit socket event
+            return message;
 
         } catch (err) {
             console.error('Send message error:', err);
+            return undefined;
         }
     };
 

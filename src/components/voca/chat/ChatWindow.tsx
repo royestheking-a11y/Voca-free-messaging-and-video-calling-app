@@ -31,7 +31,7 @@ export const ChatWindow = () => {
             setActiveChatId(chatIdParam);
         }
     }, [chatIdParam, activeChatId, setActiveChatId]);
-    const { startTyping, stopTyping, typingUsers } = useSocket();
+    const { startTyping, stopTyping, typingUsers, sendMessage: emitSocketMessage } = useSocket();
     const [inputText, setInputText] = useState('');
 
     // Media Preview State
@@ -198,7 +198,10 @@ export const ChatWindow = () => {
             const imageUrl = result.url;
 
             // Send as message - pass imageUrl as mediaUrl parameter, not content
-            await sendMessage(activeChat.id, '', 'image', imageUrl);
+            const message = await sendMessage(activeChat.id, '', 'image', imageUrl);
+            if (message && otherParticipant) {
+                emitSocketMessage(otherParticipant.id, activeChat.id, message);
+            }
             toast.success('Photo sent!');
         } catch (error) {
             console.error('Camera upload error:', error);
@@ -274,7 +277,10 @@ export const ChatWindow = () => {
             else cloudinaryUrl = (await uploadAPI.video(file)).url;
 
             // Send actual message
-            await sendMessage(activeChat.id, caption, type as any, cloudinaryUrl);
+            const message = await sendMessage(activeChat.id, caption, type as any, cloudinaryUrl);
+            if (message && otherParticipant) {
+                emitSocketMessage(otherParticipant.id, activeChat.id, message);
+            }
 
             // Remove from pending
             setPendingUploads(prev => prev.filter(m => m.id !== tempId));
@@ -289,7 +295,7 @@ export const ChatWindow = () => {
 
 
 
-    const handleSend = (e?: React.FormEvent) => {
+    const handleSend = async (e?: React.FormEvent) => {
         e?.preventDefault();
         if (!inputText.trim()) return;
 
@@ -297,8 +303,12 @@ export const ChatWindow = () => {
             editMessage(activeChat.id, editingMessageId, inputText);
             setEditingMessageId(null);
             toast.success("Message edited");
-        } else {
-            sendMessage(activeChat.id, inputText, 'text', undefined, undefined, replyTo?.id);
+        } else if (activeChat && otherParticipant) {
+            const message = await sendMessage(activeChat.id, inputText, 'text', undefined, undefined, replyTo?.id);
+            if (message) {
+                // Emit socket event to notify recipient in real-time
+                emitSocketMessage(otherParticipant.id, activeChat.id, message);
+            }
             setReplyTo(null);
         }
         setInputText('');
@@ -348,7 +358,10 @@ export const ChatWindow = () => {
                     // Mock upload or use a real endpoint if available. 
                     // Since we don't have specific doc upload in snippet, we proceed.
 
-                    await sendMessage(activeChat!.id, content, 'doc', cloudinaryUrl);
+                    const message = await sendMessage(activeChat!.id, content, 'doc', cloudinaryUrl);
+                    if (message && otherParticipant) {
+                        emitSocketMessage(otherParticipant.id, activeChat!.id, message);
+                    }
 
                     toast.success('File sent!', { id: 'upload' });
                 } catch (error: any) {
@@ -517,7 +530,10 @@ export const ChatWindow = () => {
                     const { uploadAPI } = await import('../../../lib/api');
                     const result = await uploadAPI.voice(audioBlob);
 
-                    await sendMessage(activeChat!.id, "Voice Message", 'voice', result.url, durationStr);
+                    const message = await sendMessage(activeChat!.id, "Voice Message", 'voice', result.url, durationStr);
+                    if (message && otherParticipant) {
+                        emitSocketMessage(otherParticipant.id, activeChat!.id, message);
+                    }
                     toast.success('Voice note sent!', { id: 'voice-upload' });
                 } catch (error: any) {
                     console.error('Voice upload error:', error);
@@ -547,7 +563,10 @@ export const ChatWindow = () => {
 
             // Use a simple base64 silent wav for simulation (1 second of silence) to enable playback UI
             const silentWavBase64 = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==";
-            sendMessage(activeChat!.id, "Voice Message (Simulated)", 'voice', silentWavBase64, durationStr);
+            const message = await sendMessage(activeChat!.id, "Voice Message (Simulated)", 'voice', silentWavBase64, durationStr);
+            if (message && otherParticipant) {
+                emitSocketMessage(otherParticipant.id, activeChat!.id, message);
+            }
 
             // Reset States
             setIsRecording(false);
