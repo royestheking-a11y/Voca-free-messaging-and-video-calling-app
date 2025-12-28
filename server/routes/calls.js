@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Call from '../models/Call.js';
 import { protect as authenticateToken } from '../middleware/auth.js';
 
@@ -75,9 +76,14 @@ router.post('/', authenticateToken, async (req, res) => {
             return res.json(recentCall);
         }
 
+        // Validate that participantId is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(participantId)) {
+            return res.status(400).json({ message: 'Invalid participant ID' });
+        }
+
         const newCall = new Call({
-            callerId: isIncoming ? participantId : req.user.userId,
-            receiverId: isIncoming ? req.user.userId : participantId,
+            callerId: isIncoming ? new mongoose.Types.ObjectId(participantId) : new mongoose.Types.ObjectId(req.user.userId),
+            receiverId: isIncoming ? new mongoose.Types.ObjectId(req.user.userId) : new mongoose.Types.ObjectId(participantId),
             type: type || 'voice',
             status: mappedStatus,
             duration: parseDuration(duration)
