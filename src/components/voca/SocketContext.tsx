@@ -143,9 +143,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setSocket(newSocket);
 
+
         // Cleanup on unmount or user change
         return () => {
             console.log('🔌 Socket: Cleaning up connection');
+            // Remove all listeners before disconnecting to prevent duplicates
+            newSocket.off('message:received');
+            newSocket.off('message:read');
+            newSocket.off('call:incoming');
+            newSocket.off('call:answer');
+            newSocket.off('call:ice-candidate');
+            newSocket.off('call:ended');
+            newSocket.off('typing:show');
+            newSocket.off('typing:hide');
+            newSocket.off('user:status');
             newSocket.emit('user:offline');
             newSocket.disconnect();
         };
