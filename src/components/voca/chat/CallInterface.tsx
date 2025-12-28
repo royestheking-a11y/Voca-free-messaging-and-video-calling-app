@@ -42,6 +42,7 @@ export const CallInterface = ({
     const remoteAudioRef = useRef<HTMLAudioElement>(null);
     const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]);
     const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+    const remoteStreamIdRef = useRef<string | null>(null); // Track which stream we've set
 
     useEffect(() => {
         setIsVideoEnabled(initialType === 'video');
@@ -73,31 +74,26 @@ export const CallInterface = ({
                 pc.ontrack = (event) => {
                     console.log('🎥 [INIT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
                     if (event.streams && event.streams[0]) {
+                        const streamId = event.streams[0].id;
                         remoteStreamRef.current = event.streams[0];
                         console.log('✅ [INIT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
-                        // Play remote audio/video
-                        if (isVideo && remoteVideoRef.current) {
-                            console.log('📺 [INIT] Setting remote VIDEO srcObject');
-                            remoteVideoRef.current.srcObject = event.streams[0];
 
-                            // Verify video element state
-                            console.log('🔍 [INIT] Video element state:', {
-                                hasSrcObject: !!remoteVideoRef.current.srcObject,
-                                videoTracks: event.streams[0].getVideoTracks().length,
-                                videoWidth: remoteVideoRef.current.videoWidth,
-                                videoHeight: remoteVideoRef.current.videoHeight,
-                                readyState: remoteVideoRef.current.readyState,
-                                paused: remoteVideoRef.current.paused,
-                                muted: remoteVideoRef.current.muted
-                            });
+                        // Only set srcObject once per stream to avoid interrupting playback
+                        if (remoteStreamIdRef.current !== streamId) {
+                            console.log('📺 [INIT] Setting remote srcObject for stream:', streamId);
+                            remoteStreamIdRef.current = streamId;
 
-                            remoteVideoRef.current.play()
-                                .then(() => console.log('✅ [INIT] Remote video playing'))
-                                .catch(e => console.error('❌ Error playing remote video:', e));
-                        } else if (!isVideo && remoteAudioRef.current) {
-                            console.log('🔊 [INIT] Setting remote AUDIO srcObject');
-                            remoteAudioRef.current.srcObject = event.streams[0];
-                            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
+                            if (isVideo && remoteVideoRef.current) {
+                                remoteVideoRef.current.srcObject = event.streams[0];
+                                remoteVideoRef.current.play()
+                                    .then(() => console.log('✅ [INIT] Remote video playing'))
+                                    .catch(e => console.error('❌ Error playing remote video:', e));
+                            } else if (!isVideo && remoteAudioRef.current) {
+                                remoteAudioRef.current.srcObject = event.streams[0];
+                                remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
+                            }
+                        } else {
+                            console.log('⏭️ [INIT] Stream already set, skipping srcObject assignment');
                         }
                         setStatus('connected');
                     }
@@ -277,17 +273,26 @@ export const CallInterface = ({
             pc.ontrack = (event) => {
                 console.log('🎥 [ACCEPT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
                 if (event.streams && event.streams[0]) {
+                    const streamId = event.streams[0].id;
                     remoteStreamRef.current = event.streams[0];
                     console.log('✅ [ACCEPT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
-                    // Play remote audio/video
-                    if (isVideo && remoteVideoRef.current) {
-                        console.log('📺 [ACCEPT] Setting remote VIDEO srcObject');
-                        remoteVideoRef.current.srcObject = event.streams[0];
-                        remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
-                    } else if (!isVideo && remoteAudioRef.current) {
-                        console.log('🔊 [ACCEPT] Setting remote AUDIO srcObject');
-                        remoteAudioRef.current.srcObject = event.streams[0];
-                        remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
+
+                    // Only set srcObject once per stream to avoid interrupting playback
+                    if (remoteStreamIdRef.current !== streamId) {
+                        console.log('📺 [ACCEPT] Setting remote srcObject for stream:', streamId);
+                        remoteStreamIdRef.current = streamId;
+
+                        if (isVideo && remoteVideoRef.current) {
+                            remoteVideoRef.current.srcObject = event.streams[0];
+                            remoteVideoRef.current.play()
+                                .then(() => console.log('✅ [ACCEPT] Remote video playing'))
+                                .catch(e => console.error('❌ Error playing remote video:', e));
+                        } else if (!isVideo && remoteAudioRef.current) {
+                            remoteAudioRef.current.srcObject = event.streams[0];
+                            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
+                        }
+                    } else {
+                        console.log('⏭️ [ACCEPT] Stream already set, skipping srcObject assignment');
                     }
                     setStatus('connected');
                 }
