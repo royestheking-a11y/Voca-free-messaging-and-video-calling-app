@@ -566,6 +566,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const endCall = async (duration?: string, status?: 'missed' | 'completed') => {
+        console.log('📞 VocaContext: endCall called', { duration, status, hasActiveCall: !!activeCall, activeCallParticipant: activeCall?.participant?.name });
+
         if (activeCall && activeCall.participant && currentUser) {
             // Determine call direction and status
             const isIncomingCall = activeCall.isIncoming;
@@ -678,6 +680,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
         }
+        console.log('📞 VocaContext: Clearing activeCall');
         setActiveCall(null);
     };
 
