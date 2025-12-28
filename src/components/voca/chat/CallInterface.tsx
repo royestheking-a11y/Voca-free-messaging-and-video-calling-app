@@ -59,7 +59,14 @@ export const CallInterface = ({
                 localStreamRef.current = stream;
 
                 if (localVideoRef.current && isVideo) {
+                    console.log('📹 [INIT] Setting local video srcObject for PiP');
                     localVideoRef.current.srcObject = stream;
+                    console.log('✅ [INIT] Local PiP video element:', {
+                        hasSrcObject: !!localVideoRef.current.srcObject,
+                        width: localVideoRef.current.offsetWidth,
+                        height: localVideoRef.current.offsetHeight,
+                        visible: window.getComputedStyle(localVideoRef.current).display !== 'none'
+                    });
                 }
 
                 const pc = webrtc.createPeerConnection();
@@ -258,7 +265,14 @@ export const CallInterface = ({
             localStreamRef.current = stream;
 
             if (localVideoRef.current && isVideo) {
+                console.log('📹 [ACCEPT] Setting local video srcObject for PiP');
                 localVideoRef.current.srcObject = stream;
+                console.log('✅ [ACCEPT] Local PiP video element:', {
+                    hasSrcObject: !!localVideoRef.current.srcObject,
+                    width: localVideoRef.current.offsetWidth,
+                    height: localVideoRef.current.offsetHeight,
+                    visible: window.getComputedStyle(localVideoRef.current).display !== 'none'
+                });
             }
 
             const pc = webrtc.createPeerConnection();
@@ -557,7 +571,10 @@ export const CallInterface = ({
                     dragElastic={0}
                     dragMomentum={false}
                     whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-                    className="absolute right-4 top-28 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl z-20 border-2 border-white/20 cursor-move group"
+                    className="absolute right-4 top-28 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl z-20 border-4 border-green-500 cursor-move group"
+                    style={{ backgroundColor: 'rgba(255, 0, 0, 0.3)' }} // Debug: red background
+                    onDragStart={() => console.log('🎯 PiP drag started')}
+                    onDragEnd={() => console.log('🎯 PiP drag ended')}
                 >
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm -z-10" />
                     <video
@@ -566,6 +583,7 @@ export const CallInterface = ({
                         playsInline
                         muted
                         className={cn("w-full h-full object-cover transition-opacity", !isVideoEnabled && "opacity-0")}
+                        onLoadedMetadata={() => console.log('📹 Local PiP video metadata loaded')}
                     />
                     {!isVideoEnabled && (
                         <div className="absolute inset-0 flex items-center justify-center text-white/50">
