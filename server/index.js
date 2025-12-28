@@ -14,6 +14,7 @@ import uploadRoutes from './routes/upload.js';
 import postRoutes from './routes/posts.js';
 import statusRoutes from './routes/statuses.js';
 import callsRoutes from './routes/calls.js';
+import callsDebugRoutes from './routes/calls_debug.js';
 import adminRoutes from './routes/admin.js';
 
 import User from './models/User.js';
@@ -70,6 +71,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/statuses', statusRoutes);
+app.use('/api/calls', callsDebugRoutes); // Debug route must be before general calls route
 app.use('/api/calls', callsRoutes);
 app.use('/api/admin', adminRoutes);
 
