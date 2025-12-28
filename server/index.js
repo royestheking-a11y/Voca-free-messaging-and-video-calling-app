@@ -118,7 +118,7 @@ io.on('connection', (socket) => {
         const { userId, name, avatar } = userData;
 
         onlineUsers.set(userId, {
-            odId: userId, name, avatar,
+            id: userId, name, avatar,
             lastSeen: new Date().toISOString(),
             socketId: socket.id,
             status: 'online'
@@ -137,7 +137,7 @@ io.on('connection', (socket) => {
         io.emit('user:status-change', { userId, status: 'online', lastSeen: new Date().toISOString() });
 
         const onlineList = Array.from(onlineUsers.values()).map(u => ({
-            userId: u.odId, status: 'online', lastSeen: u.lastSeen
+            userId: u.id, status: 'online', lastSeen: u.lastSeen
         }));
         socket.emit('users:online-list', onlineList);
     });

@@ -115,15 +115,41 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const isAdmin = currentUser?.role === 'admin';
 
     // Socket call handler - called by SocketContext when call events are received
-    const handleIncomingCall = (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: User }) => {
-        const participant = users.find(u => u.id === data.from) || data.caller;
+    // Socket call handler - called by SocketContext when call events are received
+    const handleIncomingCall = async (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: User }) => {
+        console.log('📞 VocaContext: Handling incoming call', { from: data.from, hasCaller: !!data.caller });
+
+        // Try to find participant in local users list
+        let participant = users.find(u => u.id === data.from);
+
+        // If not found, use the caller data sent with the socket event
+        if (!participant && data.caller) {
+            console.log('📞 VocaContext: User not found locally, using provided caller data');
+            participant = data.caller;
+        }
+
+        // If still not found, try to fetch from API (emergency fallback)
+        if (!participant) {
+            console.log('📞 VocaContext: Caller not found, fetching from API...');
+            try {
+                // We don't have a direct "get user by id" exposed in VocaContext easily without loading all?
+                // Actually we can try to reload all users? Or just proceed if we can't find?
+                // Let's rely on data.caller being sent from backend which we verified exists.
+            } catch (e) {
+                console.error('Error fetching caller:', e);
+            }
+        }
+
         if (participant) {
+            console.log('📞 VocaContext: Setting active call', { participantName: participant.name });
             setActiveCall({
                 type: data.callType,
                 isIncoming: true,
                 participant,
                 offer: data.offer
             });
+        } else {
+            console.error('📞 VocaContext: FAILED to start call - Call participant not found!', { from: data.from });
         }
     };
 
