@@ -60,6 +60,21 @@ router.post('/', authenticateToken, async (req, res) => {
             mappedStatus = isIncoming ? 'received' : 'outgoing';
         }
 
+        // De-duplication check:
+        // Check if a call between these two users exists created within the last 10 seconds
+        const recentCall = await Call.findOne({
+            $or: [
+                { callerId: req.user.userId, receiverId: participantId },
+                { callerId: participantId, receiverId: req.user.userId }
+            ],
+            timestamp: { $gt: new Date(Date.now() - 10000) } // Created in last 10s
+        });
+
+        if (recentCall) {
+            console.log('Duplicate call detected, returning existing record.');
+            return res.json(recentCall);
+        }
+
         const newCall = new Call({
             callerId: isIncoming ? participantId : req.user.userId,
             receiverId: isIncoming ? req.user.userId : participantId,
