@@ -34,14 +34,31 @@ export const createPeerConnection = (): RTCPeerConnection => {
 /**
  * Request user media (camera and/or microphone)
  */
-export const getUserMedia = async (constraints: { audio: boolean; video: boolean }): Promise<MediaStream> => {
+export const getUserMedia = async (constraints: { audio: boolean; video: boolean | MediaTrackConstraints }): Promise<MediaStream> => {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log('🎤 Got user media:', stream.getTracks().map(t => t.kind));
+        // Build constraints with proper video settings
+        const mediaConstraints: MediaStreamConstraints = {
+            audio: constraints.audio ? {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            } : false,
+            video: constraints.video ? (
+                typeof constraints.video === 'boolean' ? {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                } : constraints.video
+            ) : false
+        };
+
+        console.log('📹 Requesting media with constraints:', mediaConstraints);
+        const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+        console.log('🎤 Got user media:', stream.getTracks().map(t => `${t.kind} (${t.enabled ? 'enabled' : 'disabled'})`));
         return stream;
     } catch (error) {
         console.error('❌ Error getting user media:', error);
-        throw new Error('Failed to access camera/microphone. Please grant permissions.');
+        throw new Error(`Failed to access camera/microphone: ${(error as Error).message}. Please grant permissions.`);
     }
 };
 
