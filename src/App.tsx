@@ -19,8 +19,20 @@ import { Toaster } from 'sonner';
 import { GlobalCallUI } from './GlobalCallUI';
 
 const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) => {
-    const { currentUser, isAdmin, systemSettings } = useVoca();
+    const { currentUser, isAdmin, systemSettings, loading } = useVoca();
     const location = useLocation();
+
+    // Show loading spinner while checking authentication
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-white text-lg font-medium">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (systemSettings?.maintenanceMode && !isAdmin) {
         return <MaintenancePage />;
@@ -38,7 +50,20 @@ const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.Re
 };
 
 const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
-    const { currentUser, isAdmin } = useVoca();
+    const { currentUser, isAdmin, loading } = useVoca();
+
+    // Wait for auth check to complete
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-white text-lg font-medium">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
     if (currentUser) {
         return <Navigate to={isAdmin ? "/admin" : "/chat"} replace />;
     }
