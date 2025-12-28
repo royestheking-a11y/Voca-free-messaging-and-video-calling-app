@@ -69,14 +69,19 @@ export const CallInterface = ({
                 });
 
                 pc.ontrack = (event) => {
+                    console.log('🎥 [INIT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
                     if (event.streams && event.streams[0]) {
                         remoteStreamRef.current = event.streams[0];
+                        console.log('✅ [INIT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
                         // Play remote audio/video
                         if (isVideo && remoteVideoRef.current) {
+                            console.log('📺 [INIT] Setting remote VIDEO srcObject');
                             remoteVideoRef.current.srcObject = event.streams[0];
+                            remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
                         } else if (!isVideo && remoteAudioRef.current) {
+                            console.log('🔊 [INIT] Setting remote AUDIO srcObject');
                             remoteAudioRef.current.srcObject = event.streams[0];
-                            remoteAudioRef.current.play().catch(e => console.error('Error playing remote audio:', e));
+                            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
                         }
                         setStatus('connected');
                     }
@@ -154,14 +159,20 @@ export const CallInterface = ({
         if (!socket) return;
 
         socket.on('call:answered', async ({ answer }: { answer: RTCSessionDescriptionInit }) => {
+            console.log('📞 [CALLER] Received call:answered from receiver');
             if (peerConnectionRef.current) {
+                console.log('✅ [CALLER] Setting remote description (answer)');
                 await webrtc.setRemoteDescription(peerConnectionRef.current, answer);
+                console.log('✅ [CALLER] Remote description set, processing queued ICE candidates:', iceCandidatesQueue.current.length);
                 while (iceCandidatesQueue.current.length > 0) {
                     const candidate = iceCandidatesQueue.current.shift();
                     if (candidate && peerConnectionRef.current) {
                         await webrtc.addIceCandidate(peerConnectionRef.current, candidate);
                     }
                 }
+                console.log('✅ [CALLER] All ICE candidates processed');
+            } else {
+                console.error('❌ [CALLER] No peer connection when answer received');
             }
         });
 
@@ -243,14 +254,19 @@ export const CallInterface = ({
             });
 
             pc.ontrack = (event) => {
+                console.log('🎥 [ACCEPT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
                 if (event.streams && event.streams[0]) {
                     remoteStreamRef.current = event.streams[0];
+                    console.log('✅ [ACCEPT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
                     // Play remote audio/video
                     if (isVideo && remoteVideoRef.current) {
+                        console.log('📺 [ACCEPT] Setting remote VIDEO srcObject');
                         remoteVideoRef.current.srcObject = event.streams[0];
+                        remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
                     } else if (!isVideo && remoteAudioRef.current) {
+                        console.log('🔊 [ACCEPT] Setting remote AUDIO srcObject');
                         remoteAudioRef.current.srcObject = event.streams[0];
-                        remoteAudioRef.current.play().catch(e => console.error('Error playing remote audio:', e));
+                        remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
                     }
                     setStatus('connected');
                 }
