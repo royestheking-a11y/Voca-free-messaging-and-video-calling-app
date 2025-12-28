@@ -37,7 +37,7 @@ interface VocaContextType {
     toggleFavoriteContact: (contactId: string) => Promise<void>;
 
     // Socket message handlers
-    handleIncomingMessage: (chatId: string, message: Message) => void;
+    handleIncomingMessage: (chatId: string, message: Message) => void | Promise<void>;
     handleMessageDelivered: (chatId: string, messageId: string) => void;
     handleMessageRead: (chatId: string, messageId: string) => void;
 
@@ -455,8 +455,25 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Socket message handlers - called by SocketContext when messages are received
-    const handleIncomingMessage = (chatId: string, message: Message) => {
-        console.log('📨 VocaContext: Handling incoming message', { chatId, messageId: message.id });
+    const handleIncomingMessage = async (chatId: string, message: Message) => {
+        console.log('📨 VocaContext: Handling incoming message', { chatId, messageId: message.id, type: message.type });
+
+        // Check if chat exists in local state
+        const chatExists = chats.some(c => c.id === chatId);
+
+        if (!chatExists) {
+            // Chat not in local state, fetch all chats to get the new one
+            console.log('📨 VocaContext: Chat not found locally, fetching from server...');
+            try {
+                const updatedChats = await chatsAPI.getAll();
+                setChats(updatedChats);
+                return; // The fetched chats will include the new message
+            } catch (err) {
+                console.error('Failed to fetch chats:', err);
+                return;
+            }
+        }
+
         setChats(prev => prev.map(chat => {
             if (chat.id === chatId) {
                 // Check if message already exists (prevent duplicates)
