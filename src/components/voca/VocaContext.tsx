@@ -201,7 +201,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             socket.off('message:delivered');
             socket.off('message:read');
         };
-    }, [socket, users, activeChatId, chats]); // Added activeChatId/chats to deps
+    }, [socket, users, activeChatId]); // Removed 'chats' to prevent re-subscription loops
 
     // Load initial data on mount
     useEffect(() => {

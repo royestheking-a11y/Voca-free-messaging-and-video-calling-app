@@ -179,6 +179,13 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('message:read', ({ chatId, messageId, senderId }) => {
+        const senderSocketId = userSockets.get(senderId);
+        if (senderSocketId) {
+            io.to(senderSocketId).emit('message:read', { messageId, chatId });
+        }
+    });
+
     socket.on('typing:stop', ({ chatId, recipientId }) => {
         const recipientSocketId = userSockets.get(recipientId);
         if (recipientSocketId) {
