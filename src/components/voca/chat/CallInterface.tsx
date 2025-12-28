@@ -176,7 +176,7 @@ export const CallInterface = ({
         socket.on('call:ended', () => {
             console.log('📞 CallInterface: Received call:ended from remote user');
             toast.info('Call ended');
-            handleEnd();
+            handleEnd(true); // Skip emitting to prevent infinite loop
         });
 
         return () => {
@@ -285,17 +285,20 @@ export const CallInterface = ({
         handleEnd();
     };
 
-    const handleEnd = () => {
+    const handleEnd = (skipEmit = false) => {
         console.log('📞 CallInterface: handleEnd called', {
             participantId,
             socketConnected: socket?.connected,
             status,
-            duration
+            duration,
+            skipEmit
         });
 
-        if (socket && participantId) {
+        if (socket && participantId && !skipEmit) {
             console.log('📞 CallInterface: Emitting call:end to', participantId);
             socket.emit('call:end', { to: participantId });
+        } else if (skipEmit) {
+            console.log('📞 CallInterface: Skipping call:end emission (remote ended)');
         } else {
             console.warn('⚠️ CallInterface: Cannot emit call:end - socket or participantId missing', {
                 hasSocket: !!socket,
