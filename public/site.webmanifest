@@ -1,0 +1,21 @@
+{
+  "name": "Voca",
+  "short_name": "Voca",
+  "icons": [
+    {
+      "src": "/voca/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/voca/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#0e8a77",
+  "background_color": "#188575",
+  "display": "standalone"
+}
