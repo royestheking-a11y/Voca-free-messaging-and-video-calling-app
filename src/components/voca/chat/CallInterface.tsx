@@ -65,24 +65,28 @@ export const CallInterface = ({
                 peerConnectionRef.current = pc;
 
                 stream.getTracks().forEach(track => {
+                    console.log('➕ [INIT] Adding track to PC:', track.kind, 'enabled:', track.enabled);
                     pc.addTrack(track, stream);
                 });
+                console.log('✅ [INIT] All tracks added. Total senders:', pc.getSenders().length);
 
-                // Unified remote track handling for init call (video only)
                 pc.ontrack = (event) => {
-                    console.log('🎥 [INIT] ontrack received:', event.track.kind, 'enabled:', event.track.enabled);
-                    // Only handle video tracks to avoid duplicate srcObject assignments
-                    if (event.track.kind !== 'video') return;
-                    if (!event.streams || !event.streams[0]) return;
-                    const stream = event.streams[0];
-                    remoteStreamRef.current = stream;
-                    if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== stream) {
-                        console.log('📺 [INIT] Setting remote video srcObject');
-                        remoteVideoRef.current.pause();
-                        remoteVideoRef.current.srcObject = stream;
-                        remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
+                    console.log('🎥 [INIT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
+                    if (event.streams && event.streams[0]) {
+                        remoteStreamRef.current = event.streams[0];
+                        console.log('✅ [INIT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
+                        // Play remote audio/video
+                        if (isVideo && remoteVideoRef.current) {
+                            console.log('📺 [INIT] Setting remote VIDEO srcObject');
+                            remoteVideoRef.current.srcObject = event.streams[0];
+                            remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
+                        } else if (!isVideo && remoteAudioRef.current) {
+                            console.log('🔊 [INIT] Setting remote AUDIO srcObject');
+                            remoteAudioRef.current.srcObject = event.streams[0];
+                            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
+                        }
+                        setStatus('connected');
                     }
-                    setStatus('connected');
                 };
 
                 pc.onicecandidate = (event) => {
@@ -97,13 +101,16 @@ export const CallInterface = ({
                 if (initialIncoming && initialOffer) {
                     // Incoming handling deferred to accept
                 } else {
+                    console.log('📝 [INIT] Creating offer...');
                     const offer = await webrtc.createOffer(pc);
+                    console.log('✅ [INIT] Offer created, sending to receiver');
                     socket?.emit('call:offer', {
                         to: participantId,
                         from: socket.id,
                         offer,
                         callType: isVideo ? 'video' : 'voice'
                     });
+                    console.log('📤 [INIT] Offer sent via socket');
                 }
             } catch (error) {
                 console.error('❌ Call init error:', error);
@@ -247,35 +254,29 @@ export const CallInterface = ({
             const pc = webrtc.createPeerConnection();
             peerConnectionRef.current = pc;
 
-            console.log('📹 [ACCEPT] Adding local tracks:', stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
             stream.getTracks().forEach(track => {
+                console.log('➕ [ACCEPT] Adding track to PC:', track.kind, 'enabled:', track.enabled);
                 pc.addTrack(track, stream);
             });
-            console.log('✅ [ACCEPT] Tracks added to peer connection');
+            console.log('✅ [ACCEPT] All tracks added. Total senders:', pc.getSenders().length);
 
-            // Unified remote track handling for accepted call
-            // Unified remote track handling for accepted call
             pc.ontrack = (event) => {
-                console.log('🎥 [ACCEPT] ontrack received:', event.track.kind, 'enabled:', event.track.enabled);
-                if (!event.streams || !event.streams[0]) return;
-                const stream = event.streams[0];
-                remoteStreamRef.current = stream;
-                if (event.track.kind === 'video' && remoteVideoRef.current) {
-                    if (remoteVideoRef.current.srcObject !== stream) {
-                        console.log('📺 [ACCEPT] Setting remote video srcObject');
-                        remoteVideoRef.current.pause();
-                        remoteVideoRef.current.srcObject = stream;
+                console.log('🎥 [ACCEPT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
+                if (event.streams && event.streams[0]) {
+                    remoteStreamRef.current = event.streams[0];
+                    console.log('✅ [ACCEPT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
+                    // Play remote audio/video
+                    if (isVideo && remoteVideoRef.current) {
+                        console.log('📺 [ACCEPT] Setting remote VIDEO srcObject');
+                        remoteVideoRef.current.srcObject = event.streams[0];
                         remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
-                    }
-                } else if (event.track.kind === 'audio' && remoteAudioRef.current) {
-                    if (remoteAudioRef.current.srcObject !== stream) {
-                        console.log('🔊 [ACCEPT] Setting remote audio srcObject');
-                        remoteAudioRef.current.pause();
-                        remoteAudioRef.current.srcObject = stream;
+                    } else if (!isVideo && remoteAudioRef.current) {
+                        console.log('🔊 [ACCEPT] Setting remote AUDIO srcObject');
+                        remoteAudioRef.current.srcObject = event.streams[0];
                         remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
                     }
+                    setStatus('connected');
                 }
-                setStatus('connected');
             };
 
             pc.onicecandidate = (event) => {
@@ -288,23 +289,25 @@ export const CallInterface = ({
             };
 
             if (initialOffer) {
-                console.log('📞 [ACCEPT] Setting remote description (offer)');
+                console.log('📝 [ACCEPT] Setting remote description (offer)');
                 await webrtc.setRemoteDescription(pc, initialOffer);
-                console.log('📞 [ACCEPT] Creating answer...');
+                console.log('📝 [ACCEPT] Creating answer...');
                 const answer = await webrtc.createAnswer(pc);
-                console.log('📞 [ACCEPT] Answer created, emitting to caller');
+                console.log('✅ [ACCEPT] Answer created, sending to caller');
                 socket?.emit('call:answer', {
                     to: participantId,
                     answer
                 });
-                console.log('✅ [ACCEPT] Answer sent to caller');
+                console.log('📤 [ACCEPT] Answer sent via socket');
 
+                console.log('🧊 [ACCEPT] Processing queued ICE candidates:', iceCandidatesQueue.current.length);
                 while (iceCandidatesQueue.current.length > 0) {
                     const candidate = iceCandidatesQueue.current.shift();
                     if (candidate) {
                         await webrtc.addIceCandidate(pc, candidate);
                     }
                 }
+                console.log('✅ [ACCEPT] All queued ICE candidates processed');
             }
         } catch (e) {
             console.error(e);
