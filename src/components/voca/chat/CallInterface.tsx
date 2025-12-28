@@ -174,6 +174,7 @@ export const CallInterface = ({
         });
 
         socket.on('call:ended', () => {
+            console.log('📞 CallInterface: Received call:ended from remote user');
             toast.info('Call ended');
             handleEnd();
         });
@@ -205,6 +206,14 @@ export const CallInterface = ({
     };
 
     const handleAccept = async () => {
+        console.log('📞 CallInterface: Accepting call, stopping ringtone');
+
+        // IMMEDIATELY stop ringtone when accept is clicked
+        if (ringtoneRef.current) {
+            ringtoneRef.current.pause();
+            ringtoneRef.current = null;
+        }
+
         setIsIncoming(false);
         setStatus('connecting');
 
@@ -277,12 +286,31 @@ export const CallInterface = ({
     };
 
     const handleEnd = () => {
-        socket?.emit('call:end', { to: participantId });
+        console.log('📞 CallInterface: handleEnd called', {
+            participantId,
+            socketConnected: socket?.connected,
+            status,
+            duration
+        });
+
+        if (socket && participantId) {
+            console.log('📞 CallInterface: Emitting call:end to', participantId);
+            socket.emit('call:end', { to: participantId });
+        } else {
+            console.warn('⚠️ CallInterface: Cannot emit call:end - socket or participantId missing', {
+                hasSocket: !!socket,
+                socketConnected: socket?.connected,
+                participantId
+            });
+        }
+
         cleanup();
         const m = Math.floor(duration / 60);
         const s = duration % 60;
         const durationStr = duration > 0 ? `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : undefined;
         const callStatus = isIncoming && status !== 'connected' ? 'missed' : 'completed';
+
+        console.log('📞 CallInterface: Calling onEnd callback', { durationStr, callStatus });
         onEnd(durationStr, callStatus);
     };
 
