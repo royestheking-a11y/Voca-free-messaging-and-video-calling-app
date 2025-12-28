@@ -79,7 +79,21 @@ export const CallInterface = ({
                         if (isVideo && remoteVideoRef.current) {
                             console.log('📺 [INIT] Setting remote VIDEO srcObject');
                             remoteVideoRef.current.srcObject = event.streams[0];
-                            remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
+
+                            // Verify video element state
+                            console.log('🔍 [INIT] Video element state:', {
+                                hasSrcObject: !!remoteVideoRef.current.srcObject,
+                                videoTracks: event.streams[0].getVideoTracks().length,
+                                videoWidth: remoteVideoRef.current.videoWidth,
+                                videoHeight: remoteVideoRef.current.videoHeight,
+                                readyState: remoteVideoRef.current.readyState,
+                                paused: remoteVideoRef.current.paused,
+                                muted: remoteVideoRef.current.muted
+                            });
+
+                            remoteVideoRef.current.play()
+                                .then(() => console.log('✅ [INIT] Remote video playing'))
+                                .catch(e => console.error('❌ Error playing remote video:', e));
                         } else if (!isVideo && remoteAudioRef.current) {
                             console.log('🔊 [INIT] Setting remote AUDIO srcObject');
                             remoteAudioRef.current.srcObject = event.streams[0];
@@ -489,6 +503,15 @@ export const CallInterface = ({
                     playsInline
                     className="w-full h-full object-cover"
                     onClick={() => setIsControlsVisible(!isControlsVisible)}
+                    onLoadedMetadata={(e) => {
+                        console.log('📹 Remote video metadata loaded:', {
+                            videoWidth: e.currentTarget.videoWidth,
+                            videoHeight: e.currentTarget.videoHeight,
+                            duration: e.currentTarget.duration
+                        });
+                    }}
+                    onPlay={() => console.log('▶️ Remote video started playing')}
+                    onError={(e) => console.error('❌ Remote video error:', e)}
                 />
 
                 {/* Top Overlay */}
