@@ -615,6 +615,14 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 // The API needs 'participantId' (the OTHER person).
 
                 const participantId = activeCall.participant.id;
+                console.log('💾 Saving call to backend...', {
+                    participantId,
+                    callType,
+                    status,
+                    duration,
+                    isIncomingCall
+                });
+
                 await callsAPI.create(
                     participantId,
                     callType,
@@ -623,12 +631,19 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                     isIncomingCall
                 );
 
+                console.log('✅ Call saved to backend successfully!');
+
                 // Refresh calls list from backend to ensure consistency
                 const updatedCalls = await callsAPI.getAll();
                 setCalls(updatedCalls);
+                console.log('✅ Call history refreshed from backend:', updatedCalls.length, 'total calls');
+
 
             } catch (error) {
-                console.error('Error saving call history:', error);
+                console.error('❌ Error saving call history to backend:', error);
+                console.log('⚠️ This means Render backend is NOT deployed with ObjectId fix!');
+                console.log('💾 Using fallback: Adding call to local state only (will not persist after refresh)');
+
                 // Fallback: Add locally if backend fails
                 const newCall: Call = {
                     id: `call_${Date.now()}`,
@@ -640,6 +655,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                     direction: isIncomingCall ? 'incoming' : 'outgoing'
                 };
                 setCalls(prev => [newCall, ...prev]);
+                console.log('✅ Call added to local state:', newCall);
             }
 
             // Add call message to chat
