@@ -367,9 +367,20 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                         )
                     } : c
                 ));
-                // Call API to mark as read on server (updates sender's message status)
+
+                // Call API to mark as read on server
                 try {
                     await chatsAPI.markAsRead(chatId);
+
+                    // Emit socket event for each unread message to update sender's UI
+                    const unreadMessages = chat.messages.filter(m => m.senderId !== currentUser?.id && m.status !== 'read');
+                    unreadMessages.forEach(msg => {
+                        socket?.emit('message:read', {
+                            chatId,
+                            messageId: msg.id,
+                            senderId: msg.senderId
+                        });
+                    });
                 } catch (err) {
                     console.error('Failed to mark as read:', err);
                 }
@@ -392,6 +403,18 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 }
                 return chat;
             }));
+
+            // Emit socket event to notify recipient immediately
+            const chat = chats.find(c => c.id === chatId);
+            const recipient = chat?.participants.find(p => p.id !== currentUser.id);
+            if (recipient) {
+                socket?.emit('message:send', {
+                    chatId,
+                    recipientId: recipient.id,
+                    message
+                });
+            }
+
         } catch (err) {
             console.error('Send message error:', err);
         }
