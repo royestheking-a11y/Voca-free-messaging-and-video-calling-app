@@ -716,7 +716,21 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         fetchCalls();
-    }, [fetchCalls]);
+
+        // Listen for real-time call history updates
+        if (socket) {
+            const handleCallHistoryUpdate = () => {
+                console.log('📞 Call history updated, refreshing...');
+                fetchCalls();
+            };
+
+            socket.on('call:history-updated', handleCallHistoryUpdate);
+
+            return () => {
+                socket.off('call:history-updated', handleCallHistoryUpdate);
+            };
+        }
+    }, [fetchCalls, socket]);
 
     // ========== STATUS ==========
     const createStatus = async (mediaUrl: string, type: 'text' | 'image', caption?: string) => {

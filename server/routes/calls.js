@@ -85,8 +85,8 @@ router.post('/', authenticateToken, async (req, res) => {
         // Check if a call between these two users exists created within the last 10 seconds
         const recentCall = await Call.findOne({
             $or: [
-                { callerId: req.user.userId, receiverId: participantId },
-                { callerId: participantId, receiverId: req.user.userId }
+                { callerId: req.user._id, receiverId: participantId },
+                { callerId: participantId, receiverId: req.user._id }
             ],
             timestamp: { $gt: new Date(Date.now() - 10000) } // Created in last 10s
         });
@@ -102,14 +102,25 @@ router.post('/', authenticateToken, async (req, res) => {
         }
 
         const newCall = new Call({
-            callerId: isIncoming ? new mongoose.Types.ObjectId(participantId) : new mongoose.Types.ObjectId(req.user.userId),
-            receiverId: isIncoming ? new mongoose.Types.ObjectId(req.user.userId) : new mongoose.Types.ObjectId(participantId),
+            callerId: isIncoming ? new mongoose.Types.ObjectId(participantId) : new mongoose.Types.ObjectId(req.user._id),
+            receiverId: isIncoming ? new mongoose.Types.ObjectId(req.user._id) : new mongoose.Types.ObjectId(participantId),
             type: type || 'voice',
             status: mappedStatus,
             duration: parseDuration(duration)
         });
 
         await newCall.save();
+
+        // Emit socket event to both participants for real-time updates
+        const io = req.app.get('io');
+        if (io) {
+            // Emit to current user
+            io.to(req.user._id.toString()).emit('call:history-updated');
+            // Emit to other participant
+            io.to(participantId).emit('call:history-updated');
+            console.log('📞 Emitted call:history-updated to both participants');
+        }
+
         res.status(201).json(newCall);
     } catch (error) {
         console.error('Error creating call:', error);
