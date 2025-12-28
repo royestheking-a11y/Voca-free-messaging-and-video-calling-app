@@ -8,9 +8,9 @@ const router = express.Router();
 // Get all calls for current user
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const userId = new mongoose.Types.ObjectId(req.user.userId);
+        const userId = new mongoose.Types.ObjectId(req.user._id);
         console.log('📞 GET /api/calls request:', {
-            authUserId: req.user.userId,
+            authUserId: req.user._id.toString(),
             castUserId: userId
         });
 
