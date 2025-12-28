@@ -40,6 +40,7 @@ export const CallInterface = ({
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]);
+    const ringtoneRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
         setIsVideoEnabled(initialType === 'video');
@@ -109,6 +110,32 @@ export const CallInterface = ({
 
         return () => cleanup();
     }, []);
+
+    // Handle Ringtone
+    useEffect(() => {
+        if (isIncoming && status !== 'connected') {
+            const audio = new Audio('/sounds/ringtone.mp3'); // Assuming file exists or use a CDN/Base64
+            // Check if file exists, if not use a fallback simple beep or verify path
+            // For now let's assume a standard path or provide a reliable URL
+            // Using a standard phone ring sound from a CDN for reliability if local file missing
+            audio.src = 'https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3';
+            audio.loop = true;
+            audio.play().catch(e => console.error('Error playing ringtone:', e));
+            ringtoneRef.current = audio;
+        } else {
+            if (ringtoneRef.current) {
+                ringtoneRef.current.pause();
+                ringtoneRef.current = null;
+            }
+        }
+
+        return () => {
+            if (ringtoneRef.current) {
+                ringtoneRef.current.pause();
+                ringtoneRef.current = null;
+            }
+        };
+    }, [isIncoming, status]);
 
     // Socket Events
     useEffect(() => {
