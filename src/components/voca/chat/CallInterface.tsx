@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface CallInterfaceProps {
     participant: User;
     type: 'voice' | 'video';
-    onEnd: (duration?: string, status?: 'missed' | 'completed') => void;
+    onEnd: (duration?: string, status?: 'missed' | 'completed', isRemote?: boolean) => void;
     isIncoming?: boolean;
     offer?: RTCSessionDescriptionInit;
     participantId: string;
@@ -512,7 +512,9 @@ export const CallInterface = ({
                 {/* Local Video - Draggable Glass PiP */}
                 <motion.div
                     drag
-                    dragConstraints={{ left: 0, right: window.innerWidth - 120, top: 0, bottom: window.innerHeight - 160 }}
+                    dragConstraints={{ left: -9999, right: 9999, top: -9999, bottom: 9999 }}
+                    dragElastic={0}
+                    dragMomentum={false}
                     whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
                     className="absolute right-4 top-28 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl z-20 border-2 border-white/20 cursor-move group"
                 >
