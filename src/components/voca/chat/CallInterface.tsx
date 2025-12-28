@@ -534,7 +534,7 @@ export const CallInterface = ({
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={handleEnd}
+                                    onClick={() => handleEnd()}
                                     className="p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:bg-red-600"
                                 >
                                     <PhoneOff className="w-6 h-6 fill-current" />
@@ -635,7 +635,7 @@ export const CallInterface = ({
                         </div>
                     </button>
 
-                    <button onClick={handleEnd} className="flex flex-col items-center gap-2">
+                    <button onClick={() => handleEnd()} className="flex flex-col items-center gap-2">
                         <div className="p-4 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30 hover:bg-red-600 transition-all active:scale-95">
                             <PhoneOff className="w-6 h-6 fill-current" />
                         </div>
