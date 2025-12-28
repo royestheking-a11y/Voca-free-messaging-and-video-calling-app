@@ -194,17 +194,19 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
 
     const loadAllData = async (fetchedUser?: User | null) => {
         try {
-            const [usersData, chatsData, postsData, statusesData] = await Promise.all([
+            const [usersData, chatsData, postsData, statusesData, callsData] = await Promise.all([
                 usersAPI.getAll().catch(() => []),
                 chatsAPI.getAll().catch(() => []),
                 postsAPI.getAll().catch(() => []),
-                statusesAPI.getAll().catch(() => [])
+                statusesAPI.getAll().catch(() => []),
+                callsAPI.getAll().catch(() => [])
             ]);
 
             setUsers(usersData);
             setChats(chatsData);
             setPosts(postsData);
             setStatuses(statusesData);
+            setCalls(callsData);
 
             // Load admin data if admin (use fetchedUser if provided, else fall back to state)
             const role = fetchedUser?.role || currentUser?.role;
