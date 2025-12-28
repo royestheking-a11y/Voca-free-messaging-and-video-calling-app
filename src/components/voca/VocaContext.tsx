@@ -206,6 +206,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             setChats(chatsData);
             setPosts(postsData);
             setStatuses(statusesData);
+            console.log('Fetching calls data:', callsData);
             setCalls(callsData);
 
             // Load admin data if admin (use fetchedUser if provided, else fall back to state)

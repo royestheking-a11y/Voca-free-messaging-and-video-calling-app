@@ -218,6 +218,8 @@ export const ChatSidebar = () => {
     return call.caller.name.toLowerCase().includes(searchTerm.toLowerCase());
   }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
+  console.log('ChatSidebar Calls Debug:', { total: calls.length, filtered: filteredCalls.length, calls });
+
   // --- Handlers ---
 
   const handleOpenStatus = (userId: string) => {
