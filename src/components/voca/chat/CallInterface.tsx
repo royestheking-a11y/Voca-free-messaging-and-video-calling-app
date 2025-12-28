@@ -118,7 +118,8 @@ export const CallInterface = ({
 
     // Handle Ringtone
     useEffect(() => {
-        if (isIncoming && status !== 'connected') {
+        // Play ringtone only when incoming AND still in incoming status
+        if (status === 'incoming') {
             const audio = new Audio('/sounds/ringtone.mp3'); // Assuming file exists or use a CDN/Base64
             // Check if file exists, if not use a fallback simple beep or verify path
             // For now let's assume a standard path or provide a reliable URL
@@ -128,6 +129,7 @@ export const CallInterface = ({
             audio.play().catch(e => console.error('Error playing ringtone:', e));
             ringtoneRef.current = audio;
         } else {
+            // Stop ringtone when status changes (accepted, rejected, connected)
             if (ringtoneRef.current) {
                 ringtoneRef.current.pause();
                 ringtoneRef.current = null;
@@ -140,7 +142,7 @@ export const CallInterface = ({
                 ringtoneRef.current = null;
             }
         };
-    }, [isIncoming, status]);
+    }, [status]); // Listen to status changes, not isIncoming
 
     // Socket Events
     useEffect(() => {
