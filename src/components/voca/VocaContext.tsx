@@ -115,8 +115,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const isAdmin = currentUser?.role === 'admin';
 
     // Socket call handler - called by SocketContext when call events are received
-    // Socket call handler - called by SocketContext when call events are received
-    const handleIncomingCall = async (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: User }) => {
+
+    const handleIncomingCall = async (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: any }) => {
         console.log('📞 VocaContext: Handling incoming call', { from: data.from, hasCaller: !!data.caller });
 
         // Try to find participant in local users list
@@ -125,19 +125,20 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         // If not found, use the caller data sent with the socket event
         if (!participant && data.caller) {
             console.log('📞 VocaContext: User not found locally, using provided caller data');
-            participant = data.caller;
+
+            // Handle legacy backend data (odId vs id)
+            if (data.caller.odId && !data.caller.id) {
+                console.log('📞 VocaContext: Fixing legacy user data (odId -> id)');
+                participant = { ...data.caller, id: data.caller.odId };
+            } else {
+                participant = data.caller;
+            }
         }
 
         // If still not found, try to fetch from API (emergency fallback)
         if (!participant) {
-            console.log('📞 VocaContext: Caller not found, fetching from API...');
-            try {
-                // We don't have a direct "get user by id" exposed in VocaContext easily without loading all?
-                // Actually we can try to reload all users? Or just proceed if we can't find?
-                // Let's rely on data.caller being sent from backend which we verified exists.
-            } catch (e) {
-                console.error('Error fetching caller:', e);
-            }
+            console.log('📞 VocaContext: Caller not found, fetching from API unavailable context');
+            // We rely on data.caller being sent from backend which we verified exists.
         }
 
         if (participant) {
