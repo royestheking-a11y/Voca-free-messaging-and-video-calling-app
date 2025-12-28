@@ -197,11 +197,12 @@ io.on('connection', (socket) => {
     socket.on('call:offer', ({ to, from, offer, callType }) => {
         const recipientSocketId = userSockets.get(to);
         if (recipientSocketId) {
+            // Send caller's USER ID (not socket ID) so receiver can find them
             io.to(recipientSocketId).emit('call:incoming', {
-                from,
+                from: socket.userId,  // Use caller's user ID
                 offer,
                 callType,
-                caller: onlineUsers.get(from)
+                caller: onlineUsers.get(socket.userId)  // Look up by user ID
             });
         }
     });
