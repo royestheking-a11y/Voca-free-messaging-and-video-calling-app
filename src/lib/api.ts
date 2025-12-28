@@ -1,7 +1,5 @@
 // API Client for Voca Backend
-const API_BASE_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api')
-    .replace(/\/+$/, '') // Remove trailing slashes
-    .replace(/([^:]\/)\/+/g, "$1"); // Remove double slashes (excluding protocol)
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
 
 // Token storage
 const getToken = () => localStorage.getItem('voca_token');
@@ -21,7 +19,23 @@ const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
         (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    // Use URL constructor to handle slashes correctly
+    // Ensure API_BASE_URL doesn't have double slashes before forming the URL object if possible, 
+    // but the URL constructor is good at normalization.
+    // We treat API_BASE_URL as the base.
+
+    // Clean base URL first to ensure it's valid
+    const cleanBase = API_BASE_URL.replace(/\/+$/, '');
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+
+    // Construct URL manually to be safe against URL constructor edge cases with base paths
+    // If base has /api, URL constructor with /auth/login might strip /api if not careful.
+    // Actually safe concat is better:
+    const url = `${cleanBase}${cleanEndpoint}`;
+    // But we want to remove double slashes from the result
+    const finalUrl = url.replace(/([^:]\/)\/+/g, "$1");
+
+    const response = await fetch(finalUrl, {
         ...options,
         headers,
     });
