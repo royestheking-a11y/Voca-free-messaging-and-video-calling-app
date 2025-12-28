@@ -282,12 +282,16 @@ export const CallInterface = ({
             };
 
             if (initialOffer) {
+                console.log('📞 [ACCEPT] Setting remote description (offer)');
                 await webrtc.setRemoteDescription(pc, initialOffer);
+                console.log('📞 [ACCEPT] Creating answer...');
                 const answer = await webrtc.createAnswer(pc);
+                console.log('📞 [ACCEPT] Answer created, emitting to caller');
                 socket?.emit('call:answer', {
                     to: participantId,
                     answer
                 });
+                console.log('✅ [ACCEPT] Answer sent to caller');
 
                 while (iceCandidatesQueue.current.length > 0) {
                     const candidate = iceCandidatesQueue.current.shift();
