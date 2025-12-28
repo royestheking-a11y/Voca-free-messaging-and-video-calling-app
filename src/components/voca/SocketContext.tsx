@@ -35,7 +35,7 @@ const SocketContext = createContext<SocketContextType>({
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { currentUser, chats } = useVoca();
+    const { currentUser, chats, handleIncomingMessage, handleMessageDelivered, handleMessageRead } = useVoca();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState<Map<string, UserStatus>>(new Map());
@@ -102,15 +102,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // Listen for incoming messages
         newSocket.on('message:receive', (data: { chatId: string; message: any }) => {
-            console.log('📨 Message received:', data);
-            // TODO: Update chats context with new message
-            // This will trigger a re-render and show the new message
+            console.log('📨 SocketContext: Message received, forwarding to VocaContext');
+            handleIncomingMessage(data.chatId, data.message);
         });
 
         // Listen for message delivery confirmation
         newSocket.on('message:delivered', (data: { messageId: string; chatId: string }) => {
-            console.log('✓ Message delivered:', data);
-            // TODO: Update message status to 'delivered'
+            console.log('✓ SocketContext: Delivery confirmation received');
+            handleMessageDelivered(data.chatId, data.messageId);
         });
 
         // Listen for typing indicators
@@ -131,9 +130,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
         // Listen for read receipts
-        newSocket.on('message:read-receipt', (data: { chatId: string; messageIds: string[]; readBy: string; readAt: string }) => {
-            console.log('👁️ Messages read:', data);
-            // TODO: Update message status to 'read'
+        newSocket.on('message:read', (data: { chatId: string; messageId: string }) => {
+            console.log('👁️ SocketContext: Read receipt received');
+            handleMessageRead(data.chatId, data.messageId);
         });
 
         setSocket(newSocket);

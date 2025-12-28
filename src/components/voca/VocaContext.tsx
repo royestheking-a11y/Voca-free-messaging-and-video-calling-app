@@ -36,6 +36,11 @@ interface VocaContextType {
     toggleArchiveChat: (chatId: string) => Promise<void>;
     toggleFavoriteContact: (contactId: string) => Promise<void>;
 
+    // Socket message handlers
+    handleIncomingMessage: (chatId: string, message: Message) => void;
+    handleMessageDelivered: (chatId: string, messageId: string) => void;
+    handleMessageRead: (chatId: string, messageId: string) => void;
+
     // Status
     createStatus: (content: string, type: 'text' | 'image', color?: string) => Promise<void>;
     deleteStatus: (statusId: string) => Promise<void>;
@@ -107,10 +112,10 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const isAdmin = currentUser?.role === 'admin';
 
     // Listen for incoming calls
+    // Note: Message socket listeners are handled in SocketContext
     useEffect(() => {
         if (!socket) return;
 
-        // Calls
         socket.on('call:incoming', ({ from, offer, callType, caller }) => {
             const participant = users.find(u => u.id === from) || caller;
             if (participant) {
@@ -123,85 +128,10 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             }
         });
 
-        // Messages
-        socket.on('message:receive', async ({ chatId, message }) => {
-            setChats(prev => {
-                const chatExists = prev.some(c => c.id === chatId);
-
-                if (chatExists) {
-                    return prev.map(chat => {
-                        if (chat.id === chatId) {
-                            return {
-                                ...chat,
-                                messages: [...chat.messages, message],
-                                unreadCount: chat.id === activeChatId ? 0 : chat.unreadCount + 1,
-                                lastMessage: message
-                            };
-                        }
-                        return chat;
-                    });
-                } else {
-                    // New chat started by someone else, fetch it
-                    // Ideally we'd just fetch the single chat, but for now allow refresh
-                    // Or optimistically add it if we had full chat data in payload
-                    // Let's refetch chats to be safe and simple
-                    // Can't call async inside sync setState, so trigger effect or similar
-                    // For now, simpler: trigger a reload or handle specific "new chat" event
-                    // But usually message:receive implies chat exists or we should fetch all
-                    // We'll trust state for existing chats, and maybe fetch all if not found?
-                    // Let's just update if found, otherwise maybe trigger a refresh in a separate effect?
-                    // Actually, let's just trigger a reload if not found
-                    return prev;
-                }
-            });
-
-            // If chat wasn't found in state (new chat), we should reload
-            // But we can't easily check 'chatExists' from outside without deps.
-            // Let's rely on 'chat:created' event if it exists, or just fetch chats if missing.
-            // For robust solution:
-            const chatExists = chats.some(c => c.id === chatId);
-            if (!chatExists) {
-                const newChats = await chatsAPI.getAll();
-                setChats(newChats);
-            } else if (activeChatId === chatId) {
-                // Mark as read immediately if active
-                socket.emit('message:read', { chatId, messageId: message.id, senderId: message.senderId });
-            }
-        });
-
-        socket.on('message:delivered', ({ messageId, chatId }) => {
-            setChats(prev => prev.map(chat =>
-                chat.id === chatId ? {
-                    ...chat,
-                    messages: chat.messages.map(m =>
-                        m.id === messageId ? { ...m, status: 'delivered' } : m
-                    )
-                } : chat
-            ));
-        });
-
-        socket.on('message:read', ({ messageId, chatId }) => {
-            setChats(prev => prev.map(chat =>
-                chat.id === chatId ? {
-                    ...chat,
-                    messages: chat.messages.map(m =>
-                        // If specific message read or all prior? usually specific or bulk
-                        // Assuming specific for now or we might need handling 'all read'
-                        m.id === messageId ? { ...m, status: 'read' } : m
-                        // Better: if read receipt is for a user, mark all their sent messages as read?
-                        // Simple impl: update specific message
-                    )
-                } : chat
-            ));
-        });
-
         return () => {
             socket.off('call:incoming');
-            socket.off('message:receive');
-            socket.off('message:delivered');
-            socket.off('message:read');
         };
-    }, [socket, users, activeChatId]); // Removed 'chats' to prevent re-subscription loops
+    }, [socket, users]);
 
     // Load initial data on mount
     useEffect(() => {
@@ -535,6 +465,50 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         } catch (err) {
             console.error('Toggle favorite error:', err);
         }
+    };
+
+    // Socket message handlers - called by SocketContext when messages are received
+    const handleIncomingMessage = (chatId: string, message: Message) => {
+        console.log('📨 VocaContext: Handling incoming message', { chatId, messageId: message.id });
+        setChats(prev => prev.map(chat => {
+            if (chat.id === chatId) {
+                // Check if message already exists (prevent duplicates)
+                if (chat.messages.some(m => m.id === message.id)) {
+                    return chat;
+                }
+                return {
+                    ...chat,
+                    messages: [...chat.messages, message],
+                    unreadCount: chat.id === activeChatId ? 0 : chat.unreadCount + 1,
+                    lastMessage: message
+                };
+            }
+            return chat;
+        }));
+    };
+
+    const handleMessageDelivered = (chatId: string, messageId: string) => {
+        console.log('✓ VocaContext: Message delivered', { chatId, messageId });
+        setChats(prev => prev.map(chat =>
+            chat.id === chatId ? {
+                ...chat,
+                messages: chat.messages.map(m =>
+                    m.id === messageId ? { ...m, status: 'delivered' } : m
+                )
+            } : chat
+        ));
+    };
+
+    const handleMessageRead = (chatId: string, messageId: string) => {
+        console.log('👁️ VocaContext: Message read', { chatId, messageId });
+        setChats(prev => prev.map(chat =>
+            chat.id === chatId ? {
+                ...chat,
+                messages: chat.messages.map(m =>
+                    m.id === messageId ? { ...m, status: 'read' } : m
+                )
+            } : chat
+        ));
     };
 
     const deleteChat = async (chatId: string) => {
@@ -989,6 +963,9 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         createGroupChat,
         toggleArchiveChat,
         toggleFavoriteContact,
+        handleIncomingMessage,
+        handleMessageDelivered,
+        handleMessageRead,
 
         createStatus,
         deleteStatus,
