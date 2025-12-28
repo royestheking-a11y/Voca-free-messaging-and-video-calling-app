@@ -432,7 +432,11 @@ export const CallInterface = ({
                                 transition={{ duration: 1.5, repeat: Infinity }}
                                 className="absolute inset-0 bg-white/20 rounded-full blur-md"
                             />
-                            <Video className="w-8 h-8 fill-current relative z-10" />
+                            {isVideo ? (
+                                <Video className="w-8 h-8 fill-current relative z-10" />
+                            ) : (
+                                <Phone className="w-8 h-8 fill-current relative z-10" />
+                            )}
                         </div>
                         <span className="text-white/80 text-sm font-medium">Accept</span>
                     </motion.button>
@@ -621,31 +625,19 @@ export const CallInterface = ({
                 transition={{ delay: 0.2 }}
                 className="relative z-20 m-4 p-6 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
             >
-                <div className="flex items-center justify-between">
-                    <button className="flex flex-col items-center gap-2 group">
-                        <div className="p-4 rounded-full bg-white/5 text-white/70 group-hover:bg-white/10 group-hover:text-white transition-all">
-                            <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                                <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z" />
-                            </svg>
-                        </div>
-                    </button>
-
-                    <button className="flex flex-col items-center gap-2 group">
-                        <div className="p-4 rounded-full bg-white/5 text-white/70 group-hover:bg-white/10 group-hover:text-white transition-all">
-                            <Video className="w-6 h-6" />
-                        </div>
-                    </button>
-
+                <div className="flex items-center justify-center gap-8">
                     <button onClick={toggleMute} className="flex flex-col items-center gap-2 group">
-                        <div className={cn("p-4 rounded-full transition-all", isMuted ? "bg-white text-black" : "bg-white/5 text-white/70 group-hover:bg-white/10 group-hover:text-white")}>
-                            {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                        <div className={cn("p-6 rounded-full transition-all shadow-lg", isMuted ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
+                            {isMuted ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
                         </div>
+                        <span className="text-white/50 text-xs font-medium tracking-wide">Mute</span>
                     </button>
 
-                    <button onClick={() => handleEnd()} className="flex flex-col items-center gap-2">
-                        <div className="p-4 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30 hover:bg-red-600 transition-all active:scale-95">
-                            <PhoneOff className="w-6 h-6 fill-current" />
+                    <button onClick={() => handleEnd()} className="flex flex-col items-center gap-2 group">
+                        <div className="p-6 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 hover:bg-red-600 hover:scale-105 transition-all active:scale-95">
+                            <PhoneOff className="w-8 h-8 fill-current" />
                         </div>
+                        <span className="text-white/50 text-xs font-medium tracking-wide">End</span>
                     </button>
                 </div>
             </motion.div>
