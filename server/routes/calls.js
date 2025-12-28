@@ -17,11 +17,23 @@ router.get('/', authenticateToken, async (req, res) => {
 
         // Transform for frontend
         const formattedCalls = calls.map(call => {
-            const isCaller = call.callerId._id.toString() === req.user.userId;
-            const otherUser = isCaller ? call.receiverId : call.callerId;
+            // Safety check: ensure basic call data exists
+            if (!call || !call.callerId && !call.receiverId) return null;
 
-            // If populate failed (deleted user), handle gracefully
-            if (!otherUser) return null;
+            // Handle missing populated user (e.g. deleted account)
+            const callerIdStr = call.callerId?._id ? call.callerId._id.toString() : (call.callerId ? call.callerId.toString() : 'unknown');
+            const isCaller = callerIdStr === req.user.userId;
+
+            let otherUser = isCaller ? call.receiverId : call.callerId;
+
+            // Fallback for deleted/missing users
+            if (!otherUser) {
+                otherUser = {
+                    _id: 'deleted',
+                    name: 'Deleted User',
+                    avatar: '', // Default avatar in frontend
+                };
+            }
 
             return {
                 id: call._id,
@@ -30,11 +42,11 @@ router.get('/', authenticateToken, async (req, res) => {
                     id: otherUser._id,
                     name: otherUser.name,
                     avatar: otherUser.avatar,
-                    online: false // status not stored in call history usually, fetched live
+                    online: false
                 },
                 timestamp: call.timestamp,
                 duration: call.duration ? formatDuration(call.duration) : '0:00',
-                status: call.status, // 'missed', 'received', 'outgoing'
+                status: call.status,
                 direction: isCaller ? 'outgoing' : 'incoming'
             };
         }).filter(Boolean);
