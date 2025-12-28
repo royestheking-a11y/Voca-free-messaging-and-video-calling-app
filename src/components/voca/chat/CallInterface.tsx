@@ -39,6 +39,7 @@ export const CallInterface = ({
     const remoteStreamRef = useRef<MediaStream | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const remoteAudioRef = useRef<HTMLAudioElement>(null);
     const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]);
     const ringtoneRef = useRef<HTMLAudioElement | null>(null);
 
@@ -70,8 +71,12 @@ export const CallInterface = ({
                 pc.ontrack = (event) => {
                     if (event.streams && event.streams[0]) {
                         remoteStreamRef.current = event.streams[0];
-                        if (remoteVideoRef.current) {
+                        // Play remote audio/video
+                        if (isVideo && remoteVideoRef.current) {
                             remoteVideoRef.current.srcObject = event.streams[0];
+                        } else if (!isVideo && remoteAudioRef.current) {
+                            remoteAudioRef.current.srcObject = event.streams[0];
+                            remoteAudioRef.current.play().catch(e => console.error('Error playing remote audio:', e));
                         }
                         setStatus('connected');
                     }
@@ -222,8 +227,12 @@ export const CallInterface = ({
             pc.ontrack = (event) => {
                 if (event.streams && event.streams[0]) {
                     remoteStreamRef.current = event.streams[0];
-                    if (remoteVideoRef.current) {
+                    // Play remote audio/video
+                    if (isVideo && remoteVideoRef.current) {
                         remoteVideoRef.current.srcObject = event.streams[0];
+                    } else if (!isVideo && remoteAudioRef.current) {
+                        remoteAudioRef.current.srcObject = event.streams[0];
+                        remoteAudioRef.current.play().catch(e => console.error('Error playing remote audio:', e));
                     }
                     setStatus('connected');
                 }
@@ -600,6 +609,9 @@ export const CallInterface = ({
                     </button>
                 </div>
             </motion.div>
+
+            {/* Hidden audio element for voice calls */}
+            <audio ref={remoteAudioRef} autoPlay playsInline />
         </motion.div>
     );
 };
