@@ -68,23 +68,21 @@ export const CallInterface = ({
                     pc.addTrack(track, stream);
                 });
 
+                // Unified remote track handling for init call (video only)
                 pc.ontrack = (event) => {
-                    console.log('🎥 [INIT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
-                    if (event.streams && event.streams[0]) {
-                        remoteStreamRef.current = event.streams[0];
-                        console.log('✅ [INIT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
-                        // Play remote audio/video
-                        if (isVideo && remoteVideoRef.current) {
-                            console.log('📺 [INIT] Setting remote VIDEO srcObject');
-                            remoteVideoRef.current.srcObject = event.streams[0];
-                            remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
-                        } else if (!isVideo && remoteAudioRef.current) {
-                            console.log('🔊 [INIT] Setting remote AUDIO srcObject');
-                            remoteAudioRef.current.srcObject = event.streams[0];
-                            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
-                        }
-                        setStatus('connected');
+                    console.log('🎥 [INIT] ontrack received:', event.track.kind, 'enabled:', event.track.enabled);
+                    // Only handle video tracks to avoid duplicate srcObject assignments
+                    if (event.track.kind !== 'video') return;
+                    if (!event.streams || !event.streams[0]) return;
+                    const stream = event.streams[0];
+                    remoteStreamRef.current = stream;
+                    if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== stream) {
+                        console.log('📺 [INIT] Setting remote video srcObject');
+                        remoteVideoRef.current.pause();
+                        remoteVideoRef.current.srcObject = stream;
+                        remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
                     }
+                    setStatus('connected');
                 };
 
                 pc.onicecandidate = (event) => {
@@ -255,23 +253,29 @@ export const CallInterface = ({
             });
             console.log('✅ [ACCEPT] Tracks added to peer connection');
 
+            // Unified remote track handling for accepted call
+            // Unified remote track handling for accepted call
             pc.ontrack = (event) => {
-                console.log('🎥 [ACCEPT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
-                if (event.streams && event.streams[0]) {
-                    remoteStreamRef.current = event.streams[0];
-                    console.log('✅ [ACCEPT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
-                    // Play remote audio/video
-                    if (isVideo && remoteVideoRef.current) {
-                        console.log('📺 [ACCEPT] Setting remote VIDEO srcObject');
-                        remoteVideoRef.current.srcObject = event.streams[0];
+                console.log('🎥 [ACCEPT] ontrack received:', event.track.kind, 'enabled:', event.track.enabled);
+                if (!event.streams || !event.streams[0]) return;
+                const stream = event.streams[0];
+                remoteStreamRef.current = stream;
+                if (event.track.kind === 'video' && remoteVideoRef.current) {
+                    if (remoteVideoRef.current.srcObject !== stream) {
+                        console.log('📺 [ACCEPT] Setting remote video srcObject');
+                        remoteVideoRef.current.pause();
+                        remoteVideoRef.current.srcObject = stream;
                         remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video:', e));
-                    } else if (!isVideo && remoteAudioRef.current) {
-                        console.log('🔊 [ACCEPT] Setting remote AUDIO srcObject');
-                        remoteAudioRef.current.srcObject = event.streams[0];
+                    }
+                } else if (event.track.kind === 'audio' && remoteAudioRef.current) {
+                    if (remoteAudioRef.current.srcObject !== stream) {
+                        console.log('🔊 [ACCEPT] Setting remote audio srcObject');
+                        remoteAudioRef.current.pause();
+                        remoteAudioRef.current.srcObject = stream;
                         remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
                     }
-                    setStatus('connected');
                 }
+                setStatus('connected');
             };
 
             pc.onicecandidate = (event) => {
