@@ -1,5 +1,7 @@
 // API Client for Voca Backend
-const API_BASE_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api').replace(/\/$/, '');
+const API_BASE_URL = ((import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api')
+    .replace(/\/+$/, '') // Remove trailing slashes
+    .replace(/([^:]\/)\/+/g, "$1"); // Remove double slashes (excluding protocol)
 
 // Token storage
 const getToken = () => localStorage.getItem('voca_token');
