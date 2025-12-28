@@ -249,9 +249,11 @@ export const CallInterface = ({
             const pc = webrtc.createPeerConnection();
             peerConnectionRef.current = pc;
 
+            console.log('📹 [ACCEPT] Adding local tracks:', stream.getTracks().map(t => `${t.kind}:${t.enabled}`));
             stream.getTracks().forEach(track => {
                 pc.addTrack(track, stream);
             });
+            console.log('✅ [ACCEPT] Tracks added to peer connection');
 
             pc.ontrack = (event) => {
                 console.log('🎥 [ACCEPT] ontrack event:', event.track.kind, 'enabled:', event.track.enabled);
