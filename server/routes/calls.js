@@ -8,12 +8,20 @@ const router = express.Router();
 // Get all calls for current user
 router.get('/', authenticateToken, async (req, res) => {
     try {
+        const userId = new mongoose.Types.ObjectId(req.user.userId);
+        console.log('📞 GET /api/calls request:', {
+            authUserId: req.user.userId,
+            castUserId: userId
+        });
+
         const calls = await Call.find({
-            $or: [{ callerId: req.user.userId }, { receiverId: req.user.userId }]
+            $or: [{ callerId: userId }, { receiverId: userId }]
         })
             .sort({ timestamp: -1 })
             .populate('callerId', 'name avatar')
             .populate('receiverId', 'name avatar');
+
+        console.log('📞 GET /api/calls found:', calls.length, 'records');
 
         // Transform for frontend
         const formattedCalls = calls.map(call => {
