@@ -120,25 +120,30 @@ export const CallInterface = ({
     useEffect(() => {
         // Play ringtone only when incoming AND still in incoming status
         if (status === 'incoming') {
-            const audio = new Audio('/sounds/ringtone.mp3'); // Assuming file exists or use a CDN/Base64
-            // Check if file exists, if not use a fallback simple beep or verify path
-            // For now let's assume a standard path or provide a reliable URL
-            // Using a standard phone ring sound from a CDN for reliability if local file missing
-            audio.src = 'https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3';
-            audio.loop = true;
-            audio.play().catch(e => console.error('Error playing ringtone:', e));
-            ringtoneRef.current = audio;
+            // Only create new ringtone if one doesn't already exist
+            if (!ringtoneRef.current) {
+                console.log('🔔 Starting ringtone');
+                const audio = new Audio('/sounds/ringtone.mp3');
+                audio.src = 'https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3';
+                audio.loop = true;
+                audio.play().catch(e => console.error('Error playing ringtone:', e));
+                ringtoneRef.current = audio;
+            }
         } else {
             // Stop ringtone when status changes (accepted, rejected, connected)
             if (ringtoneRef.current) {
+                console.log('🔕 Stopping ringtone - status changed to:', status);
                 ringtoneRef.current.pause();
+                ringtoneRef.current.currentTime = 0; // Reset to beginning
                 ringtoneRef.current = null;
             }
         }
 
         return () => {
             if (ringtoneRef.current) {
+                console.log('🔕 Cleanup: Stopping ringtone');
                 ringtoneRef.current.pause();
+                ringtoneRef.current.currentTime = 0;
                 ringtoneRef.current = null;
             }
         };
@@ -208,9 +213,11 @@ export const CallInterface = ({
     const handleAccept = async () => {
         console.log('📞 CallInterface: Accepting call, stopping ringtone');
 
-        // IMMEDIATELY stop ringtone when accept is clicked
+        // IMMEDIATELY and AGGRESSIVELY stop ringtone when accept is clicked
         if (ringtoneRef.current) {
+            console.log('🔕 FORCE STOP ringtone on accept');
             ringtoneRef.current.pause();
+            ringtoneRef.current.currentTime = 0;
             ringtoneRef.current = null;
         }
 
