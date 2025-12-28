@@ -30,7 +30,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
             // Handle missing populated user (e.g. deleted account)
             const callerIdStr = call.callerId?._id ? call.callerId._id.toString() : (call.callerId ? call.callerId.toString() : 'unknown');
-            const isCaller = callerIdStr === req.user.userId;
+            const isCaller = callerIdStr === req.user._id.toString();
 
             let otherUser = isCaller ? call.receiverId : call.callerId;
 
