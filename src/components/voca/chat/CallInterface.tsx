@@ -320,8 +320,8 @@ export const CallInterface = ({
         const durationStr = duration > 0 ? `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : undefined;
         const callStatus = isIncoming && status !== 'connected' ? 'missed' : 'completed';
 
-        console.log('📞 CallInterface: Calling onEnd callback', { durationStr, callStatus });
-        onEnd(durationStr, callStatus);
+        console.log('📞 CallInterface: Calling onEnd callback', { durationStr, callStatus, isRemote: skipEmit });
+        onEnd(durationStr, callStatus, skipEmit); // Pass skipEmit as isRemote
     };
 
     const toggleMute = () => {

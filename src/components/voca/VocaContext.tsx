@@ -30,7 +30,7 @@ interface VocaContextType {
     setActiveChatId: (id: string | null) => Promise<void>;
     activeCall: { type: 'voice' | 'video', isIncoming: boolean, participant?: User, offer?: RTCSessionDescriptionInit } | null;
     startCall: (participantId: string, type: 'voice' | 'video', fallbackParticipant?: User) => void;
-    endCall: (duration?: string, status?: 'missed' | 'completed') => void;
+    endCall: (duration?: string, status?: 'missed' | 'completed', isRemote?: boolean) => void;
     createChat: (participantId: string) => Promise<void>;
     createGroupChat: (name: string, participantIds: string[], image?: string) => Promise<void>;
     toggleArchiveChat: (chatId: string) => Promise<void>;
@@ -568,8 +568,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const endCall = async (duration?: string, status?: 'missed' | 'completed') => {
-        console.log('📞 VocaContext: endCall called', { duration, status, hasActiveCall: !!activeCall, activeCallParticipant: activeCall?.participant?.name });
+    const endCall = async (duration?: string, status?: 'missed' | 'completed', isRemote = false) => {
+        console.log('📞 VocaContext: endCall called', { duration, status, isRemote, hasActiveCall: !!activeCall, activeCallParticipant: activeCall?.participant?.name });
 
         if (activeCall && activeCall.participant && currentUser) {
             // Determine call direction and status
@@ -661,8 +661,10 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 console.log('✅ Call added to local state:', newCall);
             }
 
-            // Add call message to chat
-            if (chat) {
+            // Add call message to chat ONLY if ending locally (not remote)
+            //This prevents duplicate messages when both users end the call
+            if (chat && !isRemote) {
+                console.log('📝 Adding call message to chat (local end)');
                 const callIcon = callType === 'video' ? '📹' : '📞';
                 let callLabel = '';
 
@@ -697,6 +699,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 } catch (error) {
                     console.error('Error sending call message:', error);
                 }
+            } else if (isRemote) {
+                console.log('⏩ Skipping call message creation (remote end - other user will create it)');
             }
         }
         console.log('📞 VocaContext: Clearing activeCall');
