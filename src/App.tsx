@@ -87,6 +87,7 @@ const AppContent = () => {
                 <Route path="status" element={<div className="hidden md:flex items-center justify-center h-full w-full text-gray-500">View Status Updates</div>} />
                 <Route path="calls" element={<div className="hidden md:flex items-center justify-center h-full w-full text-gray-500">View Call History</div>} />
                 <Route path="groups" element={<div className="hidden md:flex items-center justify-center h-full w-full text-gray-500">Manage Groups</div>} />
+                <Route path="posts" element={<div className="hidden md:flex items-center justify-center h-full w-full text-gray-500">View Posts</div>} />
             </Route>
 
             <Route path="/admin" element={

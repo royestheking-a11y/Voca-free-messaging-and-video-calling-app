@@ -14,13 +14,19 @@ export const ChatLayout = () => {
     const navigate = useNavigate();
 
     // Check routes to determine mobile view state
-    const isChatOpen = !!useMatch('/chat/:id');
-    const isStatusOpen = !!useMatch('/chat/status');
-    const isCallsOpen = !!useMatch('/chat/calls');
-    const isGroupsOpen = !!useMatch('/chat/groups');
+    const chatMatch = useMatch('/chat/:id');
 
-    // On mobile, show content if any specific route is matched, otherwise show sidebar
-    const showContent = isMobile && (isChatOpen || isStatusOpen || isCallsOpen || isGroupsOpen);
+    // Define tab routes that should show the sidebar on mobile, not the content area
+    const tabRoutes = ['status', 'calls', 'groups', 'posts'];
+
+    // Check if the current route is a real chat (not a tab)
+    // useMatch('/chat/:id') matches 'status', 'calls' etc too, so we must filter them out
+    const isTabRoute = chatMatch && tabRoutes.includes(chatMatch.params.id || '');
+    const isChatOpen = !!chatMatch && !isTabRoute;
+
+    // On mobile, show content ONLY if a specific chat is open. 
+    // For tabs (status, calls, etc), we want to show the SIDEBAR (which contains the lists).
+    const showContent = isMobile && isChatOpen;
     const showSidebar = !isMobile || !showContent;
 
     // Responsive check
