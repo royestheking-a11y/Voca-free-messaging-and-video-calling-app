@@ -164,7 +164,16 @@ export const CallInterface = ({
                 const audio = new Audio('/sounds/ringtone.mp3');
                 audio.src = 'https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3';
                 audio.loop = true;
-                audio.play().catch(e => console.error('Error playing ringtone:', e));
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.error('Error playing ringtone (likely autoplay policy):', e);
+                        // Optional: Show UI to ask user to interact
+                        if (e.name === 'NotAllowedError') {
+                            toast('Creating incoming call...'); // Subtle prompt
+                        }
+                    });
+                }
                 globalRingtone = audio; // Assign to singleton
             }
         } else {
@@ -569,8 +578,8 @@ export const CallInterface = ({
                     dragElastic={0}
                     dragMomentum={false}
                     whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-                    className="absolute right-4 top-28 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl z-20 border-4 border-green-500 cursor-move group"
-                    style={{ backgroundColor: 'rgba(255, 0, 0, 0.3)' }} // Debug: red background
+                    className="absolute right-4 top-28 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl z-50 border-4 border-yellow-400 cursor-move group"
+                    style={{ backgroundColor: 'rgba(0, 0, 255, 0.3)' }} // Debug: blue background
                     onDragStart={() => console.log('🎯 PiP drag started')}
                     onDragEnd={() => console.log('🎯 PiP drag ended')}
                 >
@@ -579,9 +588,9 @@ export const CallInterface = ({
                         ref={localVideoRef}
                         autoPlay
                         playsInline
-                        muted
-                        className={cn("w-full h-full object-cover transition-opacity", !isVideoEnabled && "opacity-0")}
-                        onLoadedMetadata={() => console.log('📹 Local PiP video metadata loaded')}
+                        muted={true} // Explicit true
+                        className={cn("w-full h-full object-cover")} // Removed transition/opacity logic
+                        onLoadedMetadata={() => console.log('📹 Local PiP video metadata loaded - VISIBILITY CHECK')}
                     />
                     {!isVideoEnabled && (
                         <div className="absolute inset-0 flex items-center justify-center text-white/50">
