@@ -244,10 +244,10 @@ const CallInterfaceComponent = ({
             handleEnd();
         });
 
-        socket.on('call:ended', (data: { duration?: string, status?: 'missed' | 'completed' }) => {
-            console.log('📞 CallInterface: Received call:ended from remote user', data);
+        socket.on('call:ended', () => {
+            console.log('📞 CallInterface: Received call:ended from remote user');
             toast.info('Call ended');
-            handleEnd(true, data.duration, data.status);
+            handleEnd(true); // Skip emitting to prevent infinite loop
         });
 
         return () => {
@@ -369,32 +369,18 @@ const CallInterfaceComponent = ({
         handleEnd();
     };
 
-    const handleEnd = async (skipEmit = false, remoteDuration?: string, remoteStatus?: 'missed' | 'completed') => {
+    const handleEnd = (skipEmit = false) => {
         console.log('📞 CallInterface: handleEnd called', {
             participantId,
-            socketConnected: !!socket,
+            socketConnected: socket?.connected,
             status,
             duration,
-            skipEmit,
-            remoteDuration,
-            remoteStatus
+            skipEmit
         });
 
-        cleanup();
-
-        // Calculate duration string
-        const m = Math.floor(duration / 60);
-        const s = duration % 60;
-        const durationStr = duration > 0 ? `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : undefined;
-        const callStatus = isIncoming && status !== 'connected' ? 'missed' : 'completed';
-
-        if (!skipEmit && socket && participantId) {
-            console.log('📞 CallInterface: Emitting call:end to', participantId, 'with duration:', durationStr);
-            socket.emit('call:end', {
-                to: participantId,
-                duration: durationStr,
-                status: callStatus
-            });
+        if (socket && participantId && !skipEmit) {
+            console.log('📞 CallInterface: Emitting call:end to', participantId);
+            socket.emit('call:end', { to: participantId });
         } else if (skipEmit) {
             console.log('📞 CallInterface: Skipping call:end emission (remote ended)');
         } else {
@@ -405,17 +391,14 @@ const CallInterfaceComponent = ({
             });
         }
 
-        // Use remote duration/status if provided (for receiver), otherwise use local
-        const finalDuration = remoteDuration || durationStr;
-        const finalStatus = remoteStatus || callStatus;
+        cleanup();
+        const m = Math.floor(duration / 60);
+        const s = duration % 60;
+        const durationStr = duration > 0 ? `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : undefined;
+        const callStatus = isIncoming && status !== 'connected' ? 'missed' : 'completed';
 
-        console.log('📞 CallInterface: Calling onEnd callback', {
-            durationStr: finalDuration,
-            callStatus: finalStatus,
-            isRemote: skipEmit
-        });
-
-        onEnd(finalDuration, finalStatus, skipEmit); // Pass skipEmit as isRemote
+        console.log('📞 CallInterface: Calling onEnd callback', { durationStr, callStatus, isRemote: skipEmit });
+        onEnd(durationStr, callStatus, skipEmit); // Pass skipEmit as isRemote
     };
 
     const toggleMute = () => {
@@ -474,7 +457,7 @@ const CallInterfaceComponent = ({
                         animate={{ y: 0, opacity: 1 }}
                         className="flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10"
                     >
-                        <span className="text-sm font-medium text-white">Incoming {isVideo ? 'Video' : 'Voice'} Call</span>
+                        <span className="text-sm font-medium text-white/80">Incoming {isVideo ? 'Video' : 'Voice'} Call</span>
                     </motion.div>
 
                     <motion.div
@@ -604,18 +587,9 @@ const CallInterfaceComponent = ({
                     )}
                 </AnimatePresence>
 
-                {/* Local Video PiP - Draggable */}
-                <motion.div
-                    drag
-                    dragElastic={0}
-                    dragMomentum={false}
-                    dragConstraints={{
-                        top: -(window.innerHeight - 300), // Can drag up (leave some space at top)
-                        left: -(window.innerWidth - 200), // Can drag left (leave some space)
-                        right: window.innerWidth - 148,   // Can drag right
-                        bottom: window.innerHeight - 212  // Can drag down
-                    }}
-                    className="rounded-2xl overflow-hidden shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
+                {/* Local Video PiP - FIXED POSITION */}
+                <div
+                    className="rounded-2xl overflow-hidden shadow-2xl border border-white/20"
                     style={{
                         position: 'fixed',
                         top: '120px',
@@ -626,7 +600,6 @@ const CallInterfaceComponent = ({
                         opacity: 1,
                         pointerEvents: 'auto'
                     }}
-                    whileDrag={{ scale: 1.05 }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm" />
                     <video
@@ -650,7 +623,7 @@ const CallInterfaceComponent = ({
                             </div>
                         </div>
                     )}
-                </motion.div>
+                </div>
 
                 {/* Bottom Floating Glass Bar */}
                 <AnimatePresence>
@@ -689,7 +662,7 @@ const CallInterfaceComponent = ({
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div >
+            </div>
         );
     }
 
