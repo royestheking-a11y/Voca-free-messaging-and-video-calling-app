@@ -480,7 +480,7 @@ const CallInterfaceComponent = ({
                     </motion.div>
 
                     <h1 className="text-3xl sm:text-4xl text-white font-bold mt-2 sm:mt-4 mb-2 tracking-tight text-center">{participant.name}</h1>
-                    <p className="text-indigo-200/80 text-base sm:text-lg font-light">Voca Audio...</p>
+                    <p className="text-indigo-200/80 text-base sm:text-lg font-light">Voca video call...</p>
                 </div>
 
                 {/* Bottom Actions - Premium Slide/Tap */}
