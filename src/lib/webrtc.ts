@@ -45,8 +45,8 @@ export const getUserMedia = async (constraints: { audio: boolean; video: boolean
             } : false,
             video: constraints.video ? (
                 typeof constraints.video === 'boolean' ? {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
                     facingMode: 'user',
                     frameRate: { ideal: 30 }
                 } : constraints.video
