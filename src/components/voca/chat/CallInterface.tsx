@@ -58,6 +58,7 @@ export const CallInterface = ({
     // Initialize call
     useEffect(() => {
         const initCall = async () => {
+            console.log('🚀 [CALLER] initCall starting...', { isVideo });
             try {
                 const stream = await webrtc.getUserMedia({
                     audio: true,
@@ -516,6 +517,12 @@ export const CallInterface = ({
 
     // 2. ACTIVE VIDEO CALL (Floating Controls)
     if (isVideo) {
+        console.log('🎬 Rendering VIDEO CALL interface', {
+            isIncoming,
+            status,
+            hasLocalStream: !!localStream,
+            hasRemoteStream: !!remoteStream
+        });
         return (
             <div
                 className="fixed inset-0 z-[100] bg-black"
