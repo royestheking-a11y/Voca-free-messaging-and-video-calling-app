@@ -42,14 +42,15 @@ export const CallInterface = ({
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-    const localStreamRef = useRef<MediaStream | null>(null); // Keep ref for cleanup/access without closure issues
+    const localStreamRef = useRef<MediaStream | null>(null);
     const remoteStreamRef = useRef<MediaStream | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const remoteAudioRef = useRef<HTMLAudioElement>(null);
     const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]);
     const ringtoneRef = useRef<HTMLAudioElement | null>(null);
-    const remoteStreamIdRef = useRef<string | null>(null); // Track which stream we've set
+    const remoteStreamIdRef = useRef<string | null>(null);
+    const hasInitialized = useRef(false); // Prevent duplicate initialization
 
     useEffect(() => {
         setIsVideoEnabled(initialType === 'video');
@@ -58,6 +59,11 @@ export const CallInterface = ({
     // Initialize call
     useEffect(() => {
         const initCall = async () => {
+            if (hasInitialized.current) {
+                console.log('⚠️ [CALLER] Skipping duplicate initCall - already initialized');
+                return;
+            }
+            hasInitialized.current = true;
             console.log('🚀 [CALLER] initCall starting...', { isVideo });
             try {
                 const stream = await webrtc.getUserMedia({
