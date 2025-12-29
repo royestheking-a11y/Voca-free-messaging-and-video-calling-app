@@ -4,6 +4,7 @@ import { ChatSidebar } from './ChatSidebar';
 import { ChatWindow } from './ChatWindow';
 import { useVoca } from '../VocaContext';
 import { CallInterface } from './CallInterface';
+import { FloatingCallBar } from './FloatingCallBar';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { cn } from '../../ui/utils';
@@ -11,6 +12,7 @@ import { cn } from '../../ui/utils';
 export const ChatLayout = () => {
     const { activeChatId, setActiveChatId, activeCall, endCall } = useVoca();
     const [isMobile, setIsMobile] = useState(false);
+    const [isCallMinimized, setIsCallMinimized] = useState(false);
     const navigate = useNavigate();
 
     // Check routes to determine mobile view state
@@ -78,13 +80,32 @@ export const ChatLayout = () => {
                 </div>
             </div>
 
-            {/* Global Call Interface Overlay */}
-            {activeCall && (
+            {/* Floating Call Indicator (when minimized) */}
+            {activeCall && isCallMinimized && (
+                <div onClick={() => setIsCallMinimized(false)}>
+                    <FloatingCallBar />
+                </div>
+            )}
+
+            {/* Global Call Interface Overlay (when not minimized) */}
+            {activeCall && !isCallMinimized && (
                 <div className="absolute inset-0 z-50">
+                    {/* Minimize button - tap back gesture */}
+                    <button
+                        onClick={() => setIsCallMinimized(true)}
+                        className="absolute top-4 left-4 z-[60] p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors"
+                        aria-label="Minimize call"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+
                     <CallInterface
                         participant={activeCall.participant!}
                         type={activeCall.type}
-                        onEnd={endCall}
+                        onEnd={(duration, status, isRemote) => {
+                            endCall(duration, status, isRemote);
+                            setIsCallMinimized(false); // Reset minimize state when call ends
+                        }}
                         isIncoming={activeCall.isIncoming}
                         offer={activeCall.offer}
                         participantId={activeCall.participant!.id}
