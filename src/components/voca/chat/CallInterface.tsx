@@ -127,7 +127,7 @@ export const CallInterface = ({
         return () => cleanup();
     }, []);
 
-    // NEW: Attach streams to video elements whenever they become available
+    // Attach local stream to PiP when available (do NOT depend on isIncoming/isVideo to prevent re-renders)
     useEffect(() => {
         if (localVideoRef.current && localStream) {
             console.log('📹 [EFFECT] Attaching local stream to PiP', {
@@ -138,8 +138,9 @@ export const CallInterface = ({
             // Explicitly play local video (it is muted so it should allow autoplay, but being safe)
             localVideoRef.current.play().catch(e => console.error('📹 Error playing local PiP:', e));
         }
-    }, [isIncoming, isVideo, localStream]); // Depends on localStream state now!
+    }, [localStream]); // ONLY depend on localStream, not isIncoming/isVideo
 
+    // Attach remote stream to video/audio when available (do NOT depend on isIncoming/isVideo)
     useEffect(() => {
         if (remoteVideoRef.current && remoteStream) {
             console.log('📺 [EFFECT] Attaching remote stream to main video', {
@@ -153,7 +154,7 @@ export const CallInterface = ({
             remoteAudioRef.current.srcObject = remoteStream;
             remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
         }
-    }, [isIncoming, isVideo, remoteStream]); // Depends on remoteStream state now!
+    }, [remoteStream]); // ONLY depend on remoteStream
 
     // Handle Ringtone
     useEffect(() => {
