@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../../../lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Phone, ChevronUp, Lock } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Phone, ChevronUp, Lock, Volume2 } from 'lucide-react';
 import { cn } from '../../ui/utils';
 import { useSocket } from '../SocketContext';
 import * as webrtc from '../../../lib/webrtc';
@@ -440,102 +440,156 @@ const CallInterfaceComponent = ({
 
     // --- RENDER ---
 
-    // 1. INCOMING CALL SCREEN (Premium)
-    if (isIncoming) {
+    // 1. INCOMING CALL SCREEN (Premium Design)
+    if (isIncoming && status === 'incoming') {
         return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex flex-col items-center justify-between"
-                style={{
-                    // Deep, colorful gradient background
-                    background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
-                }}
-            >
-                {/* Floating Particles / Gradient Orbs */}
-                <div className="absolute inset-0 overflow-hidden z-0">
+            <div className="fixed inset-0 z-[100] bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+                {/* Animated Background Effects */}
+                <div className="absolute inset-0 overflow-hidden">
                     <motion.div
-                        animate={{ scale: [1, 1.2, 1], x: [0, 50, 0] }}
-                        transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-                        className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full bg-purple-500/20 blur-[120px]"
+                        animate={{
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 90, 0],
+                        }}
+                        transition={{ duration: 20, repeat: Infinity }}
+                        className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-3xl"
                     />
                     <motion.div
-                        animate={{ scale: [1, 1.2, 1], x: [0, -50, 0] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                        className="absolute bottom-[-20%] right-[-20%] w-[500px] h-[500px] rounded-full bg-blue-500/20 blur-[120px]"
+                        animate={{
+                            scale: [1.2, 1, 1.2],
+                            rotate: [0, -90, 0],
+                        }}
+                        transition={{ duration: 20, repeat: Infinity }}
+                        className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-blue-500/20 to-transparent rounded-full blur-3xl"
                     />
                 </div>
 
-                {/* Header */}
-                <div className="relative z-10 w-full pt-20 flex flex-col items-center">
+                {/* Header - Voca Brand */}
+                <div className="relative z-10 w-full pt-16 flex flex-col items-center">
                     <motion.div
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10"
+                        className="flex items-center gap-3 mb-4 px-6 py-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl"
                     >
-                        <span className="text-sm font-medium text-white/80">Incoming {isVideo ? 'Video' : 'Voice'} Call</span>
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
+                            {isVideo ? (
+                                <Video className="w-4 h-4 text-white" />
+                            ) : (
+                                <Phone className="w-4 h-4 text-white" />
+                            )}
+                        </div>
+                        <span className="text-lg font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                            Voca {isVideo ? 'Video' : 'Voice'} Call
+                        </span>
                     </motion.div>
 
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-white/60 text-sm font-medium mb-8"
+                    >
+                        Incoming {isVideo ? 'video' : 'voice'} call...
+                    </motion.p>
+
+                    {/* Avatar with Pulse */}
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="relative"
+                        transition={{ delay: 0.3 }}
+                        className="relative mb-8"
                     >
-                        {/* Glowing Ring Animation */}
                         <motion.div
-                            animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.2, 0.5] }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                            className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 blur-xl opacity-50"
+                            animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 blur-2xl"
                         />
-                        <Avatar className="w-32 h-32 border-[3px] border-white/20 shadow-2xl relative z-10">
+                        <motion.div
+                            animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                            className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 blur-2xl"
+                        />
+
+                        <Avatar className="w-40 h-40 border-4 border-white/30 shadow-2xl relative z-10">
                             <AvatarImage src={participant.avatar} className="object-cover" />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-3xl font-light text-white">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-4xl font-bold text-white">
                                 {participant.name[0]}
                             </AvatarFallback>
                         </Avatar>
+
+                        <div className="absolute bottom-2 right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-purple-900 shadow-lg z-20" />
                     </motion.div>
 
-                    <h1 className="text-4xl text-white font-bold mt-8 mb-2 tracking-tight">{participant.name}</h1>
-                    <p className="text-indigo-200/80 text-lg font-light">Voca Audio...</p>
+                    <motion.h2
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-4xl font-bold text-white mb-2 drop-shadow-lg"
+                    >
+                        {participant.name}
+                    </motion.h2>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="text-white/70 text-lg mb-12"
+                    >
+                        {participant.email || 'Voca User'}
+                    </motion.p>
                 </div>
 
-                {/* Bottom Actions - Premium Slide/Tap */}
-                <div className="relative z-10 w-full px-8 pb-16 flex items-center justify-around">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleReject}
-                        className="flex flex-col items-center gap-3 group"
+                {/* Action Buttons */}
+                <div className="absolute bottom-20 left-0 right-0 flex justify-center items-center gap-8 px-8">
+                    <motion.div
+                        initial={{ x: -50, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                        className="flex flex-col items-center gap-3"
                     >
-                        <div className="w-16 h-16 rounded-full bg-red-500/10 backdrop-blur-md border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all duration-300 shadow-lg shadow-red-500/20">
-                            <PhoneOff className="w-7 h-7" />
-                        </div>
-                        <span className="text-white/60 text-sm font-medium">Decline</span>
-                    </motion.button>
-
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleAccept}
-                        className="flex flex-col items-center gap-3 group"
-                    >
-                        <div className="w-20 h-20 rounded-full bg-[#00a884] flex items-center justify-center text-white shadow-[0_0_40px_rgba(0,168,132,0.4)] relative overflow-hidden group-hover:shadow-[0_0_60px_rgba(0,168,132,0.6)] transition-all duration-300">
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleReject}
+                            className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-2xl flex items-center justify-center relative overflow-hidden"
+                        >
                             <motion.div
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="absolute inset-0 bg-white/20 rounded-full blur-md"
+                                className="absolute inset-0 bg-white/20"
+                                animate={{ scale: [1, 1.5, 1], opacity: [0, 0.5, 0] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                            />
+                            <PhoneOff className="w-8 h-8 text-white relative z-10" />
+                        </motion.button>
+                        <span className="text-white font-semibold text-sm">Decline</span>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ x: 50, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                        className="flex flex-col items-center gap-3"
+                    >
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleAccept}
+                            className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 shadow-2xl flex items-center justify-center relative overflow-hidden"
+                        >
+                            <motion.div
+                                className="absolute inset-0 bg-white/20"
+                                animate={{ scale: [1, 1.5, 1], opacity: [0, 0.5, 0] }}
+                                transition={{ duration: 2, repeat: Infinity }}
                             />
                             {isVideo ? (
-                                <Video className="w-8 h-8 fill-current relative z-10" />
+                                <Video className="w-8 h-8 text-white relative z-10" />
                             ) : (
-                                <Phone className="w-8 h-8 fill-current relative z-10" />
+                                <Phone className="w-8 h-8 text-white relative z-10" />
                             )}
-                        </div>
-                        <span className="text-white/80 text-sm font-medium">Accept</span>
-                    </motion.button>
+                        </motion.button>
+                        <span className="text-white font-semibold text-sm">Accept</span>
+                    </motion.div>
                 </div>
-            </motion.div>
+            </div>
         );
     }
 
@@ -663,27 +717,39 @@ const CallInterfaceComponent = ({
                         >
                             <div className="flex items-center gap-4 px-6 py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
                                 <motion.button
-                                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={toggleVideoState}
-                                    className={cn("p-4 rounded-full transition-all", isVideoEnabled ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
-                                >
-                                    {isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-                                </motion.button>
-
-                                <motion.button
-                                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                                    key="mute"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={toggleMute}
-                                    className={cn("p-4 rounded-full transition-all", !isMuted ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
+                                    className={cn(
+                                        "flex flex-col items-center gap-2 p-4 rounded-2xl transition-all",
+                                        isMuted ? "bg-red-500/20 text-red-400" : "bg-white/5 text-white hover:bg-white/10"
+                                    )}
                                 >
-                                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                                    {isMuted ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
+                                    <span className="text-xs font-medium text-white">{isMuted ? 'Unmute' : 'Mute'}</span>
                                 </motion.button>
 
                                 <motion.button
-                                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleEnd()}
-                                    className="p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:bg-red-600"
+                                    key="speaker"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => toast.info('Speaker toggled')}
+                                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/5 text-white hover:bg-white/10 transition-all"
                                 >
-                                    <PhoneOff className="w-6 h-6 fill-current" />
+                                    <Volume2 className="w-7 h-7" />
+                                    <span className="text-xs font-medium text-white">Speaker</span>
+                                </motion.button>
+
+                                <motion.button
+                                    key="end"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleEnd()}
+                                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-red-500/90 text-white hover:bg-red-600 transition-all shadow-lg"
+                                >
+                                    <PhoneOff className="w-7 h-7" />
+                                    <span className="text-xs font-medium text-white">End Call</span>
                                 </motion.button>
                             </div>
                         </motion.div>
