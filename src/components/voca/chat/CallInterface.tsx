@@ -134,6 +134,8 @@ export const CallInterface = ({
                 tracks: localStream.getTracks().length
             });
             localVideoRef.current.srcObject = localStream;
+            // Explicitly play local video (it is muted so it should allow autoplay, but being safe)
+            localVideoRef.current.play().catch(e => console.error('📹 Error playing local PiP:', e));
         }
     }, [isIncoming, isVideo, localStream]); // Depends on localStream state now!
 
@@ -179,8 +181,12 @@ export const CallInterface = ({
             // Cleanup on unmount or dependency change
             if (globalRingtone) {
                 console.log('🔕 Cleanup: Stopping ringtone');
-                globalRingtone.pause();
-                globalRingtone.currentTime = 0;
+                try {
+                    globalRingtone.pause();
+                    globalRingtone.currentTime = 0;
+                } catch (e) {
+                    console.error('Error stopping ringtone:', e);
+                }
                 globalRingtone = null;
             }
         };
@@ -257,10 +263,16 @@ export const CallInterface = ({
         console.log('📞 CallInterface: Accepting call, stopping ringtone');
 
         // IMMEDIATELY and AGGRESSIVELY stop ringtone when accept is clicked
-        if (ringtoneRef.current) {
+        if (globalRingtone) {
             console.log('🔕 FORCE STOP ringtone on accept');
+            globalRingtone.pause();
+            globalRingtone.currentTime = 0;
+            globalRingtone = null;
+        }
+
+        // Also clear ref if it exists (legacy safety)
+        if (ringtoneRef.current) {
             ringtoneRef.current.pause();
-            ringtoneRef.current.currentTime = 0;
             ringtoneRef.current = null;
         }
 

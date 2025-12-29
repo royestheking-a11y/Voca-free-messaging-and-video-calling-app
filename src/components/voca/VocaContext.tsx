@@ -141,6 +141,15 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             // We rely on data.caller being sent from backend which we verified exists.
         }
 
+        // Check if we already have an active call (incoming or connected) from this user
+        if (activeCall) {
+            console.log('📞 VocaContext: Ignoring duplicate/concurrent call request', {
+                currentParticipant: activeCall.participant?.id,
+                newRequestFrom: data.from
+            });
+            return;
+        }
+
         if (participant) {
             console.log('📞 VocaContext: Setting active call', { participantName: participant.name });
             setActiveCall({
