@@ -64,6 +64,15 @@ app.use(express.json({ limit: '50mb' }));
 // Make io accessible in routes
 app.set('io', io);
 
+// Health check endpoint for cron-job (keeps Render awake)
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
