@@ -20,7 +20,7 @@ interface CallInterfaceProps {
 // Global singleton for ringtone to prevent double-playing or leaks
 let globalRingtone: HTMLAudioElement | null = null;
 
-export const CallInterface = ({
+const CallInterfaceComponent = ({
     participant,
     type: initialType,
     onEnd,
@@ -764,3 +764,14 @@ export const CallInterface = ({
         </motion.div>
     );
 };
+
+// Wrap with React.memo to prevent unnecessary re-renders that cause render loops
+export const CallInterface = React.memo(CallInterfaceComponent, (prevProps, nextProps) => {
+    // Only re-render if these specific props change
+    return (
+        prevProps.participant.id === nextProps.participant.id &&
+        prevProps.type === nextProps.type &&
+        prevProps.isIncoming === nextProps.isIncoming &&
+        prevProps.participantId === nextProps.participantId
+    );
+});
