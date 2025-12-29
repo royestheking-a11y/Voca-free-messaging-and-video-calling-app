@@ -451,19 +451,19 @@ const CallInterfaceComponent = ({
                 </div>
 
                 {/* Header */}
-                <div className="relative z-10 w-full pt-20 flex flex-col items-center">
+                <div className="relative z-10 w-full flex flex-col items-center px-4 sm:px-8 pt-4 sm:pt-8 pb-safe">
                     <motion.div
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10"
+                        className="flex items-center gap-2 mb-4 sm:mb-6 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20"
                     >
-                        <span className="text-sm font-medium text-white/80">Incoming {isVideo ? 'Video' : 'Voice'} Call</span>
+                        <span className="text-sm font-medium text-white">Incoming {isVideo ? 'Video' : 'Voice'} Call</span>
                     </motion.div>
 
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="relative"
+                        className="relative my-4 sm:my-6"
                     >
                         {/* Glowing Ring Animation */}
                         <motion.div
@@ -471,30 +471,30 @@ const CallInterfaceComponent = ({
                             transition={{ duration: 3, repeat: Infinity }}
                             className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 blur-xl opacity-50"
                         />
-                        <Avatar className="w-32 h-32 border-[3px] border-white/20 shadow-2xl relative z-10">
+                        <Avatar className="w-28 h-28 sm:w-32 sm:h-32 border-[3px] border-white/20 shadow-2xl relative z-10">
                             <AvatarImage src={participant.avatar} className="object-cover" />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-3xl font-light text-white">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-2xl sm:text-3xl font-light text-white">
                                 {participant.name[0]}
                             </AvatarFallback>
                         </Avatar>
                     </motion.div>
 
-                    <h1 className="text-4xl text-white font-bold mt-8 mb-2 tracking-tight">{participant.name}</h1>
-                    <p className="text-indigo-200/80 text-lg font-light">Voca Audio...</p>
+                    <h1 className="text-3xl sm:text-4xl text-white font-bold mt-2 sm:mt-4 mb-2 tracking-tight text-center">{participant.name}</h1>
+                    <p className="text-indigo-200/80 text-base sm:text-lg font-light">Voca Audio...</p>
                 </div>
 
                 {/* Bottom Actions - Premium Slide/Tap */}
-                <div className="relative z-10 w-full px-8 pb-16 flex items-center justify-around">
+                <div className="relative z-10 w-full px-4 sm:px-8 pb-8 sm:pb-12 flex items-center justify-center gap-8 sm:gap-12 safe-bottom">
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleReject}
-                        className="flex flex-col items-center gap-3 group"
+                        className="flex flex-col items-center gap-2 sm:gap-3 group"
                     >
-                        <div className="w-16 h-16 rounded-full bg-red-500/10 backdrop-blur-md border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all duration-300 shadow-lg shadow-red-500/20">
-                            <PhoneOff className="w-7 h-7" />
+                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-red-500/10 backdrop-blur-md border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all duration-300 shadow-lg shadow-red-500/20">
+                            <PhoneOff className="w-6 h-6 sm:w-7 sm:h-7" />
                         </div>
-                        <span className="text-white/60 text-sm font-medium">Decline</span>
+                        <span className="text-white text-sm font-medium">Decline</span>
                     </motion.button>
 
                     <motion.button
