@@ -244,10 +244,10 @@ const CallInterfaceComponent = ({
             handleEnd();
         });
 
-        socket.on('call:ended', (data: { duration?: string, status?: 'missed' | 'completed' }) => {
+        socket.on('call:ended', (data?: { duration?: string, status?: 'missed' | 'completed' }) => {
             console.log('📞 CallInterface: Received call:ended from remote user', data);
             toast.info('Call ended');
-            handleEnd(true, data.duration, data.status);
+            handleEnd(true, data?.duration, data?.status);
         });
 
         return () => {

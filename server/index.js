@@ -230,10 +230,15 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('call:end', ({ to }) => {
-        const recipientSocketId = userSockets.get(to);
+    // End call
+    socket.on('call:end', (data) => {
+        console.log('📞 Forwarding call:end to', data.to, 'with data:', { duration: data.duration, status: data.status });
+        const recipientSocketId = userSockets.get(data.to);
         if (recipientSocketId) {
-            io.to(recipientSocketId).emit('call:ended');
+            io.to(recipientSocketId).emit('call:ended', {
+                duration: data.duration,
+                status: data.status
+            });
         }
     });
 
