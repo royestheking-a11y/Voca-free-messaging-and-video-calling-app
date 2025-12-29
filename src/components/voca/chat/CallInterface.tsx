@@ -517,10 +517,9 @@ export const CallInterface = ({
     // 2. ACTIVE VIDEO CALL (Floating Controls)
     if (isVideo) {
         return (
-            <motion.div
+            <div
                 className="fixed inset-0 z-[100] bg-black"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                style={{ opacity: 1 }} // Force opacity
             >
                 {/* Remote Video */}
                 <video
@@ -571,35 +570,30 @@ export const CallInterface = ({
                     )}
                 </AnimatePresence>
 
-                {/* Local Video - Draggable Glass PiP */}
-                <motion.div
-                    drag
-                    dragConstraints={{ left: -9999, right: 9999, top: -9999, bottom: 9999 }}
-                    dragElastic={0}
-                    dragMomentum={false}
-                    whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-                    className="absolute right-4 top-28 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl z-50 border-4 border-yellow-400 cursor-move group"
-                    style={{ backgroundColor: 'rgba(0, 0, 255, 0.3)' }} // Debug: blue background
-                    onDragStart={() => console.log('🎯 PiP drag started')}
-                    onDragEnd={() => console.log('🎯 PiP drag ended')}
+                {/* Local Video - PiP (NO MOTION, PURE CSS) */}
+                <div
+                    className="absolute z-[9999] group"
+                    style={{
+                        position: 'fixed',
+                        top: '100px',
+                        right: '20px',
+                        width: '120px',
+                        height: '180px',
+                        border: '5px solid yellow',
+                        background: 'red',
+                        zIndex: 9999,
+                        boxShadow: '0 0 20px rgba(0,0,0,0.5)'
+                    }}
                 >
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm -z-10" />
                     <video
                         ref={localVideoRef}
                         autoPlay
                         playsInline
-                        muted={true} // Explicit true
-                        className={cn("w-full h-full object-cover")} // Removed transition/opacity logic
-                        onLoadedMetadata={() => console.log('📹 Local PiP video metadata loaded - VISIBILITY CHECK')}
+                        muted={true}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onLoadedMetadata={() => console.log('📹 VISIBILITY CHECK: PiP Metadata Loaded')}
                     />
-                    {!isVideoEnabled && (
-                        <div className="absolute inset-0 flex items-center justify-center text-white/50">
-                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
-                                <VideoOff className="w-6 h-6" />
-                            </div>
-                        </div>
-                    )}
-                </motion.div>
+                </div>
 
                 {/* Bottom Floating Glass Bar */}
                 <AnimatePresence>
@@ -638,7 +632,7 @@ export const CallInterface = ({
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </motion.div>
+            </div>
         );
     }
 
