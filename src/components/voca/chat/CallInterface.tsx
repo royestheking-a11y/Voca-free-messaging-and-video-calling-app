@@ -489,10 +489,10 @@ const CallInterfaceComponent = ({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleReject}
-                        className="flex flex-col items-center gap-2 sm:gap-3 group"
+                        className="flex flex-col items-center gap-3 group"
                     >
-                        <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-red-500/10 backdrop-blur-md border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all duration-300 shadow-lg shadow-red-500/20">
-                            <PhoneOff className="w-6 h-6 sm:w-7 sm:h-7" />
+                        <div className="w-16 h-16 rounded-full bg-red-500/10 backdrop-blur-md border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all duration-300 shadow-lg shadow-red-500/20">
+                            <PhoneOff className="w-7 h-7" />
                         </div>
                         <span className="text-white text-sm font-medium">Decline</span>
                     </motion.button>
@@ -711,7 +711,7 @@ const CallInterfaceComponent = ({
                 </div>
 
                 <h2 className="text-3xl text-white font-bold mt-8 mb-2 tracking-tight">{participant.name}</h2>
-                <p className="text-slate-400 font-medium tracking-wide">{status === 'connected' ? formatDuration(duration) : 'Connecting...'}</p>
+                <p className="text-white font-medium tracking-wide">{status === 'connected' ? formatDuration(duration) : 'Connecting...'}</p>
 
                 {/* Decorative Waveform */}
                 <div className="mt-12 flex items-center justify-center gap-1 h-8">
@@ -731,19 +731,19 @@ const CallInterfaceComponent = ({
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="relative z-20 mx-4 mb-4 sm:mb-6 p-4 sm:p-6 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl safe-bottom"
+                className="relative z-20 m-4 p-6 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
             >
-                <div className="flex items-center justify-center gap-6 sm:gap-8">
+                <div className="flex items-center justify-center gap-8">
                     <button onClick={toggleMute} className="flex flex-col items-center gap-2 group">
-                        <div className={cn("p-4 sm:p-6 rounded-full transition-all shadow-lg", isMuted ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
-                            {isMuted ? <MicOff className="w-6 h-6 sm:w-8 sm:h-8" /> : <Mic className="w-6 h-6 sm:w-8 sm:h-8" />}
+                        <div className={cn("p-6 rounded-full transition-all shadow-lg", isMuted ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
+                            {isMuted ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
                         </div>
                         <span className="text-white text-xs font-medium tracking-wide">Mute</span>
                     </button>
 
                     <button onClick={() => handleEnd()} className="flex flex-col items-center gap-2 group">
-                        <div className="p-4 sm:p-6 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 hover:bg-red-600 hover:scale-105 transition-all active:scale-95">
-                            <PhoneOff className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />
+                        <div className="p-6 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 hover:bg-red-600 hover:scale-105 transition-all active:scale-95">
+                            <PhoneOff className="w-8 h-8 fill-current" />
                         </div>
                         <span className="text-white text-xs font-medium tracking-wide">End</span>
                     </button>
