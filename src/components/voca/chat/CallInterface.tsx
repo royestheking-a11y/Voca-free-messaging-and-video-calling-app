@@ -244,10 +244,10 @@ const CallInterfaceComponent = ({
             handleEnd();
         });
 
-        socket.on('call:ended', () => {
-            console.log('📞 CallInterface: Received call:ended from remote user');
+        socket.on('call:ended', (data: { duration?: string, status?: 'missed' | 'completed' }) => {
+            console.log('📞 CallInterface: Received call:ended from remote user', data);
             toast.info('Call ended');
-            handleEnd(true); // Skip emitting to prevent infinite loop
+            handleEnd(true, data.duration, data.status);
         });
 
         return () => {
@@ -369,18 +369,34 @@ const CallInterfaceComponent = ({
         handleEnd();
     };
 
-    const handleEnd = (skipEmit = false) => {
+    const handleEnd = async (skipEmit = false, remoteDuration?: string, remoteStatus?: 'missed' | 'completed') => {
         console.log('📞 CallInterface: handleEnd called', {
             participantId,
-            socketConnected: socket?.connected,
+            socketConnected: !!socket,
             status,
             duration,
-            skipEmit
-        });
+            skipEmit,
+            remoteDuration,
+            remoteStatus
+        })
 
-        if (socket && participantId && !skipEmit) {
-            console.log('📞 CallInterface: Emitting call:end to', participantId);
-            socket.emit('call:end', { to: participantId });
+            ;
+
+        cleanup();
+
+        // Calculate duration string
+        const m = Math.floor(duration / 60);
+        const s = duration % 60;
+        const durationStr = duration > 0 ? `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : undefined;
+        const callStatus = isIncoming && status !== 'connected' ? 'missed' : 'completed';
+
+        if (!skipEmit && socket && participantId) {
+            console.log('📞 CallInterface: Emitting call:end to', participantId, 'with duration:', durationStr);
+            socket.emit('call:end', {
+                to: participantId,
+                duration: durationStr,
+                status: callStatus
+            });
         } else if (skipEmit) {
             console.log('📞 CallInterface: Skipping call:end emission (remote ended)');
         } else {
@@ -391,14 +407,17 @@ const CallInterfaceComponent = ({
             });
         }
 
-        cleanup();
-        const m = Math.floor(duration / 60);
-        const s = duration % 60;
-        const durationStr = duration > 0 ? `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}` : undefined;
-        const callStatus = isIncoming && status !== 'connected' ? 'missed' : 'completed';
+        // Use remote duration/status if provided (for receiver), otherwise use local
+        const finalDuration = remoteDuration || durationStr;
+        const finalStatus = remoteStatus || callStatus;
 
-        console.log('📞 CallInterface: Calling onEnd callback', { durationStr, callStatus, isRemote: skipEmit });
-        onEnd(durationStr, callStatus, skipEmit); // Pass skipEmit as isRemote
+        console.log('📞 CallInterface: Calling onEnd callback', {
+            durationStr: finalDuration,
+            callStatus: finalStatus,
+            isRemote: skipEmit
+        });
+
+        onEnd(finalDuration, finalStatus, skipEmit); // Pass skipEmit as isRemote
     };
 
     const toggleMute = () => {
