@@ -378,9 +378,7 @@ const CallInterfaceComponent = ({
             skipEmit,
             remoteDuration,
             remoteStatus
-        })
-
-            ;
+        });
 
         cleanup();
 
