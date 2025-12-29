@@ -681,13 +681,13 @@ const CallInterfaceComponent = ({
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[100px] animate-pulse" />
 
             {/* Top Bar */}
-            <div className="relative z-10 w-full pt-12 px-6 flex justify-between items-center opacity-70">
-                <div className="p-2 rounded-full bg-white/5 backdrop-blur hover:bg-white/10 cursor-pointer">
+            <div className="relative z-10 w-full pt-6 sm:pt-12 px-4 sm:px-6 flex justify-between items-center">
+                <div className="p-2 rounded-full bg-white/10 backdrop-blur hover:bg-white/20 cursor-pointer">
                     <ChevronUp className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 backdrop-blur border border-white/5">
-                    <Lock className="w-3 h-3 text-emerald-400" />
-                    <span className="text-xs text-emerald-400/90 font-medium">End-to-end encrypted</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                    <Lock className="w-3 h-3 text-white" />
+                    <span className="text-xs text-white font-medium">End-to-end encrypted</span>
                 </div>
                 <div className="w-9" />
             </div>
@@ -731,21 +731,21 @@ const CallInterfaceComponent = ({
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="relative z-20 m-4 p-6 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
+                className="relative z-20 mx-4 mb-4 sm:mb-6 p-4 sm:p-6 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl safe-bottom"
             >
-                <div className="flex items-center justify-center gap-8">
+                <div className="flex items-center justify-center gap-6 sm:gap-8">
                     <button onClick={toggleMute} className="flex flex-col items-center gap-2 group">
-                        <div className={cn("p-6 rounded-full transition-all shadow-lg", isMuted ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
-                            {isMuted ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
+                        <div className={cn("p-4 sm:p-6 rounded-full transition-all shadow-lg", isMuted ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
+                            {isMuted ? <MicOff className="w-6 h-6 sm:w-8 sm:h-8" /> : <Mic className="w-6 h-6 sm:w-8 sm:h-8" />}
                         </div>
-                        <span className="text-white/50 text-xs font-medium tracking-wide">Mute</span>
+                        <span className="text-white text-xs font-medium tracking-wide">Mute</span>
                     </button>
 
                     <button onClick={() => handleEnd()} className="flex flex-col items-center gap-2 group">
-                        <div className="p-6 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 hover:bg-red-600 hover:scale-105 transition-all active:scale-95">
-                            <PhoneOff className="w-8 h-8 fill-current" />
+                        <div className="p-4 sm:p-6 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 hover:bg-red-600 hover:scale-105 transition-all active:scale-95">
+                            <PhoneOff className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />
                         </div>
-                        <span className="text-white/50 text-xs font-medium tracking-wide">End</span>
+                        <span className="text-white text-xs font-medium tracking-wide">End</span>
                     </button>
                 </div>
             </motion.div>
