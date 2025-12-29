@@ -143,6 +143,26 @@ export const CallInterface = ({
         return () => cleanup();
     }, []);
 
+    // NEW: Attach streams to video elements whenever they become available
+    useEffect(() => {
+        if (localVideoRef.current && localStreamRef.current) {
+            console.log('📹 [EFFECT] Attaching local stream to PiP');
+            localVideoRef.current.srcObject = localStreamRef.current;
+        }
+    }, [isIncoming, isVideo]); // Re-run when switching views
+
+    useEffect(() => {
+        if (remoteVideoRef.current && remoteStreamRef.current) {
+            console.log('📺 [EFFECT] Attaching remote stream to main video');
+            remoteVideoRef.current.srcObject = remoteStreamRef.current;
+            remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video from effect:', e));
+        } else if (remoteAudioRef.current && remoteStreamRef.current && !isVideo) {
+            console.log('🔊 [EFFECT] Attaching remote stream to audio element');
+            remoteAudioRef.current.srcObject = remoteStreamRef.current;
+            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
+        }
+    }, [isIncoming, isVideo]); // Re-run when switching views
+
     // Handle Ringtone
     useEffect(() => {
         // Play ringtone only when incoming AND still in incoming status
@@ -161,12 +181,13 @@ export const CallInterface = ({
             if (ringtoneRef.current) {
                 console.log('🔕 Stopping ringtone - status changed to:', status);
                 ringtoneRef.current.pause();
-                ringtoneRef.current.currentTime = 0; // Reset to beginning
+                ringtoneRef.current.currentTime = 0;
                 ringtoneRef.current = null;
             }
         }
 
         return () => {
+            // Cleanup on unmount or dependency change
             if (ringtoneRef.current) {
                 console.log('🔕 Cleanup: Stopping ringtone');
                 ringtoneRef.current.pause();
@@ -265,14 +286,10 @@ export const CallInterface = ({
             localStreamRef.current = stream;
 
             if (localVideoRef.current && isVideo) {
-                console.log('📹 [ACCEPT] Setting local video srcObject for PiP');
+                // This might fail if the video element isn't mounted yet (which is likely for receiver)
+                // The new useEffect will handle this case!
+                console.log('📹 [ACCEPT] Attempting immediate PiP attachment');
                 localVideoRef.current.srcObject = stream;
-                console.log('✅ [ACCEPT] Local PiP video element:', {
-                    hasSrcObject: !!localVideoRef.current.srcObject,
-                    width: localVideoRef.current.offsetWidth,
-                    height: localVideoRef.current.offsetHeight,
-                    visible: window.getComputedStyle(localVideoRef.current).display !== 'none'
-                });
             }
 
             const pc = webrtc.createPeerConnection();
@@ -298,8 +315,9 @@ export const CallInterface = ({
 
                         if (isVideo && remoteVideoRef.current) {
                             remoteVideoRef.current.srcObject = event.streams[0];
+                            // Playhandled by useEffect but good to try here too just in case it exists
                             remoteVideoRef.current.play()
-                                .then(() => console.log('✅ [ACCEPT] Remote video playing'))
+                                .then(() => console.log('✅ [ACCEPT] Remote video playing (immediate)'))
                                 .catch(e => console.error('❌ Error playing remote video:', e));
                         } else if (!isVideo && remoteAudioRef.current) {
                             remoteAudioRef.current.srcObject = event.streams[0];
