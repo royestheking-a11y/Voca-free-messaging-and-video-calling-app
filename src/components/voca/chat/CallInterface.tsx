@@ -480,7 +480,7 @@ const CallInterfaceComponent = ({
                     </motion.div>
 
                     <h1 className="text-3xl sm:text-4xl text-white font-bold mt-2 sm:mt-4 mb-2 tracking-tight text-center">{participant.name}</h1>
-                    <p className="text-indigo-200/80 text-base sm:text-lg font-light">Voca video call...</p>
+                    <p className="text-indigo-200/80 text-base sm:text-lg font-light">Voca call...</p>
                 </div>
 
                 {/* Bottom Actions - Premium Slide/Tap */}
@@ -587,9 +587,18 @@ const CallInterfaceComponent = ({
                     )}
                 </AnimatePresence>
 
-                {/* Local Video PiP - FIXED POSITION */}
-                <div
-                    className="rounded-2xl overflow-hidden shadow-2xl border border-white/20"
+                {/* Local Video PiP - Draggable */}
+                <motion.div
+                    drag
+                    dragElastic={0}
+                    dragMomentum={false}
+                    dragConstraints={{
+                        top: -(window.innerHeight - 300),
+                        left: -(window.innerWidth - 200),
+                        right: window.innerWidth - 148,
+                        bottom: window.innerHeight - 212
+                    }}
+                    className="rounded-2xl overflow-hidden shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
                     style={{
                         position: 'fixed',
                         top: '120px',
@@ -600,6 +609,7 @@ const CallInterfaceComponent = ({
                         opacity: 1,
                         pointerEvents: 'auto'
                     }}
+                    whileDrag={{ scale: 1.05 }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm" />
                     <video
@@ -623,7 +633,7 @@ const CallInterfaceComponent = ({
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Bottom Floating Glass Bar */}
                 <AnimatePresence>
