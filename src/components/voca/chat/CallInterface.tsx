@@ -17,6 +17,9 @@ interface CallInterfaceProps {
     participantId: string;
 }
 
+// Global singleton for ringtone to prevent double-playing or leaks
+let globalRingtone: HTMLAudioElement | null = null;
+
 export const CallInterface = ({
     participant,
     type: initialType,
@@ -34,8 +37,12 @@ export const CallInterface = ({
     const [duration, setDuration] = useState(0);
     const [isControlsVisible, setIsControlsVisible] = useState(true);
 
+    // State to trigger re-renders when streams are ready (Fixes PiP not showing)
+    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-    const localStreamRef = useRef<MediaStream | null>(null);
+    const localStreamRef = useRef<MediaStream | null>(null); // Keep ref for cleanup/access without closure issues
     const remoteStreamRef = useRef<MediaStream | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -57,17 +64,9 @@ export const CallInterface = ({
                     video: isVideo
                 });
                 localStreamRef.current = stream;
+                setLocalStream(stream); // Trigger re-render for useEffect
 
-                if (localVideoRef.current && isVideo) {
-                    console.log('📹 [INIT] Setting local video srcObject for PiP');
-                    localVideoRef.current.srcObject = stream;
-                    console.log('✅ [INIT] Local PiP video element:', {
-                        hasSrcObject: !!localVideoRef.current.srcObject,
-                        width: localVideoRef.current.offsetWidth,
-                        height: localVideoRef.current.offsetHeight,
-                        visible: window.getComputedStyle(localVideoRef.current).display !== 'none'
-                    });
-                }
+                // Video attachment handled by useEffect now
 
                 const pc = webrtc.createPeerConnection();
                 peerConnectionRef.current = pc;
@@ -83,25 +82,9 @@ export const CallInterface = ({
                     if (event.streams && event.streams[0]) {
                         const streamId = event.streams[0].id;
                         remoteStreamRef.current = event.streams[0];
-                        console.log('✅ [INIT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
+                        setRemoteStream(event.streams[0]); // Trigger re-render
 
-                        // Only set srcObject once per stream to avoid interrupting playback
-                        if (remoteStreamIdRef.current !== streamId) {
-                            console.log('📺 [INIT] Setting remote srcObject for stream:', streamId);
-                            remoteStreamIdRef.current = streamId;
-
-                            if (isVideo && remoteVideoRef.current) {
-                                remoteVideoRef.current.srcObject = event.streams[0];
-                                remoteVideoRef.current.play()
-                                    .then(() => console.log('✅ [INIT] Remote video playing'))
-                                    .catch(e => console.error('❌ Error playing remote video:', e));
-                            } else if (!isVideo && remoteAudioRef.current) {
-                                remoteAudioRef.current.srcObject = event.streams[0];
-                                remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
-                            }
-                        } else {
-                            console.log('⏭️ [INIT] Stream already set, skipping srcObject assignment');
-                        }
+                        // Video attachment handled by useEffect now
                         setStatus('connected');
                     }
                 };
@@ -145,54 +128,60 @@ export const CallInterface = ({
 
     // NEW: Attach streams to video elements whenever they become available
     useEffect(() => {
-        if (localVideoRef.current && localStreamRef.current) {
-            console.log('📹 [EFFECT] Attaching local stream to PiP');
-            localVideoRef.current.srcObject = localStreamRef.current;
+        if (localVideoRef.current && localStream) {
+            console.log('📹 [EFFECT] Attaching local stream to PiP', {
+                streamId: localStream.id,
+                tracks: localStream.getTracks().length
+            });
+            localVideoRef.current.srcObject = localStream;
         }
-    }, [isIncoming, isVideo]); // Re-run when switching views
+    }, [isIncoming, isVideo, localStream]); // Depends on localStream state now!
 
     useEffect(() => {
-        if (remoteVideoRef.current && remoteStreamRef.current) {
-            console.log('📺 [EFFECT] Attaching remote stream to main video');
-            remoteVideoRef.current.srcObject = remoteStreamRef.current;
+        if (remoteVideoRef.current && remoteStream) {
+            console.log('📺 [EFFECT] Attaching remote stream to main video', {
+                streamId: remoteStream.id,
+                tracks: remoteStream.getTracks().length
+            });
+            remoteVideoRef.current.srcObject = remoteStream;
             remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video from effect:', e));
-        } else if (remoteAudioRef.current && remoteStreamRef.current && !isVideo) {
+        } else if (remoteAudioRef.current && remoteStream && !isVideo) {
             console.log('🔊 [EFFECT] Attaching remote stream to audio element');
-            remoteAudioRef.current.srcObject = remoteStreamRef.current;
+            remoteAudioRef.current.srcObject = remoteStream;
             remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
         }
-    }, [isIncoming, isVideo]); // Re-run when switching views
+    }, [isIncoming, isVideo, remoteStream]); // Depends on remoteStream state now!
 
     // Handle Ringtone
     useEffect(() => {
         // Play ringtone only when incoming AND still in incoming status
         if (status === 'incoming') {
-            // Only create new ringtone if one doesn't already exist
-            if (!ringtoneRef.current) {
+            // Only create new ringtone if one doesn't already exist in global singleton
+            if (!globalRingtone) {
                 console.log('🔔 Starting ringtone');
                 const audio = new Audio('/sounds/ringtone.mp3');
                 audio.src = 'https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3';
                 audio.loop = true;
                 audio.play().catch(e => console.error('Error playing ringtone:', e));
-                ringtoneRef.current = audio;
+                globalRingtone = audio; // Assign to singleton
             }
         } else {
             // Stop ringtone when status changes (accepted, rejected, connected)
-            if (ringtoneRef.current) {
+            if (globalRingtone) {
                 console.log('🔕 Stopping ringtone - status changed to:', status);
-                ringtoneRef.current.pause();
-                ringtoneRef.current.currentTime = 0;
-                ringtoneRef.current = null;
+                globalRingtone.pause();
+                globalRingtone.currentTime = 0;
+                globalRingtone = null;
             }
         }
 
         return () => {
             // Cleanup on unmount or dependency change
-            if (ringtoneRef.current) {
+            if (globalRingtone) {
                 console.log('🔕 Cleanup: Stopping ringtone');
-                ringtoneRef.current.pause();
-                ringtoneRef.current.currentTime = 0;
-                ringtoneRef.current = null;
+                globalRingtone.pause();
+                globalRingtone.currentTime = 0;
+                globalRingtone = null;
             }
         };
     }, [status]); // Listen to status changes, not isIncoming
@@ -284,13 +273,9 @@ export const CallInterface = ({
                 video: isVideo
             });
             localStreamRef.current = stream;
+            setLocalStream(stream); // Trigger re-render
 
-            if (localVideoRef.current && isVideo) {
-                // This might fail if the video element isn't mounted yet (which is likely for receiver)
-                // The new useEffect will handle this case!
-                console.log('📹 [ACCEPT] Attempting immediate PiP attachment');
-                localVideoRef.current.srcObject = stream;
-            }
+            // Video attachment handled by useEffect now
 
             const pc = webrtc.createPeerConnection();
             peerConnectionRef.current = pc;
@@ -306,26 +291,9 @@ export const CallInterface = ({
                 if (event.streams && event.streams[0]) {
                     const streamId = event.streams[0].id;
                     remoteStreamRef.current = event.streams[0];
-                    console.log('✅ [ACCEPT] Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
+                    setRemoteStream(event.streams[0]); // Trigger re-render
 
-                    // Only set srcObject once per stream to avoid interrupting playback
-                    if (remoteStreamIdRef.current !== streamId) {
-                        console.log('📺 [ACCEPT] Setting remote srcObject for stream:', streamId);
-                        remoteStreamIdRef.current = streamId;
-
-                        if (isVideo && remoteVideoRef.current) {
-                            remoteVideoRef.current.srcObject = event.streams[0];
-                            // Playhandled by useEffect but good to try here too just in case it exists
-                            remoteVideoRef.current.play()
-                                .then(() => console.log('✅ [ACCEPT] Remote video playing (immediate)'))
-                                .catch(e => console.error('❌ Error playing remote video:', e));
-                        } else if (!isVideo && remoteAudioRef.current) {
-                            remoteAudioRef.current.srcObject = event.streams[0];
-                            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
-                        }
-                    } else {
-                        console.log('⏭️ [ACCEPT] Stream already set, skipping srcObject assignment');
-                    }
+                    // Video attachment handled by useEffect now
                     setStatus('connected');
                 }
             };
