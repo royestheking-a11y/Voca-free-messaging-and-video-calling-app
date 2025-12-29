@@ -587,9 +587,18 @@ const CallInterfaceComponent = ({
                     )}
                 </AnimatePresence>
 
-                {/* Local Video PiP - FIXED POSITION */}
-                <div
-                    className="rounded-2xl overflow-hidden shadow-2xl border border-white/20"
+                {/* Local Video PiP - Draggable */}
+                <motion.div
+                    drag
+                    dragElastic={0}
+                    dragMomentum={false}
+                    dragConstraints={{
+                        top: 0,
+                        left: 0,
+                        right: window.innerWidth - 148, // 128px width + 20px margin
+                        bottom: window.innerHeight - 212 // 192px height + 20px margin
+                    }}
+                    className="rounded-2xl overflow-hidden shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
                     style={{
                         position: 'fixed',
                         top: '120px',
@@ -600,6 +609,7 @@ const CallInterfaceComponent = ({
                         opacity: 1,
                         pointerEvents: 'auto'
                     }}
+                    whileDrag={{ scale: 1.05 }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/40 backdrop-blur-sm" />
                     <video
@@ -623,7 +633,7 @@ const CallInterfaceComponent = ({
                             </div>
                         </div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Bottom Floating Glass Bar */}
                 <AnimatePresence>
@@ -662,7 +672,7 @@ const CallInterfaceComponent = ({
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
+            </div >
         );
     }
 
