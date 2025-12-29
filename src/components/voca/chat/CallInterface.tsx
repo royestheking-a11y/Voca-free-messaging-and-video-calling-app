@@ -593,10 +593,10 @@ const CallInterfaceComponent = ({
                     dragElastic={0}
                     dragMomentum={false}
                     dragConstraints={{
-                        top: 0,
-                        left: 0,
-                        right: window.innerWidth - 148, // 128px width + 20px margin
-                        bottom: window.innerHeight - 212 // 192px height + 20px margin
+                        top: -(window.innerHeight - 300), // Can drag up (leave some space at top)
+                        left: -(window.innerWidth - 200), // Can drag left (leave some space)
+                        right: window.innerWidth - 148,   // Can drag right
+                        bottom: window.innerHeight - 212  // Can drag down
                     }}
                     className="rounded-2xl overflow-hidden shadow-2xl border border-white/20 cursor-grab active:cursor-grabbing"
                     style={{
