@@ -526,7 +526,16 @@ export const CallInterface = ({
                     ref={remoteVideoRef}
                     autoPlay
                     playsInline
-                    className="w-full h-full object-cover relative z-0"
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        zIndex: 0,
+                        backgroundColor: '#000'
+                    }}
                     onClick={() => setIsControlsVisible(!isControlsVisible)}
                     onLoadedMetadata={(e) => {
                         console.log('📹 Remote video metadata loaded:', {
