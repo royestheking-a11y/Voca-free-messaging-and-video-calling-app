@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useVoca } from '../VocaContext';
 import { useSocket } from '../SocketContext';
 import { CameraComponent } from './CameraComponent';
@@ -66,6 +66,14 @@ export const ChatSidebar = () => {
   const [contactPickerMode, setContactPickerMode] = useState<'call' | 'favorite'>('call');
   const [viewingStatus, setViewingStatus] = useState<string | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [lastCallsViewTime, setLastCallsViewTime] = useState<number>(Date.now());
+
+  // Mark calls as "viewed" when user opens the Calls tab
+  useEffect(() => {
+    if (activeTab === 'calls') {
+      setLastCallsViewTime(Date.now());
+    }
+  }, [activeTab]);
 
   // Camera capture handler for status
   const handleCameraCapture = async (imageData: string, caption?: string) => {
@@ -208,9 +216,10 @@ export const ChatSidebar = () => {
   // Count chats with unread messages
   const unreadChatsCount = visibleChats.filter(c => c.unreadCount > 0).length;
 
-  // Count missed calls (only for calls visible to user)
-  // Count missed calls (only for calls visible to user)
-  const missedCallsCount = calls.filter(c => c.status === 'missed').length;
+  // Count NEW missed calls (only calls that arrived after last viewing the Calls tab)
+  const missedCallsCount = calls.filter(c =>
+    c.status === 'missed' && new Date(c.timestamp).getTime() > lastCallsViewTime
+  ).length;
 
   // Filter Calls
   const filteredCalls = calls.filter(call => {
