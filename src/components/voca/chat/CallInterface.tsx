@@ -526,7 +526,7 @@ export const CallInterface = ({
                     ref={remoteVideoRef}
                     autoPlay
                     playsInline
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover relative z-0"
                     onClick={() => setIsControlsVisible(!isControlsVisible)}
                     onLoadedMetadata={(e) => {
                         console.log('📹 Remote video metadata loaded:', {
@@ -570,30 +570,33 @@ export const CallInterface = ({
                     )}
                 </AnimatePresence>
 
-                {/* Local Video - PiP (NO MOTION, PURE CSS) */}
-                <div
-                    className="absolute z-[9999] group"
-                    style={{
-                        position: 'fixed',
-                        top: '100px',
-                        right: '20px',
-                        width: '120px',
-                        height: '180px',
-                        border: '5px solid yellow',
-                        background: 'red',
-                        zIndex: 9999,
-                        boxShadow: '0 0 20px rgba(0,0,0,0.5)'
-                    }}
+                {/* Local Video - Draggable Glass PiP */}
+                <motion.div
+                    drag
+                    dragConstraints={{ left: 0, right: 300, top: 0, bottom: 500 }}
+                    dragElastic={0.1}
+                    className="absolute right-4 top-28 w-32 h-48 rounded-2xl overflow-hidden shadow-2xl z-[50] cursor-move group border border-white/10"
+                    style={{ opacity: 1 }} // Explicit opacity
+                    onDragStart={() => console.log('🎯 PiP drag started')}
+                    onDragEnd={() => console.log('🎯 PiP drag ended')}
                 >
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm -z-10" />
                     <video
                         ref={localVideoRef}
                         autoPlay
                         playsInline
                         muted={true}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onLoadedMetadata={() => console.log('📹 VISIBILITY CHECK: PiP Metadata Loaded')}
+                        className={cn("w-full h-full object-cover")}
+                        onLoadedMetadata={() => console.log('📹 PiP metadata loaded')}
                     />
-                </div>
+                    {!isVideoEnabled && (
+                        <div className="absolute inset-0 flex items-center justify-center text-white/50">
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
+                                <VideoOff className="w-6 h-6" />
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
 
                 {/* Bottom Floating Glass Bar */}
                 <AnimatePresence>
