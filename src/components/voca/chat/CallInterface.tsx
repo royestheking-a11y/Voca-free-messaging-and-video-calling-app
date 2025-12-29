@@ -524,14 +524,6 @@ const CallInterfaceComponent = ({
 
     // 2. ACTIVE VIDEO CALL (Floating Controls)
     if (isVideo) {
-        // DEBUG: Count renders to detect loops
-        const w = window as any;
-        if (!w.renderCount) w.renderCount = 0;
-        w.renderCount++;
-        if (w.renderCount > 5) {
-            console.error(`⚠️ RENDER LOOP DETECTED: ${w.renderCount} renders!`);
-            w.renderCount = 0;
-        }
         return (
             <div
                 className="fixed inset-0 z-[100] bg-black"
@@ -550,8 +542,7 @@ const CallInterfaceComponent = ({
                         top: 0,
                         left: 0,
                         zIndex: 0,
-                        backgroundColor: '#000',
-                        border: '10px solid red' // DEBUG: Make video visible
+                        backgroundColor: '#000'
                     }}
                     onClick={() => setIsControlsVisible(!isControlsVisible)}
                     onLoadedMetadata={(e) => {
