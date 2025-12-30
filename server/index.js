@@ -208,9 +208,19 @@ io.on('connection', (socket) => {
                     data: { url: `/chat/${chatId}`, type: 'message' }
                 });
 
-                webpush.sendNotification(recipient.pushSubscription, payload).catch(err => {
-                    console.error('Push Error:', err);
-                });
+                console.log(`📲 Sending push to ${recipient.name} (${recipient._id})`);
+                webpush.sendNotification(recipient.pushSubscription, payload)
+                    .then(() => console.log(`✅ Push sent to ${recipient.name}`))
+                    .catch(err => {
+                        console.error('Push Error:', err);
+                        if (err.statusCode === 410 || err.statusCode === 404) {
+                            // Subscription is invalid/expired, remove it
+                            console.log(`🗑️ Removing invalid subscription for ${recipient.name}`);
+                            User.findByIdAndUpdate(recipientId, { $unset: { pushSubscription: 1 } }).catch(e => console.error(e));
+                        }
+                    });
+            } else {
+                console.log(`⚠️ No push subscription for ${recipient?.name || recipientId}`);
             }
         } catch (err) {
             console.error('Error sending push:', err);
@@ -285,9 +295,18 @@ io.on('connection', (socket) => {
                     ]
                 });
 
-                webpush.sendNotification(recipient.pushSubscription, payload).catch(err => {
-                    console.error('Push Error (Call):', err);
-                });
+                console.log(`📲 Sending call push to ${recipient.name} (${recipient._id})`);
+                webpush.sendNotification(recipient.pushSubscription, payload)
+                    .then(() => console.log(`✅ Call push sent to ${recipient.name}`))
+                    .catch(err => {
+                        console.error('Call Push Error:', err);
+                        if (err.statusCode === 410 || err.statusCode === 404) {
+                            console.log(`🗑️ Removing invalid subscription for ${recipient.name}`);
+                            User.findByIdAndUpdate(recipient.id, { $unset: { pushSubscription: 1 } }).catch(e => console.error(e));
+                        }
+                    });
+            } else {
+                console.log(`⚠️ No push subscription for ${to}`);
             }
         } catch (err) {
             console.error('Error sending call push:', err);
