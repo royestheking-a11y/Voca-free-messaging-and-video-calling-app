@@ -7,28 +7,18 @@ interface SplashScreenProps {
 }
 
 export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
-    const [showFullName, setShowFullName] = useState(false);
     const [shouldHide, setShouldHide] = useState(false);
 
     useEffect(() => {
-        // Show "V" first, then reveal full name after 500ms
-        const timer = setTimeout(() => {
-            setShowFullName(true);
-        }, 600);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    useEffect(() => {
-        // When loading is done and animation has played, hide splash
-        if (!isLoading && showFullName) {
+        // When loading is done, hide splash after a brief moment
+        if (!isLoading) {
             const hideTimer = setTimeout(() => {
                 setShouldHide(true);
                 onComplete?.();
-            }, 800);
+            }, 500);
             return () => clearTimeout(hideTimer);
         }
-    }, [isLoading, showFullName, onComplete]);
+    }, [isLoading, onComplete]);
 
     if (shouldHide) return null;
 
@@ -45,65 +35,33 @@ export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
 
                 {/* Logo Container */}
                 <div className="relative z-10 flex flex-col items-center">
-                    {/* Animated Logo */}
-                    <div className="flex items-center justify-center">
-                        {/* V Logo with gradient */}
-                        <motion.div
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 200,
-                                damping: 15,
-                                duration: 0.6
-                            }}
-                            className="relative"
-                        >
-                            <div className="w-20 h-20 bg-gradient-to-br from-[#006D77] to-[#83C5BE] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#006D77]/30">
-                                <span className="text-white font-bold text-4xl tracking-tight">V</span>
-                            </div>
-
-                            {/* Glow effect */}
-                            <div className="absolute inset-0 w-20 h-20 bg-[#006D77] rounded-2xl blur-xl opacity-30 -z-10" />
-                        </motion.div>
-
-                        {/* "oca" text slides in */}
-                        <AnimatePresence>
-                            {showFullName && (
-                                <motion.span
-                                    initial={{ opacity: 0, x: -20, width: 0 }}
-                                    animate={{ opacity: 1, x: 0, width: 'auto' }}
-                                    transition={{
-                                        type: "spring",
-                                        stiffness: 150,
-                                        damping: 20,
-                                        delay: 0.1
-                                    }}
-                                    className="text-5xl font-bold text-[#006D77] ml-3 overflow-hidden"
-                                >
-                                    oca
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Tagline */}
-                    <motion.p
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: showFullName ? 1 : 0, y: showFullName ? 0 : 10 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
-                        className="text-gray-400 text-sm mt-6 tracking-widest uppercase"
+                    {/* V Logo with gradient */}
+                    <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{
+                            type: "spring",
+                            stiffness: 200,
+                            damping: 15,
+                            duration: 0.6
+                        }}
+                        className="relative"
                     >
-                        Connect Freely
-                    </motion.p>
+                        <div className="w-24 h-24 bg-gradient-to-br from-[#006D77] to-[#83C5BE] rounded-3xl flex items-center justify-center shadow-2xl shadow-[#006D77]/30">
+                            <span className="text-white font-bold text-5xl tracking-tight">V</span>
+                        </div>
+
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 w-24 h-24 bg-[#006D77] rounded-3xl blur-xl opacity-30 -z-10" />
+                    </motion.div>
 
                     {/* Loading indicator - subtle dots */}
                     {isLoading && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 0.8 }}
-                            className="flex gap-1.5 mt-8"
+                            transition={{ delay: 0.5 }}
+                            className="flex gap-1.5 mt-10"
                         >
                             {[0, 1, 2].map((i) => (
                                 <motion.div
@@ -117,21 +75,26 @@ export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
                                         repeat: Infinity,
                                         delay: i * 0.15
                                     }}
-                                    className="w-2 h-2 rounded-full bg-[#006D77]"
+                                    className="w-2.5 h-2.5 rounded-full bg-[#006D77]"
                                 />
                             ))}
                         </motion.div>
                     )}
                 </div>
 
-                {/* Bottom branding */}
+                {/* Bottom branding with version */}
                 <motion.div
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: showFullName ? 0.5 : 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="absolute bottom-8 text-gray-300 text-xs tracking-wider"
+                    animate={{ opacity: 0.6 }}
+                    transition={{ delay: 0.3 }}
+                    className="absolute bottom-8 flex flex-col items-center gap-1"
                 >
-                    from <span className="text-[#006D77] font-medium">Voca Team</span>
+                    <span className="text-gray-400 text-xs tracking-wider">
+                        from <span className="text-[#006D77] font-medium">Voca Team</span>
+                    </span>
+                    <span className="text-gray-300 text-[10px] tracking-widest">
+                        Version 3.0
+                    </span>
                 </motion.div>
             </motion.div>
         </AnimatePresence>
@@ -139,3 +102,4 @@ export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
 };
 
 export default SplashScreen;
+
