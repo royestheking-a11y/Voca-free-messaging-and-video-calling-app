@@ -27,6 +27,9 @@ export const ChatWindow = () => {
     const navigate = useNavigate();
     const { chats, activeChatId, setActiveChatId, currentUser, sendMessage, startCall, editMessage, systemSettings, toggleFavoriteContact, blockUser, unblockUser, deleteChat, markChatAsRead } = useVoca();
 
+    // Ref to prevent duplicate call triggers
+    const callInitiatedRef = useRef(false);
+
     // Sync URL param with Context
     useEffect(() => {
         if (chatIdParam && chatIdParam !== activeChatId) {
@@ -39,8 +42,11 @@ export const ChatWindow = () => {
         const callParam = searchParams.get('call');
         const callType = (searchParams.get('type') as 'voice' | 'video') || 'voice';
 
-        if (callParam === 'true' && activeChatId) {
-            // Clear the query params to prevent re-triggering
+        // Guard: Only trigger once per query param
+        if (callParam === 'true' && activeChatId && !callInitiatedRef.current) {
+            callInitiatedRef.current = true; // Prevent duplicate triggers
+
+            // Clear the query params
             setSearchParams({});
 
             // Find the contact from the chat
@@ -48,12 +54,16 @@ export const ChatWindow = () => {
             if (chat) {
                 const otherUser = chat.participants.find(p => p.id !== currentUser?.id);
                 if (otherUser) {
-                    // Wait for splash screen to complete (approx 2 seconds for full load + animation)
+                    // Wait for splash screen to complete
                     toast.info(`Connecting ${callType} call...`);
                     setTimeout(() => {
                         startCall(otherUser.id, callType);
+                        // Reset ref after call starts so future calls can work
+                        setTimeout(() => { callInitiatedRef.current = false; }, 5000);
                     }, 2000);
                 }
+            } else {
+                callInitiatedRef.current = false; // Reset if chat not found
             }
         }
     }, [searchParams, activeChatId, chats, currentUser, startCall, setSearchParams]);
