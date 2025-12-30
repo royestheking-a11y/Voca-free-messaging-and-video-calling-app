@@ -1,16 +1,35 @@
 // WebRTC Utilities for Voice and Video Calling
 
-// STUN servers for NAT traversal
-const ICE_SERVERS = [
+// STUN and TURN servers for NAT traversal
+// TURN servers are REQUIRED for mobile networks with carrier-grade NAT
+const ICE_SERVERS: RTCIceServer[] = [
+    // Google STUN servers
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
+    // OpenRelay TURN servers (free, public)
+    {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+    },
+    {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+    },
+    {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+    },
 ];
 
 // Peer connection configuration
 const PC_CONFIG: RTCConfiguration = {
     iceServers: ICE_SERVERS,
     iceCandidatePoolSize: 10,
+    iceTransportPolicy: 'all', // Allow both relay and direct connections
 };
 
 /**
