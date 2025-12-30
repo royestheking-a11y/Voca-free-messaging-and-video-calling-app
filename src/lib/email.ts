@@ -20,12 +20,14 @@ export const sendRegistrationOTP = async (email: string, otp: string, name: stri
     try {
         const templateParams = {
             to_email: email,
+            email: email, // Fallback for common template variable names
+            user_email: email,
             to_name: name,
             OTP_CODE: otp,
             reply_to: 'support@voca.app'
         };
 
-        const response = await emailjs.send(SERVICE_ID, REGISTRATION_TEMPLATE_ID, templateParams);
+        const response = await emailjs.send(SERVICE_ID, REGISTRATION_TEMPLATE_ID, templateParams, PUBLIC_KEY);
         return { success: true, response };
     } catch (error) {
         console.error('EmailJS Error:', error);
@@ -37,12 +39,14 @@ export const sendPasswordResetOTP = async (email: string, otp: string) => {
     try {
         const templateParams = {
             to_email: email,
-            to_name: 'Voca User', // Generic name for reset
+            email: email, // Fallback
+            user_email: email,
+            to_name: 'Voca User',
             OTP_CODE: otp,
             reply_to: 'support@voca.app'
         };
 
-        const response = await emailjs.send(SERVICE_ID, RESET_TEMPLATE_ID, templateParams);
+        const response = await emailjs.send(SERVICE_ID, RESET_TEMPLATE_ID, templateParams, PUBLIC_KEY);
         return { success: true, response };
     } catch (error) {
         console.error('EmailJS Error:', error);
