@@ -187,32 +187,33 @@ io.on('connection', (socket) => {
         const { recipientId, chatId, message } = data;
         const recipientSocketId = userSockets.get(recipientId);
 
+        // Always emit to socket if online
         if (recipientSocketId) {
             io.to(recipientSocketId).emit('message:receive', { chatId, message: { ...message, status: 'delivered' } });
             socket.emit('message:delivered', { messageId: message.id, chatId });
-        } else {
-            // User is offline or not connected, send Push Notification
-            try {
-                const recipient = await User.findById(recipientId);
-                // Fetch sender details for accurate name and avatar
-                const sender = await User.findById(socket.userId).select('name avatar');
+        }
 
-                if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
-                    const payload = JSON.stringify({
-                        title: `New Message from ${sender?.name || 'Voca User'}`,
-                        body: message.type === 'image' ? 'Sent a photo 📷' : message.content,
-                        icon: sender?.avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
-                        data: { url: `/chat/${chatId}` }
-                    });
+        // Always send push notification (ensures locked devices/background get it)
+        try {
+            const recipient = await User.findById(recipientId);
+            const sender = await User.findById(socket.userId).select('name avatar');
 
-                    webpush.sendNotification(recipient.pushSubscription, payload).catch(err => {
-                        console.error('Push Error:', err);
-                        // If 410 or 404, remove subscription
-                    });
-                }
-            } catch (err) {
-                console.error('Error sending push:', err);
+            if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
+                const payload = JSON.stringify({
+                    title: `New Message from ${sender?.name || 'Voca User'}`,
+                    body: message.type === 'image' ? 'Sent a photo 📷' : message.content,
+                    icon: sender?.avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
+                    tag: `chat-${chatId}`, // Group messages from same chat
+                    renotify: true,
+                    data: { url: `/chat/${chatId}`, type: 'message' }
+                });
+
+                webpush.sendNotification(recipient.pushSubscription, payload).catch(err => {
+                    console.error('Push Error:', err);
+                });
             }
+        } catch (err) {
+            console.error('Error sending push:', err);
         }
     });
 

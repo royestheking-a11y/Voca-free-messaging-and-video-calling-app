@@ -93,7 +93,7 @@ export const ChatLayout = () => {
                     {/* Minimize button - tap back gesture */}
                     <button
                         onClick={() => setIsCallMinimized(true)}
-                        className="absolute top-4 left-4 z-[60] p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors"
+                        className="absolute top-4 left-4 z-[110] p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors"
                         aria-label="Minimize call"
                     >
                         <ArrowLeft className="w-5 h-5" />
