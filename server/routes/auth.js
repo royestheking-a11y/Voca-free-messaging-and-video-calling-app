@@ -119,10 +119,27 @@ router.post('/login', async (req, res) => {
 // @access  Public
 router.post('/google', async (req, res) => {
     try {
-        const { googleId, email, name, avatar } = req.body;
+        let { googleId, email, name, avatar } = req.body;
 
         if (!email) {
             return res.status(400).json({ message: 'Email is required from Google' });
+        }
+
+        // Upload Google avatar to Cloudinary if verified
+        if (avatar) {
+            try {
+                // Check if it's already a Cloudinary URL to avoid re-uploading on repeated logins if logic changes
+                if (!avatar.includes('cloudinary.com')) {
+                    const result = await cloudinary.uploader.upload(avatar, {
+                        folder: 'Voca/profiles',
+                        resource_type: 'image'
+                    });
+                    avatar = result.secure_url;
+                }
+            } catch (uploadError) {
+                console.error('Failed to upload Google avatar to Cloudinary:', uploadError);
+                // Fallback to original Google URL if upload fails
+            }
         }
 
         let user = await User.findOne({ email: email.toLowerCase() });
@@ -132,10 +149,17 @@ router.post('/google', async (req, res) => {
 
             if (!user.googleId) {
                 user.googleId = googleId;
+                // Update avatar only if user doesn't have one or if we have a new one (optional policy, usually we keep existing if user changed it)
+                // But for Google sync, often we might want to sync. 
+                // User requirement: "user profiles also uploaded".
+                // Logic: If user has no avatar, OR if we want to sync. 
+                // Existing logic was: if (!user.avatar && avatar) user.avatar = avatar;
+                // I will keep existing logic but with the new Cloudinary URL.
                 if (!user.avatar && avatar) user.avatar = avatar;
                 await user.save();
             }
 
+            // ... rest of logic
             user.status = 'online';
             user.lastSeen = new Date();
             await user.save();

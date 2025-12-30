@@ -935,10 +935,19 @@ export const ChatSidebar = () => {
       <ContactPickerDialog
         isOpen={showContactPicker}
         onClose={() => setShowContactPicker(false)}
-        onSelect={handleContactPick}
-        title={contactPickerMode === 'call' ? "New Call" : "Add Favorite"}
+        title={contactPickerMode === 'call' ? 'New Call' : 'New Chat'}
+        onlyContacts={contactPickerMode === 'call'}
+        onSelect={(userId) => {
+          if (contactPickerMode === 'call') {
+            startCall(userId, 'voice');
+          } else if (contactPickerMode === 'favorite') {
+            // Handle adding favorite if this mode is used for that
+          } else {
+            // Default new chat behavior
+            createChat(userId);
+          }
+        }}
       />
-
       {/* Status Viewer Overlay */}
       {viewingStatus && (
         <StatusViewer

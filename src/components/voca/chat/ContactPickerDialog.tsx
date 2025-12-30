@@ -14,11 +14,22 @@ interface ContactPickerDialogProps {
     title?: string;
 }
 
-export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select Contact" }: ContactPickerDialogProps) => {
+export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select Contact", onlyContacts = false }: ContactPickerDialogProps & { onlyContacts?: boolean }) => {
     const { users, currentUser } = useVoca();
     const [searchTerm, setSearchTerm] = useState('');
 
-    const availableUsers = users.filter(u => u.id !== currentUser?.id);
+    const availableUsers = users.filter(u => {
+        // Remove current user
+        if (u.id === currentUser?.id) return false;
+
+        // If onlyContacts is true, only show favorites
+        if (onlyContacts) {
+            return currentUser?.favorites?.includes(u.id);
+        }
+
+        return true;
+    });
+
     const filteredUsers = availableUsers.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return (
