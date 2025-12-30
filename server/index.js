@@ -193,8 +193,8 @@ io.on('connection', (socket) => {
 
             if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
                 const payload = JSON.stringify({
-                    title: `New Message from ${sender?.name || 'Voca User'}`,
-                    body: message.type === 'image' ? 'Sent a photo 📷' : message.content,
+                    title: sender?.name || 'Voca User',
+                    body: message.type === 'image' ? '📷 Photo' : message.content,
                     icon: sender?.avatar || '/pwa-192x192.png',
                     tag: `chat-${chatId}`, // Group messages from same chat
                     renotify: true,
