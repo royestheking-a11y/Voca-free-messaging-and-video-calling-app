@@ -299,14 +299,7 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
       </div>
 
       <div className="space-y-2">
-        <div className="flex justify-between">
-          <Label htmlFor="password" className="text-gray-300">Password</Label>
-          {isLoginView && (
-            <button type="button" onClick={() => { setAuthStep('forgot-password'); setEmail(''); }} className="text-xs text-[#83C5BE] hover:underline">
-              Forgot password?
-            </button>
-          )}
-        </div>
+        <Label htmlFor="password" className="text-gray-300">Password</Label>
         <div className="relative">
           <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
           <Input
@@ -326,6 +319,13 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
+        {isLoginView && (
+          <div className="flex justify-end">
+            <button type="button" onClick={() => { setAuthStep('forgot-password'); setEmail(''); }} className="text-xs text-[#83C5BE] hover:underline">
+              Forgot password?
+            </button>
+          </div>
+        )}
       </div>
 
       <Button
@@ -333,7 +333,7 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
         className="w-full h-11 bg-gradient-to-r from-[#006D77] to-[#005a63] hover:from-[#005a63] hover:to-[#004e56] text-white shadow-lg shadow-[#006D77]/25 border-none"
         disabled={isLoading}
       >
-        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLoginView ? "Sign In" : "Verify & Create Account")}
+        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLoginView ? "Sign In" : "Create Account")}
       </Button>
 
       <div className="relative">
