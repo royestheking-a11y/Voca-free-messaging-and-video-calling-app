@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Chat from '../models/Chat.js';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
@@ -124,7 +125,7 @@ router.post('/:id/messages', protect, async (req, res) => {
         const chatId = req.params.id;
 
         const message = await Message.create({
-            chatId,
+            chatId: new mongoose.Types.ObjectId(chatId), // Convert string to ObjectId
             senderId: req.user._id,
             content,
             type: type || 'text',
