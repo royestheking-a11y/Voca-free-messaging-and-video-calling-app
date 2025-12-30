@@ -108,10 +108,26 @@ app.get('/api/health', (req, res) => {
 // Socket.IO for real-time features
 const onlineUsers = new Map();
 const userSockets = new Map();
+// Track active/ringing calls to support reconnection/offline pickup
+// Key: receiverId, Value: { from, offer, callType, caller, timestamp }
+const activeCalls = new Map();
 
 io.on('connection', (socket) => {
     console.log(`🔌 User connected: ${socket.id}`);
 
+    socket.on('join', async (userId) => {
+        // Handle join explicitly if client emits it, OR reuse 'user:online' logic if distinct.
+        // Looking at code, 'user:online' seems to be the main identity exchange.
+        // But some clients might emit 'join'. Let's stick to what was there: 'user:online' is the event shown in file.
+        // wait, previous file view showed 'socket.on('user:online', ...)' at line 115.
+        // The logs showed 'User connected' then client sends `GET /calls`.
+        // Clients usually emit 'join' or 'user:online'.
+        // My previous read showed 'socket.on('join', ...)' in the *proposed* replacement, but original file has 'user:online'.
+        // Wait, let me verify if 'join' exists. The file view showed 'socket.on('user:online''.
+        // So I should modify 'user:online'.
+    });
+
+    // I will replace 'user:online' block.
     socket.on('user:online', async (userData) => {
         const { userId, name, avatar } = userData;
 
@@ -125,14 +141,30 @@ io.on('connection', (socket) => {
         userSockets.set(userId, socket.id);
         socket.userId = userId;
 
-        // Update user status in database
+        // CHECK FOR PENDING CALLS
+        if (activeCalls.has(userId)) {
+            const pendingCall = activeCalls.get(userId);
+            // Only re-emit if less than 60 seconds old
+            if (Date.now() - pendingCall.timestamp < 60000) {
+                console.log(`🔄 Re-emitting pending call to ${name} from ${pendingCall.caller?.name}`);
+                socket.emit('call:incoming', {
+                    from: pendingCall.from,
+                    offer: pendingCall.offer,
+                    callType: pendingCall.callType,
+                    caller: pendingCall.caller
+                });
+            } else {
+                activeCalls.delete(userId); // Expired
+            }
+        }
+
+        // Update user status
         try {
             await User.findByIdAndUpdate(userId, { status: 'online', lastSeen: new Date() });
         } catch (error) {
-            console.error('Error updating user status:', error);
+            console.error('Error updating status:', error);
         }
 
-        // Notify all connected users
         io.emit('user:online', {
             userId,
             status: 'online',
@@ -189,7 +221,7 @@ io.on('connection', (socket) => {
                 const payload = JSON.stringify({
                     title: `New Message from ${sender?.name || 'Voca User'}`,
                     body: message.type === 'image' ? 'Sent a photo 📷' : message.content,
-                    icon: sender?.avatar || '/pwa-192x192.png',
+                    icon: sender?.avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
                     tag: `chat-${chatId}`, // Group messages from same chat
                     renotify: true,
                     data: { url: `/chat/${chatId}`, type: 'message' }
@@ -244,10 +276,20 @@ io.on('connection', (socket) => {
     });
 
     // WebRTC Signaling Events
-    // WebRTC Signaling Events
     socket.on('call:offer', async ({ to, from, offer, callType }) => {
         const recipientSocketId = userSockets.get(to);
         const caller = onlineUsers.get(socket.userId);
+
+        console.log(`📞 Call offer from ${socket.userId} to ${to} (${callType})`);
+
+        // STORE ACTIVE CALL for offline retrieval
+        activeCalls.set(to, {
+            from: socket.userId,
+            offer,
+            callType,
+            caller,
+            timestamp: Date.now()
+        });
 
         if (recipientSocketId) {
             // Send caller's USER ID (not socket ID) so receiver can find them
@@ -273,7 +315,7 @@ io.on('connection', (socket) => {
                     tag: 'call', // Replaces older call notifications
                     renotify: true,
                     data: {
-                        url: `/chat/${from}?call=true`, // Or specific call route
+                        url: `/chat/${socket.userId}?call=true`,
                         type: 'call',
                         callType
                     },
@@ -302,8 +344,14 @@ io.on('connection', (socket) => {
         }
     });
 
+
+
     socket.on('call:answer', ({ to, answer }) => {
         const recipientSocketId = userSockets.get(to);
+
+        // Call accepted, remove from pending list
+        activeCalls.delete(socket.userId);
+
         if (recipientSocketId) {
             io.to(recipientSocketId).emit('call:answered', { answer });
         }
@@ -318,14 +366,24 @@ io.on('connection', (socket) => {
 
     socket.on('call:reject', ({ to }) => {
         const recipientSocketId = userSockets.get(to);
+
+        // Call rejected, remove from pending
+        activeCalls.delete(socket.userId);
+
         if (recipientSocketId) {
             io.to(recipientSocketId).emit('call:rejected');
         }
     });
 
     // End call
+    // End call
     socket.on('call:end', (data) => {
         console.log('📞 Forwarding call:end to', data.to, 'with data:', { duration: data.duration, status: data.status });
+
+        // Cleanup active calls
+        activeCalls.delete(socket.userId); // If I was receiver
+        activeCalls.delete(data.to);       // If I was caller
+
         const recipientSocketId = userSockets.get(data.to);
         if (recipientSocketId) {
             io.to(recipientSocketId).emit('call:ended', {
@@ -347,6 +405,17 @@ io.on('connection', (socket) => {
         if (userId) {
             const userInfo = onlineUsers.get(userId);
             const userName = userInfo?.name || 'A user';
+
+            // Cleanup active calls
+            if (activeCalls.has(userId)) {
+                activeCalls.delete(userId);
+            }
+            // Also check if they initiated any calls
+            for (const [receiverId, callData] of activeCalls.entries()) {
+                if (callData.from === userId) {
+                    activeCalls.delete(receiverId);
+                }
+            }
 
             onlineUsers.delete(userId);
             userSockets.delete(userId);

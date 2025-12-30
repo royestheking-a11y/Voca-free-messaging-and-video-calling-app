@@ -48,7 +48,8 @@ self.addEventListener('push', (event) => {
             // Absolute fallback to prevent "Site updated in background"
             return self.registration.showNotification('Voca', {
                 body: 'New message received',
-                icon: '/pwa-192x192.png'
+                icon: 'https://voca-web-app.vercel.app/pwa-192x192.png',
+                badge: '/favicon-96x96.png'
             });
         }
     };
