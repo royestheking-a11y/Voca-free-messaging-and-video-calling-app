@@ -243,14 +243,35 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     // ========== AUTH ==========
     const login = async (email: string, password: string): Promise<{ success: boolean; isAdminPanel?: boolean }> => {
         try {
-            const response = await authAPI.login(email, password);
-            setCurrentUser(response.user);
-            await loadAllData();
-            return { success: true, isAdminPanel: response.isAdminPanel || response.user?.isAdminPanel };
+            setLoading(true);
+            setError(null);
+            const { user, token } = await authAPI.login(email, password);
+
+            // Store token for API calls
+            localStorage.setItem('token', token);
+
+            setCurrentUser(user);
+            console.log('✅ User logged in:', user.name);
+
+            // Subscribe to push notifications (non-blocking)
+            try {
+                const { subscribeToPushNotifications } = await import('../../lib/pushNotifications');
+                await subscribeToPushNotifications(user.id, token);
+            } catch (err) {
+                console.warn('Failed to subscribe to push notifications:', err);
+                // Don't block login if push notifications fail
+            }
+
+            return {
+                success: true,
+                isAdminPanel: user.role === 'admin'
+            };
         } catch (err: any) {
             console.error('Login error:', err);
             setError(err.message);
             return { success: false };
+        } finally {
+            setLoading(false);
         }
     };
 

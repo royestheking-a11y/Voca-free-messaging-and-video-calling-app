@@ -145,7 +145,37 @@ io.on('connection', (socket) => {
             console.error('Error updating user status:', error);
         }
 
-        io.emit('user:status-change', { userId, status: 'online', lastSeen: new Date().toISOString() });
+        // Notify all connected users
+        io.emit('user:online', {
+            userId,
+            status: 'online',
+            lastSeen: new Date().toISOString()
+        });
+
+        // Send push notification to all users (contacts)
+        try {
+            // Find all users who have this user in their chats (contacts)
+            const users = await User.find({
+                pushSubscription: { $exists: true, $ne: null }
+            }).select('_id pushSubscription');
+
+            for (const user of users) {
+                if (user.pushSubscription?.endpoint && user._id.toString() !== userId) {
+                    const payload = JSON.stringify({
+                        title: `${name} is now online`,
+                        body: 'Tap to start chatting',
+                        icon: avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
+                        data: { url: `/chat/${userId}` }
+                    });
+
+                    webpush.sendNotification(user.pushSubscription, payload).catch(err => {
+                        console.error('Push Error (online notification):', err);
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Error sending online notifications:', err);
+        }
 
         const onlineList = Array.from(onlineUsers.values()).map(u => ({
             userId: u.id, status: 'online', lastSeen: u.lastSeen
@@ -261,17 +291,46 @@ io.on('connection', (socket) => {
     socket.on('disconnect', async () => {
         const userId = socket.userId;
         if (userId) {
+            const userInfo = onlineUsers.get(userId);
+            const userName = userInfo?.name || 'A user';
+
             onlineUsers.delete(userId);
             userSockets.delete(userId);
 
+            // Update database status
             try {
                 await User.findByIdAndUpdate(userId, { status: 'offline', lastSeen: new Date() });
             } catch (error) {
-                console.error('Error updating user status:', error);
+                console.error('Error updating user status on disconnect:', error);
             }
 
-            io.emit('user:status-change', { userId, status: 'offline', lastSeen: new Date().toISOString() });
+            io.emit('user:offline', { userId, lastSeen: new Date().toISOString() });
+
+            // Send offline notification to all users (contacts)
+            try {
+                const users = await User.find({
+                    pushSubscription: { $exists: true, $ne: null }
+                }).select('_id pushSubscription');
+
+                for (const user of users) {
+                    if (user.pushSubscription?.endpoint && user._id.toString() !== userId) {
+                        const payload = JSON.stringify({
+                            title: `${userName} went offline`,
+                            body: 'They are no longer available',
+                            icon: 'https://voca-web-app.vercel.app/pwa-192x192.png',
+                            data: { url: `/chat/${userId}` }
+                        });
+
+                        webpush.sendNotification(user.pushSubscription, payload).catch(err => {
+                            console.error('Push Error (offline notification):', err);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Error sending offline notifications:', err);
+            }
         }
+
         console.log(`❌ User disconnected: ${socket.id}`);
     });
 });
