@@ -61,13 +61,13 @@ export const PushDebug = () => {
         }
     };
 
-    if (!currentUser) return null;
+    // if (!currentUser) return null;
 
     if (!isOpen) {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-4 right-4 z-[9999] bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                className="fixed bottom-4 right-4 z-[99999] bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-colors border-2 border-white"
                 title="Push Notification Debug"
             >
                 <Bell size={24} />
@@ -76,7 +76,7 @@ export const PushDebug = () => {
     }
 
     return (
-        <div className="fixed bottom-4 right-4 z-[9999] bg-[#1a2c38] border border-gray-700 p-4 rounded-lg shadow-xl w-80 text-white">
+        <div className="fixed bottom-4 right-4 z-[99999] bg-[#1a2c38] border border-gray-700 p-4 rounded-lg shadow-xl w-80 text-white">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold flex items-center gap-2">
                     <Bell size={18} /> Push Debug
