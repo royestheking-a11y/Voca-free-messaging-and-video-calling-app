@@ -275,13 +275,15 @@ io.on('connection', (socket) => {
                 const payload = JSON.stringify({
                     title: `Incoming ${isVideo ? 'Video' : 'Voice'} Call`,
                     body: `${sender?.name || 'Someone'} is calling you...`,
-                    icon: sender?.avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
+                    icon: sender?.avatar || '/pwa-192x192.png',
                     tag: 'call', // Replaces older call notifications
                     renotify: true,
+                    requireInteraction: true, // Keep on screen until user responds
                     data: {
-                        url: `/chat/${from}?call=true`, // Or specific call route
+                        url: `/chat/${socket.userId}?call=true&type=${callType}`,
                         type: 'call',
-                        callType
+                        callType,
+                        callerId: socket.userId
                     },
                     actions: [
                         { action: 'answer', title: 'Answer ✅' },

@@ -73,13 +73,26 @@ self.addEventListener('push', (event) => {
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
-    console.log('[Service Worker] Notification clicked, data:', event.notification.data);
+    console.log('[Service Worker] Notification clicked, action:', event.action, 'data:', event.notification.data);
 
     event.notification.close();
 
     const data = event.notification.data || {};
-    const targetUrl = data.url || '/chat';
     const notificationType = data.type || 'message';
+    const action = event.action;
+
+    // Handle call action buttons
+    if (notificationType === 'call') {
+        if (action === 'decline') {
+            console.log('[Service Worker] Call declined');
+            // Just close notification, don't open app
+            return;
+        }
+        // 'answer' action or default click - open app with call params
+    }
+
+    // Determine target URL
+    let targetUrl = data.url || '/chat';
 
     console.log('[Service Worker] Opening URL:', targetUrl, 'type:', notificationType);
 
