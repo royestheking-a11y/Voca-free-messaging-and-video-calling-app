@@ -194,11 +194,14 @@ io.on('connection', (socket) => {
             // User is offline or not connected, send Push Notification
             try {
                 const recipient = await User.findById(recipientId);
+                // Fetch sender details for accurate name and avatar
+                const sender = await User.findById(socket.userId).select('name avatar');
+
                 if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
                     const payload = JSON.stringify({
-                        title: `New Message from ${message.senderName || 'Voca User'}`,
+                        title: `New Message from ${sender?.name || 'Voca User'}`,
                         body: message.type === 'image' ? 'Sent a photo 📷' : message.content,
-                        icon: 'https://voca-web-app.vercel.app/pwa-192x192.png', // Replace with prod URL
+                        icon: sender?.avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
                         data: { url: `/chat/${chatId}` }
                     });
 
@@ -242,16 +245,51 @@ io.on('connection', (socket) => {
     });
 
     // WebRTC Signaling Events
-    socket.on('call:offer', ({ to, from, offer, callType }) => {
+    // WebRTC Signaling Events
+    socket.on('call:offer', async ({ to, from, offer, callType }) => {
         const recipientSocketId = userSockets.get(to);
+        const caller = onlineUsers.get(socket.userId);
+
         if (recipientSocketId) {
             // Send caller's USER ID (not socket ID) so receiver can find them
             io.to(recipientSocketId).emit('call:incoming', {
                 from: socket.userId,  // Use caller's user ID
                 offer,
                 callType,
-                caller: onlineUsers.get(socket.userId)  // Look up by user ID
+                caller: caller  // Look up by user ID
             });
+        }
+
+        // Always attempt to send Push Notification for calls (ensures locked devices get it)
+        try {
+            const recipient = await User.findById(to);
+            const sender = await User.findById(socket.userId).select('name avatar'); // Re-fetch to be safe or use 'caller'
+
+            if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
+                const isVideo = callType === 'video';
+                const payload = JSON.stringify({
+                    title: `Incoming ${isVideo ? 'Video' : 'Voice'} Call`,
+                    body: `${sender?.name || 'Someone'} is calling you...`,
+                    icon: sender?.avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
+                    tag: 'call', // Replaces older call notifications
+                    renotify: true,
+                    data: {
+                        url: `/chat/${from}?call=true`, // Or specific call route
+                        type: 'call',
+                        callType
+                    },
+                    actions: [
+                        { action: 'answer', title: 'Answer ✅' },
+                        { action: 'decline', title: 'Decline ❌' }
+                    ]
+                });
+
+                webpush.sendNotification(recipient.pushSubscription, payload).catch(err => {
+                    console.error('Push Error (Call):', err);
+                });
+            }
+        } catch (err) {
+            console.error('Error sending call push:', err);
         }
     });
 
