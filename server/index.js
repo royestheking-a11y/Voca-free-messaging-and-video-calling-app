@@ -139,35 +139,7 @@ io.on('connection', (socket) => {
             lastSeen: new Date().toISOString()
         });
 
-        // Send push notification to all users (contacts)
-        try {
-            // Find all users who have this user in their chats (contacts)
-            const users = await User.find({
-                pushSubscription: { $exists: true, $ne: null }
-            }).select('_id pushSubscription');
-
-            for (const user of users) {
-                if (user.pushSubscription?.endpoint && user._id.toString() !== userId) {
-                    const payload = JSON.stringify({
-                        title: `${name} is now online`,
-                        body: 'Tap to start chatting',
-                        icon: avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
-                        data: { url: `/chat/${userId}` }
-                    });
-
-                    webpush.sendNotification(user.pushSubscription, payload).catch(err => {
-                        console.error('Push Error (online notification):', err);
-                        // Remove invalid subscription on 410/404
-                        if (err.statusCode === 410 || err.statusCode === 404) {
-                            console.log(`🗑️ Removing invalid subscription (online notify)`);
-                            User.findByIdAndUpdate(user._id, { $unset: { pushSubscription: 1 } }).catch(e => console.error(e));
-                        }
-                    });
-                }
-            }
-        } catch (err) {
-            console.error('Error sending online notifications:', err);
-        }
+        // Online/offline push notifications disabled for privacy
 
         const onlineList = Array.from(onlineUsers.values()).map(u => ({
             userId: u.id, status: 'online', lastSeen: u.lastSeen
@@ -368,34 +340,7 @@ io.on('connection', (socket) => {
 
             io.emit('user:offline', { userId, lastSeen: new Date().toISOString() });
 
-            // Send offline notification to all users (contacts)
-            try {
-                const users = await User.find({
-                    pushSubscription: { $exists: true, $ne: null }
-                }).select('_id pushSubscription');
-
-                for (const user of users) {
-                    if (user.pushSubscription?.endpoint && user._id.toString() !== userId) {
-                        const payload = JSON.stringify({
-                            title: `${userName} went offline`,
-                            body: 'They are no longer available',
-                            icon: 'https://voca-web-app.vercel.app/pwa-192x192.png',
-                            data: { url: `/chat/${userId}` }
-                        });
-
-                        webpush.sendNotification(user.pushSubscription, payload).catch(err => {
-                            console.error('Push Error (offline notification):', err);
-                            // Remove invalid subscription on 410/404
-                            if (err.statusCode === 410 || err.statusCode === 404) {
-                                console.log(`🗑️ Removing invalid subscription (offline notify)`);
-                                User.findByIdAndUpdate(user._id, { $unset: { pushSubscription: 1 } }).catch(e => console.error(e));
-                            }
-                        });
-                    }
-                }
-            } catch (err) {
-                console.error('Error sending offline notifications:', err);
-            }
+            // Offline push notifications disabled for privacy
         }
 
         console.log(`❌ User disconnected: ${socket.id}`);
