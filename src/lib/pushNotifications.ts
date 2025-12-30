@@ -75,41 +75,20 @@ export async function subscribeToPushNotifications(userId: string, token: string
         // Get service worker registration
         const registration = await navigator.serviceWorker.ready;
 
-        // Check if already subscribed
+        // CRITICAL FIX FOR 410: Always force a fresh subscription
+        // Unsubscribe any existing subscription (might be expired)
         let subscription = await registration.pushManager.getSubscription();
-
-        // If we have a subscription, we should verifying it's still valid on the server
-        // But for now, let's assume if we are calling this, we might want to ensure it's saved.
-        // Or, we can just send it. If the server deleted it (due to 410), saving it again MIGHT re-activate it
-        // IF the browser key hasn't actually rotated.
-        // HOWEVER, if the browser key IS the confused one, we need to rotate it.
-        // A 410 usually means the browser *should* have rotated it but didn't notify the app.
-
-        // Strategy: Always try to save. If 'subscribe' call fails, maybe we should re-subscribe.
-        // But a standard 'save' might look like success even if key is bad.
-
-        // IMPROVED STRATEGY: 
-        // 1. If subscription exists, just return it (optimistic) -> THIS WAS THE BUG.
-        // 2. We should allow a 'force' refresh.
-
-        // Let's implement a "Nuclear Option" logic:
-        // If we detect we are in a "broken" state (user reports issues), we can auto-nuke.
-        // But we don't know user state here easily.
-
-        // Safer Approach for this specific bug:
-        // Unsubscribe purely to force rotation if it's an old one? No, bad for battery/traffic.
-
-        // Reverting to sending it to backend.
-        // If it's null, we create new.
-        if (!subscription) {
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY) as BufferSource
-            });
-            console.log('✅ Subscribed to push notifications (Fresh)');
-        } else {
-            console.log('ℹ️ Existing subscription found, sending to server to ensure sync...');
+        if (subscription) {
+            console.log('⚠️ Unsubscribing old push subscription...');
+            await subscription.unsubscribe();
         }
+
+        // Create brand new subscription
+        subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY) as BufferSource
+        });
+        console.log('✅ Fresh push subscription created');
 
         // Send subscription to backend
         const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3000';
