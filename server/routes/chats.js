@@ -25,9 +25,12 @@ router.get('/', protect, async (req, res) => {
         // Get messages for each chat
         const chatsWithMessages = await Promise.all(
             chats.map(async (chat) => {
+                console.log(`🔍 Fetching messages for Chat ID: ${chat._id} (type: ${typeof chat._id})`);
                 const messages = await Message.find({ chatId: chat._id })
                     .sort({ timestamp: 1 })
                     .limit(100);
+
+                console.log(`📊 Found ${messages.length} messages for chat ${chat._id}`);
 
                 const chatObj = chat.toJSON();
                 chatObj.messages = messages.map(m => m.toJSON());
@@ -35,6 +38,8 @@ router.get('/', protect, async (req, res) => {
                 return chatObj;
             })
         );
+
+        console.log(`✅ Returning ${chatsWithMessages.length} chats to user ${req.user._id}`);
 
         res.json(chatsWithMessages);
     } catch (error) {
