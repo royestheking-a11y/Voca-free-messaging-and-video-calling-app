@@ -24,6 +24,7 @@ import { NewGroupDialog } from './NewGroupDialog';
 import { ContactPickerDialog } from './ContactPickerDialog';
 import { CreatePostDialog } from './CreatePostDialog';
 import { PostCard } from './PostCard';
+import { ChatListSkeleton, CallItemSkeleton, StatusSkeleton } from './SkeletonLoaders';
 
 type SidebarTab = 'chats' | 'status' | 'posts' | 'groups' | 'calls';
 type ChatFilter = 'all' | 'unread' | 'favorites' | 'groups';
@@ -34,7 +35,7 @@ export const ChatSidebar = () => {
   const {
     chats, activeChatId, setActiveChatId, currentUser, logout, statuses, createStatus,
     calls, createChat, toggleArchiveChat, toggleFavoriteContact, createGroupChat, startCall, deleteChat,
-    posts, users
+    posts, users, loading
   } = useVoca();
   const { isConnected, onlineUsers, typingUsers } = useSocket();
   const navigate = useNavigate();
@@ -358,8 +359,13 @@ export const ChatSidebar = () => {
 
   const renderChatsList = () => (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--wa-app-bg)] pb-20">
+      {/* Show skeleton loaders while loading */}
+      {loading && chats.length === 0 && (
+        <ChatListSkeleton count={8} />
+      )}
+
       {/* Archived Row (only shown if not in archived view and not filtering) */}
-      {!showArchived && activeFilter === 'all' && archivedCount > 0 && (
+      {!loading && !showArchived && activeFilter === 'all' && archivedCount > 0 && (
         <div
           onClick={() => setShowArchived(true)}
           className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-[var(--wa-hover)] transition-colors mx-2 rounded-lg"
