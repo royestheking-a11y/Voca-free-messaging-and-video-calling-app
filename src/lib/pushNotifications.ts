@@ -93,7 +93,7 @@ export async function subscribeToPushNotifications(userId: string, token: string
 
         // Send subscription to backend
         const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3000';
-        const response = await fetch(`${API_URL}/api/notifications/subscribe`, {
+        const response = await fetch(`${API_URL}/notifications/subscribe`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
