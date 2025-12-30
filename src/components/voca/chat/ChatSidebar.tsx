@@ -10,7 +10,7 @@ import {
   Users, Phone, Camera, Archive, PhoneIncoming, PhoneOutgoing,
   Video, Star, ArrowLeft, Clock, Check, CheckCheck, Edit, FileText
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { cn } from '../../ui/utils';
 import { toast } from 'sonner';
 import { UserProfileSettings } from './UserProfileSettings';
@@ -722,56 +722,59 @@ export const ChatSidebar = () => {
           }
 
           return (
-            <div key={call.id} className="flex items-center gap-3 p-3 px-4 cursor-pointer transition-colors hover:bg-[var(--wa-hover)] border-b border-[var(--wa-border)]">
+            <div key={call.id} className="flex items-center gap-3 p-3 px-4 cursor-pointer transition-colors hover:bg-[var(--wa-hover)] border-b border-[var(--wa-border)] group">
               <Avatar className="h-12 w-12 shrink-0">
                 <AvatarImage src={call.caller.avatar} />
                 <AvatarFallback>{call.caller.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <h3 className="text-[var(--wa-text-primary)] font-medium text-[17px]">{call.caller.name}</h3>
-                <div className="flex items-center gap-1.5 text-[var(--wa-text-secondary)] text-sm mt-0.5">
-
-                  {/* Premium 3D Icon */}
-                  <div className={cn("w-5 h-5 rounded-md flex items-center justify-center border border-white/5", bgClass)}>
-                    {call.type === 'video' ? (
-                      <Video
-                        className="w-3.5 h-3.5 drop-shadow-sm"
-                        style={{ stroke: `url(#${gradientId})`, strokeWidth: 2.5 }}
-                      />
-                    ) : (
-                      <Phone
-                        className={cn("w-3.5 h-3.5 drop-shadow-sm", call.status === 'missed' ? "rotate-[135deg]" : "")}
-                        style={{ stroke: `url(#${gradientId})`, strokeWidth: 2.5 }}
-                      />
-                    )}
-                  </div>
-
-                  {/* Call status label */}
-                  <span className={call.status === 'missed' ? 'text-red-400 font-medium' : ''}>
-                    {call.direction === 'incoming'
-                      ? (call.status === 'missed' ? 'Missed' : 'Incoming')
-                      : (call.status === 'missed' ? 'Cancelled' : 'Outgoing')
-                    }
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center mb-0.5">
+                  <h3 className={cn("font-medium text-[17px] truncate", call.status === 'missed' ? "text-red-500" : "text-[var(--wa-text-primary)]")}>
+                    {call.caller.name}
+                  </h3>
+                  <span className="text-[11px] text-[var(--wa-text-secondary)] whitespace-nowrap">
+                    {(() => {
+                      const date = new Date(call.timestamp);
+                      if (isToday(date)) return format(date, 'h:mm a');
+                      if (isYesterday(date)) return 'Yesterday';
+                      return format(date, 'MM/dd/yy');
+                    })()}
                   </span>
-                  <span>•</span>
-                  <span>{format(new Date(call.timestamp), 'MMMM d, h:mm a')}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[var(--wa-text-secondary)] text-[13px] truncate">
+                  {/* Call Icon Indicator */}
+                  {call.type === 'video' ? (
+                    <Video className={cn("w-4 h-4", call.status === 'missed' ? "text-red-500 fill-red-500/10" : "text-[var(--wa-text-secondary)]")} />
+                  ) : (
+                    <Phone className={cn("w-3.5 h-3.5", call.status === 'missed' ? "text-red-500 fill-red-500/10" : "text-[var(--wa-text-secondary)]", call.direction === 'outgoing' ? "rotate-45" : "rotate-[135deg]")} />
+                  )}
+
+                  {/* Status Text & Duration */}
+                  <span className="truncate">
+                    {call.direction === 'outgoing' ? 'Outgoing' : (call.status === 'missed' ? 'Missed' : 'Incoming')}
+                  </span>
+
                   {call.duration && call.duration !== '0:00' && (
                     <>
-                      <span>•</span>
+                      <span className="text-[var(--wa-text-secondary)]/50">•</span>
                       <span>{call.duration}</span>
                     </>
                   )}
                 </div>
               </div>
-              <div
-                className="text-[var(--wa-primary)] p-2 hover:bg-[var(--wa-header-bg)] rounded-full transition-colors"
-                onClick={(e) => {
+
+              {/* Call Back Action */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-[var(--wa-primary)] hover:bg-[var(--wa-primary)]/10 hover:text-[var(--wa-primary)] rounded-full shrink-0 opacity-80 group-hover:opacity-100 transition-all"
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   startCall(call.caller.id, call.type, call.caller);
                 }}
               >
                 {call.type === 'video' ? <Video className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
-              </div>
+              </Button>
             </div>
           );
         })

@@ -15,6 +15,7 @@ import {
     Eye, EyeOff, Smartphone, Globe, Sun, Image as ImageIcon, FileText, Wifi
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageCropper } from '../shared/ImageCropper';
 
 interface UserProfileSettingsProps {
     isOpen: boolean;
@@ -30,6 +31,7 @@ export const UserProfileSettings = ({ isOpen, onClose }: UserProfileSettingsProp
     const [about, setAbout] = useState(currentUser?.about || '');
     const [isEditingName, setIsEditingName] = useState(false);
     const [isEditingAbout, setIsEditingAbout] = useState(false);
+    const [showImageCropper, setShowImageCropper] = useState(false);
 
     if (!currentUser) return null;
 
@@ -40,26 +42,30 @@ export const UserProfileSettings = ({ isOpen, onClose }: UserProfileSettingsProp
         toast.success("Profile updated");
     };
 
-    const handlePhotoUpload = async () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = async (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) {
-                toast.loading('Uploading photo...', { id: 'photo-upload' });
-                try {
-                    const { uploadAPI } = await import('../../../lib/api');
-                    const result = await uploadAPI.image(file);
-                    await updateProfilePhoto(result.url);
-                    toast.success("Profile photo updated", { id: 'photo-upload' });
-                } catch (error: any) {
-                    console.error('Photo upload error:', error);
-                    toast.error(`Upload failed: ${error.message}`, { id: 'photo-upload' });
-                }
-            }
-        };
-        input.click();
+    const handlePhotoUpload = () => {
+        setShowImageCropper(true);
+    };
+
+    const handleCropComplete = async (croppedImageUrl: string) => {
+        // Convert base64 to file for upload
+        try {
+            toast.loading('Uploading profile photo...', { id: 'photo-upload' });
+
+            // Upload base64 directly or convert to blob then upload
+            const res = await fetch(croppedImageUrl);
+            const blob = await res.blob();
+            const file = new File([blob], "profile-photo.jpg", { type: "image/jpeg" });
+
+            const { uploadAPI } = await import('../../../lib/api');
+            const result = await uploadAPI.image(file);
+
+            await updateProfilePhoto(result.url);
+            toast.success("Profile photo updated", { id: 'photo-upload' });
+            setShowImageCropper(false);
+        } catch (error: any) {
+            console.error('Photo upload error:', error);
+            toast.error(`Upload failed: ${error.message}`, { id: 'photo-upload' });
+        }
     };
 
     const renderHeader = (title: string, backTo: SettingsView | null) => (
@@ -536,6 +542,14 @@ export const UserProfileSettings = ({ isOpen, onClose }: UserProfileSettingsProp
                 {currentView === 'notifications' && renderNotificationsView()}
                 {currentView === 'storage' && renderStorageView()}
 
+                {/* Image Cropper Dialog */}
+                <ImageCropper
+                    isOpen={showImageCropper}
+                    onClose={() => setShowImageCropper(false)}
+                    onCropComplete={handleCropComplete}
+                    title="Edit Profile Photo"
+                    aspectRatio={1} // Square for profile photos
+                />
             </SheetContent>
         </Sheet>
     );
