@@ -220,7 +220,14 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('message:read', ({ chatId, messageId, senderId }) => {
+    socket.on('message:read', async ({ chatId, messageId, senderId }) => {
+        // Update status in database
+        try {
+            await Message.findByIdAndUpdate(messageId, { status: 'read' });
+        } catch (error) {
+            console.error('Error updating message read status:', error);
+        }
+
         const senderSocketId = userSockets.get(senderId);
         if (senderSocketId) {
             io.to(senderSocketId).emit('message:read', { messageId, chatId });

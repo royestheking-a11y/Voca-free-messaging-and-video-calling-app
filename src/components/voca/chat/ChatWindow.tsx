@@ -23,7 +23,7 @@ const COMMON_EMOJIS = ["😀", "😂", "😍", "🥺", "🔥", "👍", "👎", "
 
 export const ChatWindow = () => {
     const { id: chatIdParam } = useParams<{ id: string }>();
-    const { chats, activeChatId, setActiveChatId, currentUser, sendMessage, startCall, editMessage, systemSettings, toggleFavoriteContact, blockUser, unblockUser, deleteChat } = useVoca();
+    const { chats, activeChatId, setActiveChatId, currentUser, sendMessage, startCall, editMessage, systemSettings, toggleFavoriteContact, blockUser, unblockUser, deleteChat, markChatAsRead } = useVoca();
 
     // Sync URL param with Context
     useEffect(() => {
@@ -96,6 +96,20 @@ export const ChatWindow = () => {
         setEditingMessageId(null);
         setInputText('');
     }, [activeChat?.messages, activeChatId]);
+
+    // Mark as read when messages update while chat is active
+    useEffect(() => {
+        if (activeChatId && activeChat?.messages) {
+            markChatAsRead(activeChatId);
+        }
+    }, [activeChat?.messages, activeChatId, markChatAsRead]);
+
+    // Mark as read when messages update while chat is active
+    useEffect(() => {
+        if (activeChatId && activeChat?.messages) {
+            markChatAsRead(activeChatId);
+        }
+    }, [activeChat?.messages, activeChatId, markChatAsRead]);
 
     // Recording Timer
     useEffect(() => {

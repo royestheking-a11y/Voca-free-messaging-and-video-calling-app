@@ -35,6 +35,7 @@ interface VocaContextType {
     createGroupChat: (name: string, participantIds: string[], image?: string) => Promise<void>;
     toggleArchiveChat: (chatId: string) => Promise<void>;
     toggleFavoriteContact: (contactId: string) => Promise<void>;
+    markChatAsRead: (chatId: string) => Promise<void>;
 
     // Socket message handlers
     handleIncomingMessage: (chatId: string, message: Message) => void | Promise<void>;
@@ -335,40 +336,48 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // ========== CHAT ==========
+    const markChatAsRead = async (chatId: string) => {
+        const chat = chats.find(c => c.id === chatId);
+        if (!chat) return;
+
+        // Check if there are actually unread messages or messages not marked as read
+        const unreadMessages = chat.messages.filter(m => m.senderId !== currentUser?.id && m.status !== 'read');
+
+        if (unreadMessages.length === 0 && chat.unreadCount === 0) return;
+
+        // Update local state immediately
+        setChats(prev => prev.map(c =>
+            c.id === chatId ? {
+                ...c,
+                unreadCount: 0,
+                messages: c.messages.map(m =>
+                    m.senderId !== currentUser?.id ? { ...m, status: 'read' } : m
+                )
+            } : c
+        ));
+
+        // Call API to mark as read on server
+        try {
+            await chatsAPI.markAsRead(chatId);
+
+            // Emit socket event for each unread message to update sender's UI
+            unreadMessages.forEach(msg => {
+                socket?.emit('message:read', {
+                    chatId,
+                    messageId: msg.id,
+                    senderId: msg.senderId
+                });
+            });
+        } catch (err) {
+            console.error('Failed to mark as read:', err);
+        }
+    };
+
     const setActiveChatId = async (chatId: string | null) => {
         setActiveChatIdInternal(chatId);
         // Mark messages as read when opening chat
         if (chatId) {
-            const chat = chats.find(c => c.id === chatId);
-            if (chat && chat.unreadCount > 0) {
-                // Update local state immediately
-                setChats(prev => prev.map(c =>
-                    c.id === chatId ? {
-                        ...c,
-                        unreadCount: 0,
-                        messages: c.messages.map(m =>
-                            m.senderId !== currentUser?.id ? { ...m, status: 'read' } : m
-                        )
-                    } : c
-                ));
-
-                // Call API to mark as read on server
-                try {
-                    await chatsAPI.markAsRead(chatId);
-
-                    // Emit socket event for each unread message to update sender's UI
-                    const unreadMessages = chat.messages.filter(m => m.senderId !== currentUser?.id && m.status !== 'read');
-                    unreadMessages.forEach(msg => {
-                        socket?.emit('message:read', {
-                            chatId,
-                            messageId: msg.id,
-                            senderId: msg.senderId
-                        });
-                    });
-                } catch (err) {
-                    console.error('Failed to mark as read:', err);
-                }
-            }
+            await markChatAsRead(chatId);
         }
     };
 
@@ -1064,6 +1073,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         createGroupChat,
         toggleArchiveChat,
         toggleFavoriteContact,
+        markChatAsRead,
         handleIncomingMessage,
         handleMessageDelivered,
         handleMessageRead,
