@@ -157,6 +157,11 @@ io.on('connection', (socket) => {
 
                     webpush.sendNotification(user.pushSubscription, payload).catch(err => {
                         console.error('Push Error (online notification):', err);
+                        // Remove invalid subscription on 410/404
+                        if (err.statusCode === 410 || err.statusCode === 404) {
+                            console.log(`🗑️ Removing invalid subscription (online notify)`);
+                            User.findByIdAndUpdate(user._id, { $unset: { pushSubscription: 1 } }).catch(e => console.error(e));
+                        }
                     });
                 }
             }
@@ -402,6 +407,11 @@ io.on('connection', (socket) => {
 
                         webpush.sendNotification(user.pushSubscription, payload).catch(err => {
                             console.error('Push Error (offline notification):', err);
+                            // Remove invalid subscription on 410/404
+                            if (err.statusCode === 410 || err.statusCode === 404) {
+                                console.log(`🗑️ Removing invalid subscription (offline notify)`);
+                                User.findByIdAndUpdate(user._id, { $unset: { pushSubscription: 1 } }).catch(e => console.error(e));
+                            }
                         });
                     }
                 }
