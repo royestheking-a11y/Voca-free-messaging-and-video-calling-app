@@ -106,6 +106,10 @@ router.get('/:id/messages', protect, async (req, res) => {
             query.timestamp = { $lt: new Date(before) };
         }
 
+        console.log(`🔍 Fetching messages for Chat: ${req.params.id}`);
+        // Log the query to be sure
+        console.log('Query:', JSON.stringify(query));
+
         const messages = await Message.find(query)
             .sort({ timestamp: -1 })
             .limit(parseInt(limit));
@@ -124,8 +128,6 @@ router.post('/:id/messages', protect, async (req, res) => {
         const { content, type, mediaUrl } = req.body;
         const chatId = req.params.id;
 
-        console.log(`📝 [API] Create Message Request: Chat=${chatId}, User=${req.user._id}, Type=${type}`);
-
         const message = await Message.create({
             chatId: new mongoose.Types.ObjectId(chatId), // Convert string to ObjectId
             senderId: req.user._id,
@@ -136,15 +138,8 @@ router.post('/:id/messages', protect, async (req, res) => {
             timestamp: new Date()
         });
 
-        console.log(`✅ [API] Message Created: ID=${message._id}`);
-
         // Get the chat to find other participants
         const chat = await Chat.findById(chatId);
-
-        if (!chat) {
-            console.error(`❌ [API] Chat not found: ${chatId}`);
-            return res.status(404).json({ message: 'Chat not found' });
-        }
 
         // Update unreadCount for all participants except sender
         const unreadUpdate = {};
@@ -162,11 +157,9 @@ router.post('/:id/messages', protect, async (req, res) => {
             ...unreadUpdate
         });
 
-        console.log(`✅ [API] Chat Updated with Last Message`);
-
         res.status(201).json(message);
     } catch (error) {
-        console.error('❌ [API] Send message error:', error);
+        console.error('Send message error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
