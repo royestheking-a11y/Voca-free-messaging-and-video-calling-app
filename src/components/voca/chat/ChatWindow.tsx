@@ -48,11 +48,11 @@ export const ChatWindow = () => {
             if (chat) {
                 const otherUser = chat.participants.find(p => p.id !== currentUser?.id);
                 if (otherUser) {
-                    // Show toast and initiate call
-                    toast.info(`Starting ${callType} call...`);
+                    // Wait for splash screen to complete (approx 2 seconds for full load + animation)
+                    toast.info(`Connecting ${callType} call...`);
                     setTimeout(() => {
                         startCall(otherUser.id, callType);
-                    }, 500);
+                    }, 2000);
                 }
             }
         }
