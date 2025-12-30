@@ -189,7 +189,7 @@ io.on('connection', (socket) => {
                 const payload = JSON.stringify({
                     title: `New Message from ${sender?.name || 'Voca User'}`,
                     body: message.type === 'image' ? 'Sent a photo 📷' : message.content,
-                    icon: sender?.avatar || 'https://voca-web-app.vercel.app/pwa-192x192.png',
+                    icon: sender?.avatar || '/pwa-192x192.png',
                     tag: `chat-${chatId}`, // Group messages from same chat
                     renotify: true,
                     data: { url: `/chat/${chatId}`, type: 'message' }
