@@ -179,35 +179,11 @@ io.on('connection', (socket) => {
         const { recipientId, chatId, message } = data;
         const recipientSocketId = userSockets.get(recipientId);
 
-        // Always emit to socket if online
-        let savedMessage;
-        try {
-            // 1. Save Message to DB (CRITICAL FIX)
-            savedMessage = await Message.create({
-                chatId,
-                senderId: socket.userId,
-                content: message.content,
-                type: message.type || 'text',
-                mediaUrl: message.mediaUrl,
-                status: 'sent'
-            });
-
-            // 2. Update Chat's lastMessage
-            await Chat.findByIdAndUpdate(chatId, {
-                lastMessage: savedMessage._id,
-                updatedAt: new Date()
-            });
-
-            console.log(`✅ Message saved: ${savedMessage._id}`);
-        } catch (dbError) {
-            console.error('❌ Data Loss Error: Failed to save message:', dbError);
-        }
-
+        // Socket handler ONLY relays messages - saving is done by API endpoint
+        // (Client calls POST /api/chats/:id/messages which saves to DB)
         if (recipientSocketId) {
-            // Use the saved message if valid, else fallback to input (but validation might fail)
-            const msgToSend = savedMessage ? { ...savedMessage.toJSON(), status: 'delivered' } : { ...message, status: 'delivered' };
-            io.to(recipientSocketId).emit('message:receive', { chatId, message: msgToSend });
-            socket.emit('message:delivered', { messageId: message.id, chatId }); // Keep client's temp ID for ack
+            io.to(recipientSocketId).emit('message:receive', { chatId, message: { ...message, status: 'delivered' } });
+            socket.emit('message:delivered', { messageId: message.id, chatId });
         }
 
         // Always send push notification (ensures locked devices/background get it)
