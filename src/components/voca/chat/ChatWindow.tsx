@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useVoca } from '../VocaContext';
 import { useSocket } from '../SocketContext';
 import { MessageBubble } from './MessageBubble';
@@ -23,6 +23,8 @@ const COMMON_EMOJIS = ["😀", "😂", "😍", "🥺", "🔥", "👍", "👎", "
 
 export const ChatWindow = () => {
     const { id: chatIdParam } = useParams<{ id: string }>();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const { chats, activeChatId, setActiveChatId, currentUser, sendMessage, startCall, editMessage, systemSettings, toggleFavoriteContact, blockUser, unblockUser, deleteChat, markChatAsRead } = useVoca();
 
     // Sync URL param with Context
@@ -31,6 +33,30 @@ export const ChatWindow = () => {
             setActiveChatId(chatIdParam);
         }
     }, [chatIdParam, activeChatId, setActiveChatId]);
+
+    // Handle call=true query param from notification clicks
+    useEffect(() => {
+        const callParam = searchParams.get('call');
+        const callType = (searchParams.get('type') as 'voice' | 'video') || 'voice';
+
+        if (callParam === 'true' && activeChatId) {
+            // Clear the query params to prevent re-triggering
+            setSearchParams({});
+
+            // Find the contact from the chat
+            const chat = chats.find(c => c.id === activeChatId);
+            if (chat) {
+                const otherUser = chat.participants.find(p => p.id !== currentUser?.id);
+                if (otherUser) {
+                    // Show toast and initiate call
+                    toast.info(`Starting ${callType} call...`);
+                    setTimeout(() => {
+                        startCall(otherUser.id, callType);
+                    }, 500);
+                }
+            }
+        }
+    }, [searchParams, activeChatId, chats, currentUser, startCall, setSearchParams]);
     const { startTyping, stopTyping, typingUsers, sendMessage: emitSocketMessage } = useSocket();
     const [inputText, setInputText] = useState('');
 
