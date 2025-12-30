@@ -91,25 +91,12 @@ const publicVapidKey = 'BHgNtaH95BRApkIjFwoE1YuKCrFIYPlwHohRYjr8Q-xdhwpcrTH_NTT4
 const privateVapidKey = 'd1RQMcUyf25CpItxXGNICU7fzjgb1GMG3jADYALUR5s';
 
 webpush.setVapidDetails(
-    'mailto:support@voca.app',
+    'mailto:admin@voca.app', // Updated contact
     publicVapidKey,
     privateVapidKey
 );
 
-// Subscribe Route
-app.post('/api/notifications/subscribe', async (req, res) => {
-    const subscription = req.body;
-    // In a real app, you would get userId from auth middleware
-    // For now, we assume the client sends userId or we rely on socket mapping
-    // But better to just save it if we have headers.
-    // Let's assume the client is authenticated and we can use a simple way or update via User route.
-    // actually, let's make this simple:
-    res.status(201).json({});
-});
-
-// We should probably add this to user routes or a new notification route file properly.
-// For speed, let's handle subscription update in the socket connection or a dedicated simple route that updates the user.
-
+// Notification Routes
 import notificationRoutes from './routes/notifications.js';
 app.use('/api/notifications', notificationRoutes);
 
@@ -209,6 +196,7 @@ io.on('connection', (socket) => {
                 });
 
                 console.log(`📲 Sending push to ${recipient.name} (${recipient._id})`);
+                console.log(`📬 Endpoint: ${recipient.pushSubscription.endpoint}`);
                 webpush.sendNotification(recipient.pushSubscription, payload)
                     .then(() => console.log(`✅ Push sent to ${recipient.name}`))
                     .catch(err => {
@@ -296,6 +284,7 @@ io.on('connection', (socket) => {
                 });
 
                 console.log(`📲 Sending call push to ${recipient.name} (${recipient._id})`);
+                console.log(`📬 Endpoint: ${recipient.pushSubscription.endpoint}`);
                 webpush.sendNotification(recipient.pushSubscription, payload)
                     .then(() => console.log(`✅ Call push sent to ${recipient.name}`))
                     .catch(err => {

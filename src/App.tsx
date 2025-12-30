@@ -57,14 +57,10 @@ const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
 };
 
-import { PushDebug } from './components/voca/PushDebug';
-
 const AppContent = () => {
     return (
         <>
             <GlobalCallUI />
-            <div style={{ position: 'fixed', bottom: 10, left: 10, zIndex: 999999, background: 'red', color: 'white', padding: 5 }}>DEBUG</div>
-            <PushDebug />
             <Routes>
                 <Route path="/" element={
                     <PublicOnlyRoute>
