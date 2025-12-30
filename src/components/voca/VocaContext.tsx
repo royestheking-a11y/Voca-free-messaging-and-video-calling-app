@@ -531,21 +531,35 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         console.log('📨 VocaContext: Handling incoming message', { chatId, messageId: message.id, type: message.type });
 
         // Check if chat exists in local state
-        const chatExists = chats.some(c => c.id === chatId);
+        const existingChat = chats.find(c => c.id === chatId);
 
-        if (!chatExists) {
+        if (!existingChat) {
             // Chat not in local state, fetch all chats to get the new one
             console.log('📨 VocaContext: Chat not found locally, fetching from server...');
             try {
                 const updatedChats = await chatsAPI.getAll();
+                // Find the chat that was just fetched and add the message if not included
+                const fetchedChat = updatedChats.find((c: any) => c.id === chatId);
+                if (fetchedChat) {
+                    // Check if message already exists in fetched chat
+                    const messageExists = fetchedChat.messages?.some((m: any) => m.id === message.id);
+                    if (!messageExists) {
+                        // Add the incoming message to the fetched chat
+                        fetchedChat.messages = [...(fetchedChat.messages || []), message];
+                        fetchedChat.lastMessage = message;
+                        fetchedChat.unreadCount = (fetchedChat.unreadCount || 0) + 1;
+                    }
+                }
                 setChats(updatedChats);
-                return; // The fetched chats will include the new message
+                console.log('📨 VocaContext: Chats updated with new chat and message');
+                return;
             } catch (err) {
                 console.error('Failed to fetch chats:', err);
                 return;
             }
         }
 
+        // Chat exists locally, add the message
         setChats(prev => prev.map(chat => {
             if (chat.id === chatId) {
                 // Check if message already exists (prevent duplicates)
