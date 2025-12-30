@@ -254,6 +254,9 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             setCurrentUser(user);
             console.log('✅ User logged in:', user.name);
 
+            // Load all data immediately after login
+            await loadAllData(user);
+
             // Subscribe to push notifications (non-blocking)
             try {
                 const { subscribeToPushNotifications } = await import('../../lib/pushNotifications');
