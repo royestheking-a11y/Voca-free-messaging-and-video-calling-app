@@ -17,21 +17,15 @@ import { ContactPage } from './components/voca/pages/ContactPage';
 import { DemoPage } from './components/voca/DemoPage';
 import { Toaster } from 'sonner';
 import { GlobalCallUI } from './GlobalCallUI';
+import { SplashScreen } from './components/voca/SplashScreen';
 
 const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) => {
     const { currentUser, isAdmin, systemSettings, loading } = useVoca();
     const location = useLocation();
 
-    // Show loading spinner while checking authentication
+    // Show splash screen while checking authentication
     if (loading) {
-        return (
-            <div className="min-h-screen bg-[#0f1c24] flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-white text-lg font-medium">Loading...</p>
-                </div>
-            </div>
-        );
+        return <SplashScreen isLoading={loading} />;
     }
 
     if (systemSettings?.maintenanceMode && !isAdmin) {
@@ -54,14 +48,7 @@ const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
 
     // Wait for auth check to complete
     if (loading) {
-        return (
-            <div className="min-h-screen bg-[#0f1c24] flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-white text-lg font-medium">Loading...</p>
-                </div>
-            </div>
-        );
+        return <SplashScreen isLoading={loading} />;
     }
 
     if (currentUser) {
