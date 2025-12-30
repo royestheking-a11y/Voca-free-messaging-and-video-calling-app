@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { authAPI, usersAPI, chatsAPI, postsAPI, statusesAPI, adminAPI, uploadAPI, callsAPI } from '../../lib/api';
 import { User, Chat, Message, Advertisement, Report, StatusUpdate, UserSettings, Call, Post } from '../../lib/data';
 import { useSocket } from './SocketContext';
@@ -98,6 +98,8 @@ const VocaContext = createContext<VocaContextType | undefined>(undefined);
 
 export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const { socket } = useSocket();
+    // Ref to track current chats for stale closure fix
+    const chatsRef = useRef<Chat[]>([]);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [chats, setChats] = useState<Chat[]>([]);
@@ -114,6 +116,11 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const [error, setError] = useState<string | null>(null);
 
     const isAdmin = currentUser?.role === 'admin';
+
+    // Sync chatsRef with chats state (fixes stale closure in socket handlers)
+    useEffect(() => {
+        chatsRef.current = chats;
+    }, [chats]);
 
     // Socket call handler - called by SocketContext when call events are received
 
@@ -530,36 +537,23 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const handleIncomingMessage = async (chatId: string, message: Message) => {
         console.log('📨 VocaContext: Handling incoming message', { chatId, messageId: message.id, type: message.type });
 
-        // Check if chat exists in local state
-        const existingChat = chats.find(c => c.id === chatId);
+        // Use ref to get current chats (fixes stale closure issue)
+        const currentChats = chatsRef.current;
+        const chatExists = currentChats.some(c => c.id === chatId);
 
-        if (!existingChat) {
+        if (!chatExists) {
             // Chat not in local state, fetch all chats to get the new one
             console.log('📨 VocaContext: Chat not found locally, fetching from server...');
             try {
                 const updatedChats = await chatsAPI.getAll();
-                // Find the chat that was just fetched and add the message if not included
-                const fetchedChat = updatedChats.find((c: any) => c.id === chatId);
-                if (fetchedChat) {
-                    // Check if message already exists in fetched chat
-                    const messageExists = fetchedChat.messages?.some((m: any) => m.id === message.id);
-                    if (!messageExists) {
-                        // Add the incoming message to the fetched chat
-                        fetchedChat.messages = [...(fetchedChat.messages || []), message];
-                        fetchedChat.lastMessage = message;
-                        fetchedChat.unreadCount = (fetchedChat.unreadCount || 0) + 1;
-                    }
-                }
                 setChats(updatedChats);
-                console.log('📨 VocaContext: Chats updated with new chat and message');
-                return;
+                return; // The fetched chats will include the new message
             } catch (err) {
                 console.error('Failed to fetch chats:', err);
                 return;
             }
         }
 
-        // Chat exists locally, add the message
         setChats(prev => prev.map(chat => {
             if (chat.id === chatId) {
                 // Check if message already exists (prevent duplicates)
