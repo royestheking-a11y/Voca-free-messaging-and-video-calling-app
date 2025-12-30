@@ -158,7 +158,7 @@ export const DemoPage = () => {
                 <div className="bg-[#1f2c34] p-4 pt-12 flex items-center gap-3 border-b border-white/5">
                   <ArrowLeft className="w-5 h-5 text-gray-400" />
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&h=150&fit=crop" />
+                    <AvatarImage src="https://res.cloudinary.com/dfvc27xla/image/upload/v1767075796/Voca/images/wvzf1gwib7tysmxyxumr.png" />
                     <AvatarFallback>S</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
