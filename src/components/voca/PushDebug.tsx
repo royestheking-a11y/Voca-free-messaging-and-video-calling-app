@@ -4,21 +4,28 @@ import { useVoca } from './VocaContext'; // Adjust path if needed
 import { Bell, BellOff, Send, RefreshCw, X } from 'lucide-react';
 
 export const PushDebug = () => {
-    const { currentUser } = useVoca();
+    // const { currentUser } = useVoca(); // REMOVED to debug crash
     const [status, setStatus] = useState<string>('Checking...');
     const [isOpen, setIsOpen] = useState(false);
+
+    console.log("🔔 PushDebug Component Rendering...");
 
     const checkStatus = async () => {
         if (!('serviceWorker' in navigator)) {
             setStatus('No Service Worker support');
             return;
         }
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-        if (subscription) {
-            setStatus('Subscribed ✅');
-        } else {
-            setStatus('Not Subscribed ❌');
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+                setStatus('Subscribed ✅');
+            } else {
+                setStatus('Not Subscribed ❌');
+            }
+        } catch (e) {
+            console.error("Status check error:", e);
+            setStatus("Check Error");
         }
     };
 
@@ -34,8 +41,12 @@ export const PushDebug = () => {
                 setStatus('Error: No auth token found');
                 return;
             }
-            // Pass currentUser.id and token as required
-            const sub = await subscribeToPushNotifications(currentUser?.id || '', token);
+            // Temporarily use a placeholder or try to parse ID if needed. 
+            // For now, let's just see if the button RENDERS.
+            // If we click this, it might fail without userID, but we need to see the button first.
+            const userId = "debug-user";
+
+            const sub = await subscribeToPushNotifications(userId, token);
             if (sub) setStatus('Subscribed ✅');
             else setStatus('Failed to subscribe');
         } catch (err: any) {
