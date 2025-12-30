@@ -28,6 +28,11 @@ messageSchema.set('toJSON', {
         ret.id = ret._id.toString();
         ret.chatId = ret.chatId?.toString();
         ret.senderId = ret.senderId?.toString();
+        // Convert replyTo ObjectId to replyToId string for frontend
+        if (ret.replyTo) {
+            ret.replyToId = ret.replyTo.toString();
+            delete ret.replyTo;
+        }
         delete ret._id;
         delete ret.__v;
         return ret;

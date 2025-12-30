@@ -221,6 +221,21 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Real-time message update events
+    socket.on('message:delete', ({ chatId, messageId, recipientId, forEveryone }) => {
+        const recipientSocketId = userSockets.get(recipientId);
+        if (recipientSocketId && forEveryone) {
+            io.to(recipientSocketId).emit('message:deleted', { chatId, messageId });
+        }
+    });
+
+    socket.on('message:edit', ({ chatId, messageId, recipientId, newContent }) => {
+        const recipientSocketId = userSockets.get(recipientId);
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit('message:edited', { chatId, messageId, newContent });
+        }
+    });
+
     // WebRTC Signaling Events
     // WebRTC Signaling Events
     socket.on('call:offer', async ({ to, from, offer, callType }) => {

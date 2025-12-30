@@ -131,7 +131,7 @@ router.get('/:id/messages', protect, async (req, res) => {
 // @access  Private
 router.post('/:id/messages', protect, async (req, res) => {
     try {
-        const { content, type, mediaUrl } = req.body;
+        const { content, type, mediaUrl, replyToId } = req.body;
         const chatId = req.params.id;
 
         const message = await Message.create({
@@ -140,6 +140,7 @@ router.post('/:id/messages', protect, async (req, res) => {
             content,
             type: type || 'text',
             mediaUrl,
+            replyTo: replyToId ? new mongoose.Types.ObjectId(replyToId) : undefined, // Link reply
             status: 'sent',
             timestamp: new Date()
         });

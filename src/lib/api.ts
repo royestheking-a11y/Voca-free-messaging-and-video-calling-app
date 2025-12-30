@@ -197,10 +197,10 @@ export const chatsAPI = {
     getMessages: async (chatId: string, limit = 50) =>
         fetchWithAuth(`/chats/${chatId}/messages?limit=${limit}`),
 
-    sendMessage: async (chatId: string, content: string, type = 'text', mediaUrl?: string) =>
+    sendMessage: async (chatId: string, content: string, type = 'text', mediaUrl?: string, replyToId?: string) =>
         fetchWithAuth(`/chats/${chatId}/messages`, {
             method: 'POST',
-            body: JSON.stringify({ content, type, mediaUrl }),
+            body: JSON.stringify({ content, type, mediaUrl, replyToId }),
         }),
 
     deleteMessage: async (chatId: string, messageId: string, forEveryone = false) =>

@@ -394,7 +394,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const sendMessage = async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' = 'text', mediaUrl?: string, duration?: string, replyToId?: string): Promise<Message | undefined> => {
         if (!currentUser) return undefined;
         try {
-            const message = await chatsAPI.sendMessage(chatId, content, type, mediaUrl);
+            const message = await chatsAPI.sendMessage(chatId, content, type, mediaUrl, replyToId);
 
             // Update local state
             setChats(prev => prev.map(chat => {
