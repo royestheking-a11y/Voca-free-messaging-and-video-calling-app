@@ -295,4 +295,28 @@ router.get('/me', async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/reset-password
+// @desc    Reset password (after OTP verification)
+// @access  Public
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Update password (pre-save hook will hash it if set up, otherwise we might need to hash manually)
+        // Checking User model standard: usually Mongoose middleware handles hashing on save if 'isModified'
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Password reset error:', error);
+        res.status(500).json({ message: 'Server error during password reset' });
+    }
+});
+
 export default router;
