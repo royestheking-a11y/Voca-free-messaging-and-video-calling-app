@@ -1,6 +1,16 @@
-// Voca Push Notification Service Worker
+// Voca Push Notification Service Worker v2
 // This handles incoming push notifications even when the app is closed
 
+// Force immediate activation - don't wait for old SW to die
+self.addEventListener('install', (event) => {
+    console.log('[Service Worker v2] Installing...');
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+    console.log('[Service Worker v2] Activating...');
+    event.waitUntil(clients.claim());
+});
 self.addEventListener('push', (event) => {
     console.log('[Service Worker] Push received');
 
