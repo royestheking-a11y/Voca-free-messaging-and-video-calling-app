@@ -36,11 +36,10 @@ export const LandingPage = () => {
           </div>
           <div className="hidden md:flex items-center gap-4">
             <Button
-              variant="ghost"
-              className="text-gray-300 hover:text-white hover:bg-white/5"
+              className="text-white bg-transparent hover:bg-white/10 border border-white/20 rounded-full px-6 transition-all hover:scale-105"
               onClick={() => navigate('/login')}
             >
-              Login
+              Log In
             </Button>
             <Button
               className="bg-[#006D77] hover:bg-[#005a63] text-white rounded-full px-6 shadow-lg shadow-[#006D77]/20 transition-all hover:scale-105"
