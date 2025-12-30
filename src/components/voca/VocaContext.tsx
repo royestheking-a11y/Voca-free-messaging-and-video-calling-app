@@ -41,6 +41,8 @@ interface VocaContextType {
     handleIncomingMessage: (chatId: string, message: Message) => void | Promise<void>;
     handleMessageDelivered: (chatId: string, messageId: string) => void;
     handleMessageRead: (chatId: string, messageId: string) => void;
+    handleMessageDeleted: (chatId: string, messageId: string) => void;
+    handleMessageEdited: (chatId: string, messageId: string, newContent: string) => void;
 
     // Socket call handler
     handleIncomingCall: (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: User }) => void;
@@ -595,6 +597,32 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         ));
     };
 
+    // Handle remote message deletion (delete for everyone)
+    const handleMessageDeleted = (chatId: string, messageId: string) => {
+        console.log('🗑️ VocaContext: Message deleted remotely', { chatId, messageId });
+        setChats(prev => prev.map(chat =>
+            chat.id === chatId ? {
+                ...chat,
+                messages: chat.messages.map(m =>
+                    m.id === messageId ? { ...m, isDeleted: true, content: 'This message was deleted' } : m
+                )
+            } : chat
+        ));
+    };
+
+    // Handle remote message edit
+    const handleMessageEdited = (chatId: string, messageId: string, newContent: string) => {
+        console.log('✏️ VocaContext: Message edited remotely', { chatId, messageId, newContent });
+        setChats(prev => prev.map(chat =>
+            chat.id === chatId ? {
+                ...chat,
+                messages: chat.messages.map(m =>
+                    m.id === messageId ? { ...m, content: newContent, isEdited: true } : m
+                )
+            } : chat
+        ));
+    };
+
     const deleteChat = async (chatId: string) => {
         try {
             await chatsAPI.delete(chatId);
@@ -1088,6 +1116,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         handleIncomingMessage,
         handleMessageDelivered,
         handleMessageRead,
+        handleMessageDeleted,
+        handleMessageEdited,
         handleIncomingCall,
 
         createStatus,

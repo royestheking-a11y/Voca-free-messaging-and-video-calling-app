@@ -18,6 +18,8 @@ interface SocketContextType {
     startTyping: (chatId: string, recipientId: string) => void;
     stopTyping: (chatId: string, recipientId: string) => void;
     markMessagesRead: (chatId: string, senderId: string, messageIds: string[]) => void;
+    emitDeleteMessage: (chatId: string, messageId: string, recipientId: string, forEveryone: boolean) => void;
+    emitEditMessage: (chatId: string, messageId: string, recipientId: string, newContent: string) => void;
     typingUsers: Map<string, string>; // chatId -> userId who is typing
 }
 
@@ -29,13 +31,15 @@ const SocketContext = createContext<SocketContextType>({
     startTyping: () => { },
     stopTyping: () => { },
     markMessagesRead: () => { },
+    emitDeleteMessage: () => { },
+    emitEditMessage: () => { },
     typingUsers: new Map()
 });
 
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { currentUser, chats, handleIncomingMessage, handleMessageDelivered, handleMessageRead, handleIncomingCall } = useVoca();
+    const { currentUser, chats, handleIncomingMessage, handleMessageDelivered, handleMessageRead, handleMessageDeleted, handleMessageEdited, handleIncomingCall } = useVoca();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState<Map<string, UserStatus>>(new Map());
@@ -145,6 +149,18 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             handleMessageRead(data.chatId, data.messageId);
         });
 
+        // Listen for message deletions (delete for everyone)
+        newSocket.on('message:deleted', (data: { chatId: string; messageId: string }) => {
+            console.log('🗑️ SocketContext: Message deleted by other user');
+            handleMessageDeleted(data.chatId, data.messageId);
+        });
+
+        // Listen for message edits
+        newSocket.on('message:edited', (data: { chatId: string; messageId: string; newContent: string }) => {
+            console.log('✏️ SocketContext: Message edited by other user');
+            handleMessageEdited(data.chatId, data.messageId, data.newContent);
+        });
+
         // Listen for incoming calls
         newSocket.on('call:incoming', (data: { from: string; offer: RTCSessionDescriptionInit; callType: 'voice' | 'video'; caller?: any }) => {
             console.log('📞 SocketContext: Incoming call, forwarding to VocaContext');
@@ -161,6 +177,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             newSocket.off('message:receive');
             newSocket.off('message:delivered');
             newSocket.off('message:read');
+            newSocket.off('message:deleted');
+            newSocket.off('message:edited');
             newSocket.off('call:incoming');
             newSocket.off('call:answer');
             newSocket.off('call:ice-candidate');
@@ -206,6 +224,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [socket, isConnected]);
 
+    // Emit delete message event
+    const emitDeleteMessage = useCallback((chatId: string, messageId: string, recipientId: string, forEveryone: boolean) => {
+        if (socket && isConnected) {
+            socket.emit('message:delete', { chatId, messageId, recipientId, forEveryone });
+        }
+    }, [socket, isConnected]);
+
+    // Emit edit message event
+    const emitEditMessage = useCallback((chatId: string, messageId: string, recipientId: string, newContent: string) => {
+        if (socket && isConnected) {
+            socket.emit('message:edit', { chatId, messageId, recipientId, newContent });
+        }
+    }, [socket, isConnected]);
+
     const value = {
         socket,
         isConnected,
@@ -214,6 +246,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         startTyping,
         stopTyping,
         markMessagesRead,
+        emitDeleteMessage,
+        emitEditMessage,
         typingUsers
     };
 

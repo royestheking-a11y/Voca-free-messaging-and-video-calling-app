@@ -34,7 +34,7 @@ export const ChatWindow = () => {
 
     // NOTE: Call notifications now navigate to /chat only.
     // Incoming calls are handled by GlobalCallUI via socket 'call:incoming' event.
-    const { startTyping, stopTyping, typingUsers, sendMessage: emitSocketMessage } = useSocket();
+    const { startTyping, stopTyping, typingUsers, sendMessage: emitSocketMessage, emitEditMessage } = useSocket();
     const [inputText, setInputText] = useState('');
 
     // Media Preview State
@@ -316,8 +316,9 @@ export const ChatWindow = () => {
         e?.preventDefault();
         if (!inputText.trim()) return;
 
-        if (editingMessageId && activeChat) {
+        if (editingMessageId && activeChat && otherParticipant) {
             editMessage(activeChat.id, editingMessageId, inputText);
+            emitEditMessage(activeChat.id, editingMessageId, otherParticipant.id, inputText);
             setEditingMessageId(null);
             toast.success("Message edited");
         } else if (activeChat && otherParticipant) {
