@@ -66,7 +66,16 @@ const userSchema = new mongoose.Schema({
 
     // Premium
     isPremium: { type: Boolean, default: false },
-    premiumExpiresAt: { type: Date }
+    premiumExpiresAt: { type: Date },
+
+    // Push Notification Subscription
+    pushSubscription: {
+        endpoint: String,
+        keys: {
+            p256dh: String,
+            auth: String
+        }
+    }
 }, { timestamps: true });
 
 // Hash password before saving
