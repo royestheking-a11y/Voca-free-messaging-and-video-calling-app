@@ -82,12 +82,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             reconnectAttempts.current++;
         });
 
-        // Listen for user status changes
-        newSocket.on('user:status-change', (data: UserStatus) => {
-            console.log('👤 User status change:', data);
+        // Listen for user online status changes
+        newSocket.on('user:online', (data: { userId: string; status: 'online'; lastSeen: string }) => {
+            console.log('👤 User online:', data);
             setOnlineUsers(prev => {
                 const updated = new Map(prev);
-                updated.set(data.userId, data);
+                updated.set(data.userId, { ...data, status: 'online' });
+                return updated;
+            });
+        });
+
+        // Listen for user offline status changes
+        newSocket.on('user:offline', (data: { userId: string; lastSeen: string }) => {
+            console.log('👤 User offline:', data);
+            setOnlineUsers(prev => {
+                const updated = new Map(prev);
+                updated.set(data.userId, { userId: data.userId, status: 'offline', lastSeen: data.lastSeen });
                 return updated;
             });
         });
@@ -148,7 +158,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return () => {
             console.log('🔌 Socket: Cleaning up connection');
             // Remove all listeners before disconnecting to prevent duplicates
-            newSocket.off('message:received');
+            newSocket.off('message:receive');
+            newSocket.off('message:delivered');
             newSocket.off('message:read');
             newSocket.off('call:incoming');
             newSocket.off('call:answer');
@@ -156,7 +167,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             newSocket.off('call:ended');
             newSocket.off('typing:show');
             newSocket.off('typing:hide');
-            newSocket.off('user:status');
+            newSocket.off('user:online');
+            newSocket.off('user:offline');
+            newSocket.off('users:online-list');
             newSocket.emit('user:offline');
             newSocket.disconnect();
         };
