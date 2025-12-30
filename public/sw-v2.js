@@ -73,24 +73,41 @@ self.addEventListener('push', (event) => {
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
-    console.log('[Service Worker] Notification clicked');
+    console.log('[Service Worker] Notification clicked, data:', event.notification.data);
 
     event.notification.close();
 
     const data = event.notification.data || {};
-    const url = data.url || '/';
+    const targetUrl = data.url || '/chat';
+    const notificationType = data.type || 'message';
+
+    console.log('[Service Worker] Opening URL:', targetUrl, 'type:', notificationType);
 
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Check if app is already open
-            for (const client of clientList) {
-                if ('focus' in client) {
-                    client.navigate(url);
-                    return client.focus();
+        clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        }).then((windowClients) => {
+            console.log('[Service Worker] Found', windowClients.length, 'windows');
+
+            // Try to find an existing Voca window
+            for (const client of windowClients) {
+                // Focus and navigate existing window
+                if ('focus' in client && 'navigate' in client) {
+                    console.log('[Service Worker] Navigating existing window to:', targetUrl);
+                    return client.focus().then(() => {
+                        return client.navigate(targetUrl);
+                    });
                 }
             }
-            // Otherwise open new window
-            return clients.openWindow(url);
+
+            // No existing window - open new one
+            console.log('[Service Worker] Opening new window:', targetUrl);
+            return clients.openWindow(targetUrl);
+        }).catch(err => {
+            console.error('[Service Worker] Error handling click:', err);
+            // Fallback - just open the app
+            return clients.openWindow('/chat');
         })
     );
 });
