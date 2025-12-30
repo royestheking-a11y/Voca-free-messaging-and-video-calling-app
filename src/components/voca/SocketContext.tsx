@@ -20,6 +20,7 @@ interface SocketContextType {
     markMessagesRead: (chatId: string, senderId: string, messageIds: string[]) => void;
     emitDeleteMessage: (chatId: string, messageId: string, recipientId: string, forEveryone: boolean) => void;
     emitEditMessage: (chatId: string, messageId: string, recipientId: string, newContent: string) => void;
+    emitStarMessage: (chatId: string, messageId: string, recipientId: string) => void;
     typingUsers: Map<string, string>; // chatId -> userId who is typing
 }
 
@@ -33,13 +34,14 @@ const SocketContext = createContext<SocketContextType>({
     markMessagesRead: () => { },
     emitDeleteMessage: () => { },
     emitEditMessage: () => { },
+    emitStarMessage: () => { },
     typingUsers: new Map()
 });
 
 export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { currentUser, chats, handleIncomingMessage, handleMessageDelivered, handleMessageRead, handleMessageDeleted, handleMessageEdited, handleIncomingCall } = useVoca();
+    const { currentUser, chats, handleIncomingMessage, handleMessageDelivered, handleMessageRead, handleMessageDeleted, handleMessageEdited, handleMessageStarred, handleIncomingCall } = useVoca();
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState<Map<string, UserStatus>>(new Map());
@@ -155,10 +157,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             handleMessageDeleted(data.chatId, data.messageId);
         });
 
-        // Listen for message edits
         newSocket.on('message:edited', (data: { chatId: string; messageId: string; newContent: string }) => {
             console.log('✏️ SocketContext: Message edited by other user');
             handleMessageEdited(data.chatId, data.messageId, data.newContent);
+        });
+
+        // Listen for message star
+        newSocket.on('message:starred', (data: { chatId: string; messageId: string }) => {
+            console.log('⭐ SocketContext: Message starred by other user');
+            handleMessageStarred(data.chatId, data.messageId);
         });
 
         // Listen for incoming calls
@@ -179,6 +186,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             newSocket.off('message:read');
             newSocket.off('message:deleted');
             newSocket.off('message:edited');
+            newSocket.off('message:starred');
             newSocket.off('call:incoming');
             newSocket.off('call:answer');
             newSocket.off('call:ice-candidate');
@@ -238,6 +246,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [socket, isConnected]);
 
+    // Emit star message event
+    const emitStarMessage = useCallback((chatId: string, messageId: string, recipientId: string) => {
+        if (socket && isConnected) {
+            socket.emit('message:star', { chatId, messageId, recipientId });
+        }
+    }, [socket, isConnected]);
+
     const value = {
         socket,
         isConnected,
@@ -248,6 +263,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         markMessagesRead,
         emitDeleteMessage,
         emitEditMessage,
+        emitStarMessage,
         typingUsers
     };
 

@@ -19,7 +19,7 @@ interface MessageBubbleProps {
 
 export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: MessageBubbleProps) => {
     const { deleteMessage, starMessage, activeChatId, currentUser, chats } = useVoca();
-    const { emitDeleteMessage } = useSocket();
+    const { emitDeleteMessage, emitStarMessage } = useSocket();
     const [isPlaying, setIsPlaying] = useState(false);
 
     // Helper to emit delete event if needed
@@ -29,6 +29,16 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
         const otherParticipant = activeChat?.participants.find(p => p.id !== currentUser?.id);
         if (otherParticipant) {
             emitDeleteMessage(activeChatId!, message.id, otherParticipant.id, true);
+        }
+    };
+
+    // Helper for Star
+    const handleStar = () => {
+        starMessage(activeChatId!, message.id);
+        const activeChat = chats.find(c => c.id === activeChatId);
+        const otherParticipant = activeChat?.participants.find(p => p.id !== currentUser?.id);
+        if (otherParticipant) {
+            emitStarMessage(activeChatId!, message.id, otherParticipant.id);
         }
     };
 
@@ -246,7 +256,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                             <DropdownMenuItem className="focus:bg-[var(--wa-hover)] cursor-pointer" onClick={onReply}>
                                 <Reply className="w-4 h-4 mr-2" /> Reply
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-[var(--wa-hover)] cursor-pointer" onClick={() => starMessage(activeChatId!, message.id)}>
+                            <DropdownMenuItem className="focus:bg-[var(--wa-hover)] cursor-pointer" onClick={handleStar}>
                                 <Star className={cn("w-4 h-4 mr-2", message.isStarred && "fill-yellow-400 text-yellow-400")} />
                                 {message.isStarred ? 'Unstar' : 'Star'}
                             </DropdownMenuItem>

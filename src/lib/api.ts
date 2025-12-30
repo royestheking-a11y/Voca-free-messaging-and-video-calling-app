@@ -214,6 +214,11 @@ export const chatsAPI = {
             body: JSON.stringify({ content }),
         }),
 
+    starMessage: async (chatId: string, messageId: string) =>
+        fetchWithAuth(`/chats/${chatId}/messages/${messageId}/star`, {
+            method: 'POST',
+        }),
+
     archive: async (chatId: string) =>
         fetchWithAuth(`/chats/${chatId}/archive`, { method: 'POST' }),
 

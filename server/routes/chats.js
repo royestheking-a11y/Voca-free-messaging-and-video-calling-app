@@ -248,6 +248,26 @@ router.put('/:chatId/messages/:msgId', protect, async (req, res) => {
     }
 });
 
+// @route   POST /api/chats/:chatId/messages/:msgId/star
+// @desc    Toggle star status of a message
+// @access  Private
+router.post('/:chatId/messages/:msgId/star', protect, async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.msgId);
+        if (!message) {
+            return res.status(404).json({ message: 'Message not found' });
+        }
+
+        // Toggle star
+        message.isStarred = !message.isStarred;
+        await message.save();
+
+        res.json(message);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 // @route   POST /api/chats/:id/archive
 // @desc    Toggle archive chat
 // @access  Private

@@ -43,6 +43,7 @@ interface VocaContextType {
     handleMessageRead: (chatId: string, messageId: string) => void;
     handleMessageDeleted: (chatId: string, messageId: string) => void;
     handleMessageEdited: (chatId: string, messageId: string, newContent: string) => void;
+    handleMessageStarred: (chatId: string, messageId: string) => void;
 
     // Socket call handler
     handleIncomingCall: (data: { from: string, offer: RTCSessionDescriptionInit, callType: 'voice' | 'video', caller?: User }) => void;
@@ -438,7 +439,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const starMessage = (chatId: string, messageId: string) => {
+    const starMessage = async (chatId: string, messageId: string) => {
+        // Optimistic update
         setChats(prev => prev.map(chat => {
             if (chat.id === chatId) {
                 return {
@@ -450,6 +452,24 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             }
             return chat;
         }));
+
+        try {
+            await chatsAPI.starMessage(chatId, messageId);
+        } catch (err) {
+            console.error('Star message error:', err);
+            // Revert on error
+            setChats(prev => prev.map(chat => {
+                if (chat.id === chatId) {
+                    return {
+                        ...chat,
+                        messages: chat.messages.map(m =>
+                            m.id === messageId ? { ...m, isStarred: !m.isStarred } : m
+                        )
+                    };
+                }
+                return chat;
+            }));
+        }
     };
 
     const editMessage = async (chatId: string, messageId: string, newContent: string) => {
@@ -618,6 +638,19 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 ...chat,
                 messages: chat.messages.map(m =>
                     m.id === messageId ? { ...m, content: newContent, isEdited: true } : m
+                )
+            } : chat
+        ));
+    };
+
+    // Handle remote message star
+    const handleMessageStarred = (chatId: string, messageId: string) => {
+        console.log('⭐ VocaContext: Message starred remotely', { chatId, messageId });
+        setChats(prev => prev.map(chat =>
+            chat.id === chatId ? {
+                ...chat,
+                messages: chat.messages.map(m =>
+                    m.id === messageId ? { ...m, isStarred: !m.isStarred } : m
                 )
             } : chat
         ));
@@ -1118,6 +1151,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         handleMessageRead,
         handleMessageDeleted,
         handleMessageEdited,
+        handleMessageStarred,
         handleIncomingCall,
 
         createStatus,
