@@ -78,10 +78,10 @@ export const PushDebug = () => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-4 right-4 z-[99999] bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-colors border-2 border-white"
+                className="fixed top-24 left-4 z-[999999] bg-purple-600 text-white p-4 rounded-full shadow-2xl hover:bg-purple-700 transition-colors border-4 border-white animate-bounce"
                 title="Push Notification Debug"
             >
-                <Bell size={24} />
+                <Bell size={32} />
             </button>
         );
     }
