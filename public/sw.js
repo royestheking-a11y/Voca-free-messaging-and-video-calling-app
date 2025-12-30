@@ -4,57 +4,41 @@
 self.addEventListener('push', (event) => {
     console.log('[Service Worker] Push received:', event);
 
-    const handlePush = async () => {
-        try {
-            if (!event.data) {
-                console.log('[Service Worker] Push event has no data');
-                // Even with no data, we should show something to avoid the "Site updated" message
-                return self.registration.showNotification('Voca', {
-                    body: 'New notification',
-                    icon: '/pwa-192x192.png'
-                });
-            }
+    if (!event.data) {
+        console.log('[Service Worker] Push event has no data');
+        return;
+    }
 
-            let data;
-            try {
-                data = event.data.json();
-            } catch (e) {
-                console.warn('[Service Worker] Failed to parse JSON, using text:', e);
-                // Fallback if not JSON
-                return self.registration.showNotification('Voca', {
-                    body: event.data.text() || 'New notification',
-                    icon: '/pwa-192x192.png'
-                });
-            }
+    try {
+        const data = event.data.json();
+        console.log('[Service Worker] Push data:', data);
 
-            console.log('[Service Worker] Push data:', data);
+        const options = {
+            body: data.body || 'New notification from Voca',
+            icon: data.icon || '/pwa-192x192.png',
+            badge: '/favicon-96x96.png',
+            vibrate: [100, 50, 100],
+            data: data.data || {},
+            tag: data.tag || 'voca-notification',
+            renotify: data.renotify || false,
+            requireInteraction: data.type === 'call',
+            actions: data.actions || []
+        };
 
-            const options = {
-                body: data.body || 'New notification from Voca',
-                icon: data.icon || '/pwa-192x192.png',
-                badge: '/favicon-96x96.png',
-                vibrate: [100, 50, 100],
-                data: data.data || {},
-                tag: data.tag || 'voca-notification',
-                renotify: data.renotify || false,
-                requireInteraction: data.type === 'call',
-                actions: data.actions || []
-            };
-
-            return self.registration.showNotification(data.title || 'Voca', options);
-
-        } catch (error) {
-            console.error('[Service Worker] Error processing push:', error);
-            // Absolute fallback to prevent "Site updated in background"
-            return self.registration.showNotification('Voca', {
-                body: 'New message received',
-                icon: 'https://voca-web-app.vercel.app/pwa-192x192.png',
-                badge: '/favicon-96x96.png'
-            });
-        }
-    };
-
-    event.waitUntil(handlePush());
+        event.waitUntil(
+            self.registration.showNotification(data.title || 'Voca', options)
+        );
+    } catch (error) {
+        console.error('[Service Worker] Error processing push:', error);
+        // Fallback: Show simple notification if something went wrong
+        const title = event.data ? (event.data.text() || 'New Notification') : 'Voca';
+        event.waitUntil(
+            self.registration.showNotification(title, {
+                body: 'Check the app for new activity.',
+                icon: '/pwa-192x192.png'
+            })
+        );
+    }
 });
 
 // Handle notification click
