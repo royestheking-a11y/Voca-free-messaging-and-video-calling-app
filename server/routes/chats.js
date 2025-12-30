@@ -27,13 +27,14 @@ router.get('/', protect, async (req, res) => {
             chats.map(async (chat) => {
                 console.log(`🔍 Fetching messages for Chat ID: ${chat._id} (type: ${typeof chat._id})`);
                 const messages = await Message.find({ chatId: chat._id })
-                    .sort({ timestamp: 1 })
+                    .sort({ timestamp: -1 })  // NEWEST first (fix for disappearing messages)
                     .limit(100);
 
                 console.log(`📊 Found ${messages.length} messages for chat ${chat._id}`);
 
                 const chatObj = chat.toJSON();
-                chatObj.messages = messages.map(m => m.toJSON());
+                // Reverse to display oldest-to-newest in UI
+                chatObj.messages = messages.reverse().map(m => m.toJSON());
                 chatObj.unreadCount = chatObj.unreadCount?.[req.user._id.toString()] || 0;
                 return chatObj;
             })
