@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useVoca } from '../VocaContext';
 import { useSocket } from '../SocketContext';
 import { MessageBubble } from './MessageBubble';
@@ -23,12 +23,7 @@ const COMMON_EMOJIS = ["😀", "😂", "😍", "🥺", "🔥", "👍", "👎", "
 
 export const ChatWindow = () => {
     const { id: chatIdParam } = useParams<{ id: string }>();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
     const { chats, activeChatId, setActiveChatId, currentUser, sendMessage, startCall, editMessage, systemSettings, toggleFavoriteContact, blockUser, unblockUser, deleteChat, markChatAsRead } = useVoca();
-
-    // Ref to prevent duplicate call triggers
-    const callInitiatedRef = useRef(false);
 
     // Sync URL param with Context
     useEffect(() => {
@@ -37,36 +32,8 @@ export const ChatWindow = () => {
         }
     }, [chatIdParam, activeChatId, setActiveChatId]);
 
-    // Handle call=true query param from notification clicks
-    useEffect(() => {
-        const callParam = searchParams.get('call');
-        const callType = (searchParams.get('type') as 'voice' | 'video') || 'voice';
-
-        // Guard: Only trigger once per query param
-        if (callParam === 'true' && activeChatId && !callInitiatedRef.current) {
-            callInitiatedRef.current = true; // Prevent duplicate triggers
-
-            // Clear the query params
-            setSearchParams({});
-
-            // Find the contact from the chat
-            const chat = chats.find(c => c.id === activeChatId);
-            if (chat) {
-                const otherUser = chat.participants.find(p => p.id !== currentUser?.id);
-                if (otherUser) {
-                    // Wait for splash screen to complete
-                    toast.info(`Connecting ${callType} call...`);
-                    setTimeout(() => {
-                        startCall(otherUser.id, callType);
-                        // Reset ref after call starts so future calls can work
-                        setTimeout(() => { callInitiatedRef.current = false; }, 5000);
-                    }, 2000);
-                }
-            } else {
-                callInitiatedRef.current = false; // Reset if chat not found
-            }
-        }
-    }, [searchParams, activeChatId, chats, currentUser, startCall, setSearchParams]);
+    // NOTE: Call notifications now navigate to /chat only.
+    // Incoming calls are handled by GlobalCallUI via socket 'call:incoming' event.
     const { startTyping, stopTyping, typingUsers, sendMessage: emitSocketMessage } = useSocket();
     const [inputText, setInputText] = useState('');
 

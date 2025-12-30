@@ -252,7 +252,7 @@ io.on('connection', (socket) => {
                     renotify: true,
                     requireInteraction: true, // Keep on screen until user responds
                     data: {
-                        url: `/chat/${socket.userId}?call=true&type=${callType}`,
+                        url: '/chat', // Navigate to chat list - GlobalCallUI will show incoming call
                         type: 'call',
                         callType,
                         callerId: socket.userId
