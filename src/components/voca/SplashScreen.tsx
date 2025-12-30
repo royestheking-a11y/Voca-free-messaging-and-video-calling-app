@@ -8,6 +8,24 @@ interface SplashScreenProps {
 
 export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
     const [shouldHide, setShouldHide] = useState(false);
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        // Detect theme preference - check localStorage first, then system preference
+        const savedTheme = localStorage.getItem('voca-theme');
+        if (savedTheme === 'dark') {
+            setIsDark(true);
+        } else if (savedTheme === 'light') {
+            setIsDark(false);
+        } else if (savedTheme === 'system' || !savedTheme) {
+            // Check system preference
+            setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+        // Also check if document has dark class (backup detection)
+        if (document.documentElement.classList.contains('dark')) {
+            setIsDark(true);
+        }
+    }, []);
 
     useEffect(() => {
         // When loading is done, hide splash after a brief moment
@@ -28,10 +46,14 @@ export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
-                className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center"
+                className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center ${isDark ? 'bg-[#0f1c24]' : 'bg-white'
+                    }`}
             >
                 {/* Subtle gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-[#e8f5f4] pointer-events-none" />
+                <div className={`absolute inset-0 pointer-events-none ${isDark
+                        ? 'bg-gradient-to-br from-[#0f1c24] via-[#1a2c36] to-[#0f1c24]'
+                        : 'bg-gradient-to-br from-white via-gray-50 to-[#e8f5f4]'
+                    }`} />
 
                 {/* Logo Container */}
                 <div className="relative z-10 flex flex-col items-center">
@@ -89,10 +111,10 @@ export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
                     transition={{ delay: 0.3 }}
                     className="absolute bottom-8 flex flex-col items-center gap-1"
                 >
-                    <span className="text-gray-400 text-xs tracking-wider">
-                        from <span className="text-[#006D77] font-medium">Voca Team</span>
+                    <span className={`text-xs tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <span className="text-[#006D77] font-medium">Voca Team</span>
                     </span>
-                    <span className="text-gray-300 text-[10px] tracking-widest">
+                    <span className={`text-[10px] tracking-widest ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
                         Version 3.0
                     </span>
                 </motion.div>
@@ -102,4 +124,3 @@ export const SplashScreen = ({ isLoading, onComplete }: SplashScreenProps) => {
 };
 
 export default SplashScreen;
-
