@@ -73,7 +73,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)] max-w-md p-0 h-[600px] max-h-[90vh] flex flex-col gap-0 overflow-hidden">
+            <DialogContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)] max-w-md p-0 h-[600px] flex flex-col gap-0 overflow-hidden">
                 <DialogHeader className="p-4 bg-[var(--wa-header-bg)] border-b border-[var(--wa-border)]">
                     <DialogTitle>New Chat</DialogTitle>
                     <DialogDescription className="sr-only">Search for a user or add a new contact to start chatting.</DialogDescription>
@@ -126,20 +126,20 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--wa-app-bg)]">
-                            <div
-                                className="p-4 flex items-center gap-4 cursor-pointer hover:bg-[var(--wa-hover)] transition-colors border-b border-[var(--wa-border)]"
-                                onClick={() => setIsAddingUser(true)}
-                            >
-                                <div className="w-10 h-10 rounded-full bg-[var(--wa-primary)] flex items-center justify-center text-[#111b21]">
-                                    <UserPlus className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-[var(--wa-text-primary)] font-medium">New Contact</h3>
-                                    <p className="text-[var(--wa-text-secondary)] text-xs">Add a new person to chat with</p>
-                                </div>
+                        <div
+                            className="p-4 flex items-center gap-4 cursor-pointer hover:bg-[var(--wa-hover)] transition-colors border-b border-[var(--wa-border)]"
+                            onClick={() => setIsAddingUser(true)}
+                        >
+                            <div className="w-10 h-10 rounded-full bg-[var(--wa-primary)] flex items-center justify-center text-[#111b21]">
+                                <UserPlus className="w-5 h-5" />
                             </div>
+                            <div>
+                                <h3 className="text-[var(--wa-text-primary)] font-medium">New Contact</h3>
+                                <p className="text-[var(--wa-text-secondary)] text-xs">Add a new person to chat with</p>
+                            </div>
+                        </div>
 
+                        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--wa-app-bg)] min-h-0 pb-4">
                             {filteredUsers.length > 0 ? (
                                 <div className="py-2">
                                     <div className="px-4 py-2 text-[var(--wa-primary)] text-xs font-bold uppercase tracking-wider">Search Results</div>
