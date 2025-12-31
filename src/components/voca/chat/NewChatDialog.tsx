@@ -26,8 +26,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                 u.id !== currentUser?.id &&
                 !currentUser?.blockedUsers?.includes(u.id) &&
                 !u.blockedUsers?.includes(currentUser?.id || '') &&
-                (u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+                u.email.toLowerCase().includes(searchQuery.toLowerCase())
             )
             .sort((a, b) => a.name.localeCompare(b.name))
         : [];
@@ -119,7 +118,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                             <div className="relative">
                                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--wa-text-secondary)]" />
                                 <Input
-                                    placeholder="Search name or email"
+                                    placeholder="Search email"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-9 bg-[var(--wa-header-bg)] border-none text-[var(--wa-text-primary)] h-9 focus-visible:ring-1 ring-[var(--wa-primary)]"
@@ -140,7 +139,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                             </div>
                         </div>
 
-                        <ScrollArea className="flex-1 bg-[var(--wa-app-bg)]">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--wa-app-bg)]">
                             {filteredUsers.length > 0 ? (
                                 <div className="py-2">
                                     <div className="px-4 py-2 text-[var(--wa-primary)] text-xs font-bold uppercase tracking-wider">Search Results</div>
@@ -166,7 +165,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                                     {searchQuery ? (
                                         <>
                                             <p>No users found.</p>
-                                            <p className="text-sm mt-1">Try a different name or email.</p>
+                                            <p className="text-sm mt-1">Try a different email.</p>
                                         </>
                                     ) : (
                                         <>
@@ -176,7 +175,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                                     )}
                                 </div>
                             )}
-                        </ScrollArea>
+                        </div>
                     </div>
                 )}
             </DialogContent>
