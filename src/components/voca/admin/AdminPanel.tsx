@@ -512,7 +512,8 @@ const ModerationView = () => {
         // senderId might be populated object or string depending on backend response, verify backend
         // In backend routes/admin.js: .populate('senderId', 'name avatar')
         // So msg.senderId is object { _id:..., name:..., avatar:... }
-        senderName: msg.senderId?.name || 'Unknown',
+        // Fallback to getUserName(id) if name is missing
+        senderName: msg.senderId?.name || getUserName(msg.senderId?._id || msg.senderId) || 'Unknown',
         senderAvatar: msg.senderId?.avatar,
         chatIdStr: msg.chatId?._id || msg.chatId // Helper for deletion
     })).filter(m => {
@@ -619,7 +620,7 @@ const ModerationView = () => {
                                         >
                                             <TableCell className="text-[#83C5BE] text-xs">
                                                 <div>{format(new Date(msg.timestamp), 'MMM d')}</div>
-                                                <div className="text-gray-500">{format(new Date(msg.timestamp), 'HH:mm:ss')}</div>
+                                                <div className="text-gray-500">{format(new Date(msg.timestamp), 'h:mm a')}</div>
                                             </TableCell>
                                             <TableCell className="text-gray-300">
                                                 <div className="flex flex-col">
