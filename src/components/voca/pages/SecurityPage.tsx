@@ -3,12 +3,18 @@ import { Button } from '../../ui/button';
 import { motion } from 'motion/react';
 import { ArrowLeft, Shield, Lock, FileKey, EyeOff, Server } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../SEO';
 
 export const SecurityPage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white font-sans selection:bg-[#006D77] selection:text-white">
+      <SEO
+        title="Security & Privacy | Voca Messenger"
+        description="Learn how Voca Messenger protects your data with end-to-end encryption, secure authentication, and privacy-first architecture."
+        url="/security"
+      />
       {/* Navbar */}
       <nav className="fixed w-full z-50 bg-[#0f1c24]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">

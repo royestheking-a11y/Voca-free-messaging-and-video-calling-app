@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SEO } from '../../SEO';
 import { useVoca } from '../VocaContext';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -491,8 +492,21 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
 
   const header = getHeaderContent();
 
+  const seoProps = isLoginView
+    ? {
+      title: "Login | Voca Messenger",
+      description: "Access your secure Voca Messenger account and continue private conversations instantly.",
+      url: "/login"
+    }
+    : {
+      title: "Create Account | Voca Messenger",
+      description: "Create your Voca Messenger account using email login and enjoy private messaging, real-time chat, and encrypted communication.",
+      url: "/signup"
+    };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0f1c24] relative overflow-hidden font-sans">
+      <SEO {...seoProps} />
       <div className="absolute top-6 left-6 z-20">
         <Button
           variant="ghost"
@@ -561,4 +575,3 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
     </div>
   );
 };
-

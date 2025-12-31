@@ -3,6 +3,7 @@ import { Button } from '../../ui/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Monitor, Smartphone, Apple, Share, PlusSquare, MoreVertical, Download, Check, Laptop } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../SEO';
 
 export const DownloadPage = () => {
   const navigate = useNavigate();
@@ -62,6 +63,11 @@ export const DownloadPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white font-sans selection:bg-[#006D77] selection:text-white" style={{ paddingBottom: '120px' }}>
+      <SEO
+        title="Download Voca | Mobile & Desktop App"
+        description="Download Voca Messenger for iOS, Android, Windows, and Mac. Secure communication on all your devices."
+        url="/download"
+      />
       {/* Navbar */}
       <nav className="fixed w-full z-50 bg-[#0f1c24]/80 backdrop-blur-md border-b border-white/5 top-0">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">

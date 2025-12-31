@@ -31,8 +31,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+import { HelmetProvider } from 'react-helmet-async';
+
 createRoot(document.getElementById("root")!).render(
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-    <App />
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
   </GoogleOAuthProvider>
 );

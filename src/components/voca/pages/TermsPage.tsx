@@ -2,12 +2,18 @@ import React from 'react';
 import { Button } from '../../ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../SEO';
 
 export const TermsPage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white font-sans selection:bg-[#006D77] selection:text-white">
+      <SEO
+        title="Terms of Service | Voca Messenger"
+        description="Read the Terms of Service for using Voca Messenger."
+        url="/terms"
+      />
       <nav className="fixed w-full z-50 bg-[#0f1c24]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Button

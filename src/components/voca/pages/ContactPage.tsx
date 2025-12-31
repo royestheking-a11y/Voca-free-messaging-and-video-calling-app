@@ -5,6 +5,7 @@ import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../SEO';
 
 export const ContactPage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,11 @@ export const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white font-sans selection:bg-[#006D77] selection:text-white">
+      <SEO
+        title="Contact Us | Voca Messenger"
+        description="Contact the Voca Messenger team for support, feedback, or general inquiries."
+        url="/contact"
+      />
       {/* Navbar */}
       <nav className="fixed w-full z-50 bg-[#0f1c24]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -48,7 +54,7 @@ export const ContactPage = () => {
             </div>
             <div>
               <p className="text-sm text-gray-400">Email us directly at</p>
-              <p className="text-white font-medium select-all">voca.org@gmail.com</p>
+              <p className="text-white font-medium select-all">voca.org.com@gmail.com</p>
             </div>
           </div>
 

@@ -3,6 +3,7 @@ import { Button } from '../../ui/button';
 import { motion } from 'motion/react';
 import { ArrowLeft, Check, Lock, Zap, Smartphone, Users, Globe, Video } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../SEO';
 
 export const FeaturesPage = () => {
   const navigate = useNavigate();
@@ -54,6 +55,11 @@ export const FeaturesPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white font-sans selection:bg-[#006D77] selection:text-white">
+      <SEO
+        title="Features | Voca Messenger"
+        description="Explore Voca Messenger features including encrypted messaging, voice and video calls, file sharing, message editing, and real-time presence."
+        url="/features"
+      />
       {/* Navbar */}
       <nav className="fixed w-full z-50 bg-[#0f1c24]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">

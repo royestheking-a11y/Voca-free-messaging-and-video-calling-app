@@ -12,11 +12,18 @@ import {
   SheetDescription,
 } from "../ui/sheet";
 
+import { SEO } from '../SEO';
+
 export const LandingPage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white selection:bg-[#006D77] selection:text-white font-sans overflow-x-hidden">
+      <SEO
+        title="Voca Messenger | Secure & Private Messaging Platform"
+        description="Voca Messenger is a secure, privacy-first messaging platform offering real-time chat, voice and video calls, and encrypted communication using email-based login."
+        url="/"
+      />
 
       {/* Navbar */}
       <nav className="fixed w-full z-50 bg-[#0f1c24]/80 backdrop-blur-md border-b border-white/5">

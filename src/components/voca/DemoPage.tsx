@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Shield, Image, Phone, Mic, Edit2, Trash2, Star, Users, Mail, Check, Video, Zap } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { SEO } from '../SEO';
 
 export const DemoPage = () => {
   const navigate = useNavigate();
@@ -71,6 +72,11 @@ export const DemoPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white font-sans overflow-x-hidden selection:bg-[#006D77] selection:text-white">
+      <SEO
+        title="Live Demo | Voca Messenger"
+        description="Try the Voca Messenger live demo to experience real-time messaging, secure chat, and modern communication features."
+        url="/demo"
+      />
       {/* Header */}
       <header className="fixed top-0 w-full z-50 bg-[#0f1c24]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
