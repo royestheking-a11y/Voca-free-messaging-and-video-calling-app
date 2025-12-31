@@ -222,13 +222,30 @@ export const ChatSidebar = () => {
     c.status === 'missed' && new Date(c.timestamp).getTime() > lastCallsViewTime
   ).length;
 
+  // Derive "Added Contacts" from unique participants in chats
+  const allMyContacts = React.useMemo(() => {
+    const unique = new Map();
+    chats.forEach(chat => {
+      chat.participants.forEach(p => {
+        if (p.id !== currentUser?.id) {
+          unique.set(p.id, p);
+        }
+      });
+    });
+    return Array.from(unique.values());
+  }, [chats, currentUser]);
+
+  const filteredContactsForCalls = allMyContacts.filter(u =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Filter Calls
   const filteredCalls = calls.filter(call => {
     // Show all calls associated with this user context
     return call.caller.name.toLowerCase().includes(searchTerm.toLowerCase());
   }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  console.log('ChatSidebar Calls Debug:', { total: calls.length, filtered: filteredCalls.length, calls });
+  console.log('ChatSidebar Calls Debug:', { total: calls.length, filtered: filteredCalls.length, calls, contactsFound: filteredContactsForCalls.length });
 
   // --- Handlers ---
 
@@ -675,116 +692,167 @@ export const ChatSidebar = () => {
         </defs>
       </svg>
 
-      <div className="px-4 py-4">
-        <h3 className="text-[var(--wa-text-primary)] font-medium text-[17px] mb-4">Favorites</h3>
-        <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-          <div
-            className="flex flex-col items-center gap-2 cursor-pointer group min-w-[60px]"
-            onClick={() => {
-              setContactPickerMode('favorite');
-              setShowContactPicker(true);
-            }}
-          >
-            <div className="w-14 h-14 rounded-full bg-[var(--wa-header-bg)] border-2 border-dashed border-[var(--wa-text-secondary)] flex items-center justify-center group-hover:border-[var(--wa-primary)] group-hover:text-[var(--wa-primary)] transition-colors text-[var(--wa-text-secondary)]">
-              <Plus className="w-6 h-6" />
+      {/* Show Contacts Search Results if searching */}
+      {searchTerm ? (
+        <>
+          <div className="px-4 py-2 text-[var(--wa-primary)] font-bold text-xs tracking-wider">CONTACTS</div>
+          {filteredContactsForCalls.length === 0 && filteredCalls.length === 0 ? (
+            <div className="p-8 text-center text-[var(--wa-text-secondary)] text-sm">
+              No contacts or calls found matching "{searchTerm}"
             </div>
-            <span className="text-[var(--wa-text-secondary)] text-xs">Add</span>
-          </div>
-
-          {favoriteContacts.map(id => {
-            const user = chats.flatMap(c => c.participants).find(u => u.id === id); // Quick lookup hack
-            if (!user) return null;
-            return (
-              <div key={id} className="flex flex-col items-center gap-2 cursor-pointer min-w-[60px]" onClick={() => createChat(user.id)}>
-                <Avatar className="h-14 w-14 border-2 border-[var(--wa-panel-bg)] ring-2 ring-[var(--wa-primary)]">
-                  <AvatarImage src={user.avatar} />
-                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="text-[var(--wa-text-primary)] text-xs truncate max-w-[60px]">{user.name.split(' ')[0]}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="px-4 py-2 text-[var(--wa-primary)] font-bold text-xs tracking-wider mt-4">RECENT</div>
-
-      {filteredCalls.length === 0 ? (
-        <div className="p-8 text-center text-[var(--wa-text-secondary)] text-sm">
-          {searchTerm ? "No calls found matching search" : "No recent calls"}
-        </div>
+          ) : (
+            <>
+              {filteredContactsForCalls.map(user => (
+                <div key={user.id} className="flex items-center gap-3 p-3 px-4 cursor-pointer transition-colors hover:bg-[var(--wa-hover)] border-b border-[var(--wa-border)] group">
+                  <Avatar className="h-12 w-12 shrink-0">
+                    <AvatarImage src={user.avatar} />
+                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-[var(--wa-text-primary)] text-[17px] truncate">{user.name}</h3>
+                    <p className="text-[var(--wa-text-secondary)] text-xs truncate">{user.about || "Available"}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-[var(--wa-primary)] hover:bg-[var(--wa-primary)]/10 rounded-full"
+                      onClick={() => startCall(user.id, 'voice', user)}
+                    >
+                      <Phone className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-[var(--wa-primary)] hover:bg-[var(--wa-primary)]/10 rounded-full"
+                      onClick={() => startCall(user.id, 'video', user)}
+                    >
+                      <Video className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {filteredCalls.length > 0 && <div className="px-4 py-2 text-[var(--wa-primary)] font-bold text-xs tracking-wider mt-4">PAST CALLS</div>}
+            </>
+          )}
+        </>
       ) : (
-        filteredCalls.map((call) => {
-          // Determine styles based on call state
-          let gradientId = "green-gradient-calls";
-          let bgClass = "bg-emerald-500/10";
-
-          if (call.status === 'missed') {
-            gradientId = "red-gradient-calls";
-            bgClass = "bg-red-500/10";
-          } else if (call.direction === 'incoming') {
-            gradientId = "blue-gradient-calls";
-            bgClass = "bg-blue-500/10";
-          }
-
-          return (
-            <div key={call.id} className="flex items-center gap-3 p-3 px-4 cursor-pointer transition-colors hover:bg-[var(--wa-hover)] border-b border-[var(--wa-border)] group">
-              <Avatar className="h-12 w-12 shrink-0">
-                <AvatarImage src={call.caller.avatar} />
-                <AvatarFallback>{call.caller.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center mb-0.5">
-                  <h3 className={cn("font-medium text-[17px] truncate", call.status === 'missed' ? "text-red-500" : "text-[var(--wa-text-primary)]")}>
-                    {call.caller.name}
-                  </h3>
-                  <span className="text-[11px] text-[var(--wa-text-secondary)] whitespace-nowrap">
-                    {(() => {
-                      const date = new Date(call.timestamp);
-                      if (isToday(date)) return format(date, 'h:mm a');
-                      if (isYesterday(date)) return 'Yesterday';
-                      return format(date, 'MM/dd/yy');
-                    })()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[var(--wa-text-secondary)] text-[13px] truncate">
-                  {/* Call Icon Indicator */}
-                  {call.type === 'video' ? (
-                    <Video className={cn("w-4 h-4", call.status === 'missed' ? "text-red-500 fill-red-500/10" : "text-[var(--wa-text-secondary)]")} />
-                  ) : (
-                    <Phone className={cn("w-3.5 h-3.5", call.status === 'missed' ? "text-red-500 fill-red-500/10" : "text-[var(--wa-text-secondary)]", call.direction === 'outgoing' ? "rotate-45" : "rotate-[135deg]")} />
-                  )}
-
-                  {/* Status Text & Duration */}
-                  <span className="truncate">
-                    {call.direction === 'outgoing' ? 'Outgoing' : (call.status === 'missed' ? 'Missed' : 'Incoming')}
-                  </span>
-
-                  {call.duration && call.duration !== '0:00' && (
-                    <>
-                      <span className="text-[var(--wa-text-secondary)]/50">•</span>
-                      <span>{call.duration}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Call Back Action */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 text-[var(--wa-primary)] hover:bg-[var(--wa-primary)]/10 hover:text-[var(--wa-primary)] rounded-full shrink-0 opacity-80 group-hover:opacity-100 transition-all"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  startCall(call.caller.id, call.type, call.caller);
+        <>
+          <div className="px-4 py-4">
+            <h3 className="text-[var(--wa-text-primary)] font-medium text-[17px] mb-4">Favorites</h3>
+            {/* ... Favorites Content ... */}
+            <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+              <div
+                className="flex flex-col items-center gap-2 cursor-pointer group min-w-[60px]"
+                onClick={() => {
+                  setContactPickerMode('favorite');
+                  setShowContactPicker(true);
                 }}
               >
-                {call.type === 'video' ? <Video className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
-              </Button>
+                <div className="w-14 h-14 rounded-full bg-[var(--wa-header-bg)] border-2 border-dashed border-[var(--wa-text-secondary)] flex items-center justify-center group-hover:border-[var(--wa-primary)] group-hover:text-[var(--wa-primary)] transition-colors text-[var(--wa-text-secondary)]">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <span className="text-[var(--wa-text-secondary)] text-xs">Add</span>
+              </div>
+
+              {favoriteContacts.map(id => {
+                const user = chats.flatMap(c => c.participants).find(u => u.id === id); // Quick lookup hack
+                if (!user) return null;
+                return (
+                  <div key={id} className="flex flex-col items-center gap-2 cursor-pointer min-w-[60px]" onClick={() => createChat(user.id)}>
+                    <Avatar className="h-14 w-14 border-2 border-[var(--wa-panel-bg)] ring-2 ring-[var(--wa-primary)]">
+                      <AvatarImage src={user.avatar} />
+                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[var(--wa-text-primary)] text-xs truncate max-w-[60px]">{user.name.split(' ')[0]}</span>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })
+          </div>
+          <div className="px-4 py-2 text-[var(--wa-primary)] font-bold text-xs tracking-wider mt-4">RECENT</div>
+        </>
       )}
+
+      {/* Render Past Calls (filtered or list) */}
+      {(searchTerm ? filteredCalls : filteredCalls).length === 0 && !searchTerm ? (
+        <div className="p-8 text-center text-[var(--wa-text-secondary)] text-sm">
+          No recent calls
+        </div>
+      ) : null}
+
+      {/* Calls List Mapping (same as before but conditional rendering logic wrapper) */}
+      {(searchTerm ? filteredCalls : filteredCalls).map((call) => {
+        // Determine styles based on call state
+        let gradientId = "green-gradient-calls";
+        let bgClass = "bg-emerald-500/10";
+
+        if (call.status === 'missed') {
+          gradientId = "red-gradient-calls";
+          bgClass = "bg-red-500/10";
+        } else if (call.direction === 'incoming') {
+          gradientId = "blue-gradient-calls";
+          bgClass = "bg-blue-500/10";
+        }
+
+        return (
+          <div key={call.id} className="flex items-center gap-3 p-3 px-4 cursor-pointer transition-colors hover:bg-[var(--wa-hover)] border-b border-[var(--wa-border)] group">
+            <Avatar className="h-12 w-12 shrink-0">
+              <AvatarImage src={call.caller.avatar} />
+              <AvatarFallback>{call.caller.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-center mb-0.5">
+                <h3 className={cn("font-medium text-[17px] truncate", call.status === 'missed' ? "text-red-500" : "text-[var(--wa-text-primary)]")}>
+                  {call.caller.name}
+                </h3>
+                <span className="text-[11px] text-[var(--wa-text-secondary)] whitespace-nowrap">
+                  {(() => {
+                    const date = new Date(call.timestamp);
+                    if (isToday(date)) return format(date, 'h:mm a');
+                    if (isYesterday(date)) return 'Yesterday';
+                    return format(date, 'MM/dd/yy');
+                  })()}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[var(--wa-text-secondary)] text-[13px] truncate">
+                {/* Call Icon Indicator */}
+                {call.type === 'video' ? (
+                  <Video className={cn("w-4 h-4", call.status === 'missed' ? "text-red-500 fill-red-500/10" : "text-[var(--wa-text-secondary)]")} />
+                ) : (
+                  <Phone className={cn("w-3.5 h-3.5", call.status === 'missed' ? "text-red-500 fill-red-500/10" : "text-[var(--wa-text-secondary)]", call.direction === 'outgoing' ? "rotate-45" : "rotate-[135deg]")} />
+                )}
+
+                {/* Status Text & Duration */}
+                <span className="truncate">
+                  {call.direction === 'outgoing' ? 'Outgoing' : (call.status === 'missed' ? 'Missed' : 'Incoming')}
+                </span>
+
+                {call.duration && call.duration !== '0:00' && (
+                  <>
+                    <span className="text-[var(--wa-text-secondary)]/50">•</span>
+                    <span>{call.duration}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Call Back Action */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-[var(--wa-primary)] hover:bg-[var(--wa-primary)]/10 hover:text-[var(--wa-primary)] rounded-full shrink-0 opacity-80 group-hover:opacity-100 transition-all"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                startCall(call.caller.id, call.type, call.caller);
+              }}
+            >
+              {call.type === 'video' ? <Video className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
+            </Button>
+          </div>
+        );
+      })
+      }
     </div>
   );
 

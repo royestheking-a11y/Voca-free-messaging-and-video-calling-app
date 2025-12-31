@@ -236,13 +236,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('message:star', ({ chatId, messageId, recipientId }) => {
-        const recipientSocketId = userSockets.get(recipientId);
-        if (recipientSocketId) {
-            io.to(recipientSocketId).emit('message:starred', { chatId, messageId });
-        }
-    });
-
     // WebRTC Signaling Events
     // WebRTC Signaling Events
     socket.on('call:offer', async ({ to, from, offer, callType }) => {
