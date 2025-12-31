@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Advertisement } from '../../lib/data';
+import { adsAPI } from '../../lib/api';
 import { Button } from '../ui/button';
 import { ArrowRight, Shield, Globe, Zap, MessageCircle, Lock, Smartphone, Menu, Mail, Edit2, Trash2, Star, Users, Video, Mic } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -16,6 +18,23 @@ import { SEO } from '../SEO';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
+  const [landingAd, setLandingAd] = useState<Advertisement | null>(null);
+
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        const ads = await adsAPI.getActive();
+        const ad = ads.find((a: Advertisement) => a.position === 'landing_page');
+        if (ad) {
+          setLandingAd(ad);
+          adsAPI.view(ad.id).catch(console.error);
+        }
+      } catch (err) {
+        console.error('Failed to fetch ads:', err);
+      }
+    };
+    fetchAds();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0f1c24] text-white selection:bg-[#006D77] selection:text-white font-sans overflow-x-hidden">
@@ -258,6 +277,43 @@ export const LandingPage = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Ad Section */}
+      {landingAd && (
+        <section className="py-12 bg-[#0b141a]">
+          <div className="max-w-7xl mx-auto px-6">
+            <div
+              className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#006D77]/20 to-[#83C5BE]/10 border border-[#006D77]/20 p-8 md:p-12 cursor-pointer group"
+              onClick={() => {
+                adsAPI.click(landingAd.id).catch(console.error);
+                if (landingAd.link) window.open(landingAd.link, '_blank');
+              }}
+            >
+              <div className="absolute top-0 right-0 p-4">
+                <span className="text-[10px] text-gray-400 border border-gray-700 px-2 py-0.5 rounded uppercase tracking-wide">Sponsored</span>
+              </div>
+              <div className="flex flex-col md:flex-row gap-8 items-center">
+                {landingAd.imageUrl && (
+                  <img src={landingAd.imageUrl} alt={landingAd.title} className="w-full md:w-1/3 rounded-xl object-cover shadow-2xl shadow-black/50" />
+                )}
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-2xl md:text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                    {landingAd.title}
+                  </h3>
+                  <p className="text-gray-400 text-lg leading-relaxed mb-6">
+                    {landingAd.content}
+                  </p>
+                  {landingAd.link && (
+                    <Button className="bg-white text-[#0f1c24] hover:bg-gray-200 rounded-full px-8">
+                      Learn More <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Feature Grid */}
       <section id="features" className="py-32 bg-[#0b141a]">

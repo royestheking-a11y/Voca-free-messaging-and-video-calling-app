@@ -35,7 +35,7 @@ export const ChatSidebar = () => {
   const {
     chats, activeChatId, setActiveChatId, currentUser, logout, statuses, createStatus,
     calls, createChat, toggleArchiveChat, toggleFavoriteContact, createGroupChat, startCall, deleteChat,
-    posts, users, loading
+    posts, users, loading, ads, incrementAdClick, incrementAdView
   } = useVoca();
   const { isConnected, onlineUsers, typingUsers } = useSocket();
   const navigate = useNavigate();
@@ -153,6 +153,11 @@ export const ChatSidebar = () => {
 
     return timeB - timeA;
   });
+
+
+  // Filter Ads
+  const sidebarAds = ads.filter(a => a.active && a.position === 'sidebar');
+  const chatListAds = ads.filter(a => a.active && a.position === 'chat_list');
 
   // Status Logic
   const validStatuses = statuses.filter(s => {
@@ -374,12 +379,44 @@ export const ChatSidebar = () => {
     </div>
   );
 
+  const renderSidebarAd = () => {
+    if (sidebarAds.length === 0) return null;
+    // Rotate ads or show random? Show first for now
+    const ad = sidebarAds[0];
+
+    return (
+      <div className="mx-4 mb-2 p-3 bg-[var(--wa-panel-bg)] rounded-lg border border-[var(--wa-border)] shadow-sm relative group cursor-pointer"
+        onClick={() => {
+          incrementAdClick(ad.id);
+          if (ad.link) window.open(ad.link, '_blank');
+        }}
+        onMouseEnter={() => incrementAdView(ad.id)}
+      >
+        <div className="flex gap-3">
+          {ad.imageUrl && (
+            <img src={ad.imageUrl} alt={ad.title} className="w-12 h-12 rounded-lg object-cover bg-gray-100" />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-start">
+              <h4 className="font-semibold text-[var(--wa-text-primary)] text-sm truncate pr-4">{ad.title}</h4>
+              <span className="text-[10px] text-[var(--wa-text-secondary)] border border-[var(--wa-border)] px-1 rounded uppercase tracking-wide">Ad</span>
+            </div>
+            <p className="text-[var(--wa-text-secondary)] text-xs line-clamp-2 mt-0.5">{ad.content}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderChatsList = () => (
     <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--wa-app-bg)] pb-20">
       {/* Show skeleton loaders while loading */}
       {loading && chats.length === 0 && (
         <ChatListSkeleton count={8} />
       )}
+
+      {/* Sidebar Ad */}
+      {!loading && renderSidebarAd()}
 
       {/* Archived Row (only shown if not in archived view and not filtering) */}
       {!loading && !showArchived && activeFilter === 'all' && archivedCount > 0 && (
@@ -405,224 +442,264 @@ export const ChatSidebar = () => {
         const isActive = chat.id === activeChatId;
         const isTyping = typingUsers.get(chat.id) === otherParticipant?.id;
 
-        return (
-          <ContextMenu key={chat.id}>
-            <ContextMenuTrigger>
-              <div
-                onClick={() => {
-                  navigate(`/chat/${chat.id}`);
-                }}
-                className={cn(
-                  "flex items-center gap-3 p-3 px-4 cursor-pointer transition-colors hover:bg-[var(--wa-hover)] border-b border-[var(--wa-border)]",
-                  isActive && "bg-[var(--wa-hover)]"
-                )}
-              >
-                {/* Avatar with online status indicator */}
-                <div className="relative shrink-0">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={chatImage} />
-                    <AvatarFallback className="bg-[#6a7f8a] text-white">{chatName?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  {/* Online status dot */}
-                  {!chat.isGroup && otherParticipant && (
-                    <span
-                      className={cn(
-                        "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--wa-bg-secondary)]",
-                        onlineUsers.get(otherParticipant.id)?.status === 'online'
-                          ? "bg-green-500"
-                          : "bg-gray-500"
-                      )}
-                      title={
-                        onlineUsers.get(otherParticipant.id)?.status === 'online'
-                          ? 'Online'
-                          : onlineUsers.get(otherParticipant.id)?.lastSeen
-                            ? `Last seen ${formatDistanceToNow(new Date(onlineUsers.get(otherParticipant.id)!.lastSeen), { addSuffix: true })}`
-                            : 'Offline'
-                      }
-                    />
-                  )}
-                </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center mb-1">
-                    <div className="flex items-center gap-1.5 max-w-[70%]">
-                      <h3 className="font-semibold text-[var(--wa-text-primary)] text-[17px] truncate">{chatName}</h3>
-                      {/* Blue verified badge for Voca Team */}
-                      {!chat.isGroup && otherParticipant?.isVocaTeam && (
-                        <span className="shrink-0 flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full" title="Official Voca Team">
-                          <Check className="w-2.5 h-2.5 text-white" />
+
+        // Determine if we should show an ad after this chat
+        // Algorithm: Show ad after every 5th chat (index 4, 9, 14...)
+        // Use modulus logic relative to available ads
+        const showAd = chatListAds.length > 0 && (filteredChats.indexOf(chat) + 1) % 5 === 0;
+        const adIndex = Math.floor((filteredChats.indexOf(chat) + 1) / 5) - 1;
+        const ad = chatListAds[adIndex % chatListAds.length];
+
+        return (
+          <React.Fragment key={chat.id}>
+            <ContextMenu>
+              <ContextMenuTrigger>
+                <div
+                  onClick={() => {
+                    navigate(`/chat/${chat.id}`);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 p-3 px-4 cursor-pointer transition-colors hover:bg-[var(--wa-hover)] border-b border-[var(--wa-border)]",
+                    isActive && "bg-[var(--wa-hover)]"
+                  )}
+                >
+                  {/* Avatar with online status indicator */}
+                  <div className="relative shrink-0">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={chatImage} />
+                      <AvatarFallback className="bg-[#6a7f8a] text-white">{chatName?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    {/* Online status dot */}
+                    {!chat.isGroup && otherParticipant && (
+                      <span
+                        className={cn(
+                          "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--wa-bg-secondary)]",
+                          onlineUsers.get(otherParticipant.id)?.status === 'online'
+                            ? "bg-green-500"
+                            : "bg-gray-500"
+                        )}
+                        title={
+                          onlineUsers.get(otherParticipant.id)?.status === 'online'
+                            ? 'Online'
+                            : onlineUsers.get(otherParticipant.id)?.lastSeen
+                              ? `Last seen ${formatDistanceToNow(new Date(onlineUsers.get(otherParticipant.id)!.lastSeen), { addSuffix: true })}`
+                              : 'Offline'
+                        }
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-1.5 max-w-[70%]">
+                        <h3 className="font-semibold text-[var(--wa-text-primary)] text-[17px] truncate">{chatName}</h3>
+                        {/* Blue verified badge for Voca Team */}
+                        {!chat.isGroup && otherParticipant?.isVocaTeam && (
+                          <span className="shrink-0 flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full" title="Official Voca Team">
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </span>
+                        )}
+                      </div>
+                      {lastMessage && (
+                        <span className={cn("text-xs whitespace-nowrap font-medium", chat.unreadCount > 0 ? "text-[var(--wa-primary)]" : "text-[var(--wa-text-secondary)]")}>
+                          {format(new Date(lastMessage.timestamp), 'h:mm a')}
                         </span>
                       )}
                     </div>
-                    {lastMessage && (
-                      <span className={cn("text-xs whitespace-nowrap font-medium", chat.unreadCount > 0 ? "text-[var(--wa-primary)]" : "text-[var(--wa-text-secondary)]")}>
-                        {format(new Date(lastMessage.timestamp), 'h:mm a')}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className={cn("text-[15px] truncate max-w-[85%] leading-5 flex items-center gap-1.5",
-                      isTyping ? "text-[var(--wa-primary)] font-medium" :
-                        chat.unreadCount > 0 ? "text-[var(--wa-text-primary)] font-medium" : "text-[var(--wa-text-secondary)]"
-                    )}>
-                      {isTyping ? (
-                        "Typing..."
-                      ) : lastMessage ? (
-                        lastMessage.isDeleted ? (
-                          <span className="flex items-center gap-1.5 opacity-80">
-                            {/* 3D Deleted/Ban Icon */}
-                            <div className="relative w-4 h-4 flex items-center justify-center">
-                              <svg width="0" height="0">
-                                <defs>
-                                  <linearGradient id="gray-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#9ca3af" />
-                                    <stop offset="100%" stopColor="#4b5563" />
-                                  </linearGradient>
-                                </defs>
-                              </svg>
-                              <div className="w-4 h-4 rounded-full bg-gray-500/10 flex items-center justify-center border border-white/5">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="url(#gray-gradient-sidebar)" strokeWidth="2.5" className="w-3 h-3">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="m4.9 4.9 14.2 14.2" />
-                                </svg>
-                              </div>
-                            </div>
-                            <span className="italic">This message was deleted</span>
-                          </span>
-                        ) : lastMessage.type === 'call' ? (
-                          /* Premium 3D Call Icon Logic */
-                          (() => {
-                            const text = lastMessage.content.toLowerCase();
-                            const isVideo = text.includes('video');
-                            const isMissed = text.includes('missed') || text.includes('cancelled');
-                            const isIncoming = text.includes('incoming');
-
-                            // Determine colors
-                            let gradientId = "green-gradient-sidebar";
-                            let bgClass = "bg-emerald-500/10";
-                            let strokeColor = "#22c55e"; // Fallback
-
-                            if (isMissed) {
-                              gradientId = "red-gradient-sidebar";
-                              bgClass = "bg-red-500/10";
-                            } else if (isIncoming) {
-                              gradientId = "blue-gradient-sidebar";
-                              bgClass = "bg-blue-500/10";
-                            }
-
-                            return (
-                              <span className="flex items-center gap-1.5">
-                                {/* SVG Defs for Local Gradients */}
-                                <svg width="0" height="0" className="absolute">
+                    <div className="flex justify-between items-center">
+                      <p className={cn("text-[15px] truncate max-w-[85%] leading-5 flex items-center gap-1.5",
+                        isTyping ? "text-[var(--wa-primary)] font-medium" :
+                          chat.unreadCount > 0 ? "text-[var(--wa-text-primary)] font-medium" : "text-[var(--wa-text-secondary)]"
+                      )}>
+                        {isTyping ? (
+                          "Typing..."
+                        ) : lastMessage ? (
+                          lastMessage.isDeleted ? (
+                            <span className="flex items-center gap-1.5 opacity-80">
+                              {/* 3D Deleted/Ban Icon */}
+                              <div className="relative w-4 h-4 flex items-center justify-center">
+                                <svg width="0" height="0">
                                   <defs>
-                                    <linearGradient id="green-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                                      <stop offset="0%" stopColor="#4ade80" />
-                                      <stop offset="100%" stopColor="#22c55e" />
-                                    </linearGradient>
-                                    <linearGradient id="red-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                                      <stop offset="0%" stopColor="#f87171" />
-                                      <stop offset="100%" stopColor="#ef4444" />
-                                    </linearGradient>
-                                    <linearGradient id="blue-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                                      <stop offset="0%" stopColor="#60a5fa" />
-                                      <stop offset="100%" stopColor="#3b82f6" />
+                                    <linearGradient id="gray-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                      <stop offset="0%" stopColor="#9ca3af" />
+                                      <stop offset="100%" stopColor="#4b5563" />
                                     </linearGradient>
                                   </defs>
                                 </svg>
-
-                                <div className={cn("w-4 h-4 rounded-md flex items-center justify-center border border-white/5", bgClass)}>
-                                  {isVideo ? (
-                                    <Video
-                                      className="w-3 h-3 drop-shadow-sm"
-                                      style={{ stroke: `url(#${gradientId})`, strokeWidth: 2.5 }}
-                                    />
-                                  ) : (
-                                    <Phone
-                                      className={cn("w-3 h-3 drop-shadow-sm", isMissed ? "rotate-[135deg]" : "")}
-                                      style={{ stroke: `url(#${gradientId})`, strokeWidth: 2.5 }}
-                                    />
-                                  )}
+                                <div className="w-4 h-4 rounded-full bg-gray-500/10 flex items-center justify-center border border-white/5">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="url(#gray-gradient-sidebar)" strokeWidth="2.5" className="w-3 h-3">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="m4.9 4.9 14.2 14.2" />
+                                  </svg>
                                 </div>
-                                <span className={cn(isMissed ? "text-red-400" : "", "truncate")}>
-                                  {isMissed ? 'Missed call' :
-                                    text.includes('cancelled') ? 'Cancelled call' :
-                                      isIncoming ? `Incoming ${isVideo ? 'video' : 'voice'} call` :
-                                        `Outgoing ${isVideo ? 'video' : 'voice'} call`}
-                                </span>
-                              </span>
-                            );
-                          })()
-                        ) : (
-                          <>
-                            {/* Status icon for sent messages */}
-                            {lastMessage.senderId === currentUser?.id && (
-                              <span className="text-[var(--wa-text-secondary)] shrink-0">
-                                {lastMessage.status === 'pending' && <Clock className="w-3.5 h-3.5" />}
-                                {lastMessage.status === 'sent' && <Check className="w-3.5 h-3.5" />}
-                                {(lastMessage.status === 'delivered' || lastMessage.status === 'read' || !lastMessage.status) && <CheckCheck className="w-3.5 h-3.5" />}
-                              </span>
-                            )}
-                            {lastMessage.type === 'image' ? (
-                              <span className="flex items-center gap-1.5">
-                                {/* 3D Photo Icon */}
-                                <div className="w-4 h-4 rounded-md bg-purple-500/10 flex items-center justify-center border border-white/5">
+                              </div>
+                              <span className="italic">This message was deleted</span>
+                            </span>
+                          ) : lastMessage.type === 'call' ? (
+                            /* Premium 3D Call Icon Logic */
+                            (() => {
+                              const text = lastMessage.content.toLowerCase();
+                              const isVideo = text.includes('video');
+                              const isMissed = text.includes('missed') || text.includes('cancelled');
+                              const isIncoming = text.includes('incoming');
+
+                              // Determine colors
+                              let gradientId = "green-gradient-sidebar";
+                              let bgClass = "bg-emerald-500/10";
+                              let strokeColor = "#22c55e"; // Fallback
+
+                              if (isMissed) {
+                                gradientId = "red-gradient-sidebar";
+                                bgClass = "bg-red-500/10";
+                              } else if (isIncoming) {
+                                gradientId = "blue-gradient-sidebar";
+                                bgClass = "bg-blue-500/10";
+                              }
+
+                              return (
+                                <span className="flex items-center gap-1.5">
+                                  {/* SVG Defs for Local Gradients */}
                                   <svg width="0" height="0" className="absolute">
                                     <defs>
-                                      <linearGradient id="purple-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#c084fc" />
-                                        <stop offset="100%" stopColor="#9333ea" />
+                                      <linearGradient id="green-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#4ade80" />
+                                        <stop offset="100%" stopColor="#22c55e" />
+                                      </linearGradient>
+                                      <linearGradient id="red-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#f87171" />
+                                        <stop offset="100%" stopColor="#ef4444" />
+                                      </linearGradient>
+                                      <linearGradient id="blue-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#60a5fa" />
+                                        <stop offset="100%" stopColor="#3b82f6" />
                                       </linearGradient>
                                     </defs>
                                   </svg>
-                                  <Camera
-                                    className="w-3 h-3 drop-shadow-sm"
-                                    style={{ stroke: "url(#purple-gradient-sidebar)", strokeWidth: 2.5 }}
-                                  />
-                                </div>
-                                Photo
-                              </span>
-                            ) : (
-                              <span className="truncate">{lastMessage.content}</span>
-                            )}
-                          </>
-                        )
-                      ) : <span className="italic text-sm">Draft</span>}
-                    </p>
-                    {chat.unreadCount > 0 && lastMessage?.senderId !== currentUser?.id && (
-                      <div className="min-w-[22px] h-[22px] rounded-full bg-[var(--wa-primary)] text-[#111b21] flex items-center justify-center text-xs font-bold px-1.5 shrink-0">
-                        {chat.unreadCount}
-                      </div>
-                    )}
+
+                                  <div className={cn("w-4 h-4 rounded-md flex items-center justify-center border border-white/5", bgClass)}>
+                                    {isVideo ? (
+                                      <Video
+                                        className="w-3 h-3 drop-shadow-sm"
+                                        style={{ stroke: `url(#${gradientId})`, strokeWidth: 2.5 }}
+                                      />
+                                    ) : (
+                                      <Phone
+                                        className={cn("w-3 h-3 drop-shadow-sm", isMissed ? "rotate-[135deg]" : "")}
+                                        style={{ stroke: `url(#${gradientId})`, strokeWidth: 2.5 }}
+                                      />
+                                    )}
+                                  </div>
+                                  <span className={cn(isMissed ? "text-red-400" : "", "truncate")}>
+                                    {isMissed ? 'Missed call' :
+                                      text.includes('cancelled') ? 'Cancelled call' :
+                                        isIncoming ? `Incoming ${isVideo ? 'video' : 'voice'} call` :
+                                          `Outgoing ${isVideo ? 'video' : 'voice'} call`}
+                                  </span>
+                                </span>
+                              );
+                            })()
+                          ) : (
+                            <>
+                              {/* Status icon for sent messages */}
+                              {lastMessage.senderId === currentUser?.id && (
+                                <span className="text-[var(--wa-text-secondary)] shrink-0">
+                                  {lastMessage.status === 'pending' && <Clock className="w-3.5 h-3.5" />}
+                                  {lastMessage.status === 'sent' && <Check className="w-3.5 h-3.5" />}
+                                  {(lastMessage.status === 'delivered' || lastMessage.status === 'read' || !lastMessage.status) && <CheckCheck className="w-3.5 h-3.5" />}
+                                </span>
+                              )}
+                              {lastMessage.type === 'image' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Photo Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-purple-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="purple-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#c084fc" />
+                                          <stop offset="100%" stopColor="#9333ea" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    <Camera
+                                      className="w-3 h-3 drop-shadow-sm"
+                                      style={{ stroke: "url(#purple-gradient-sidebar)", strokeWidth: 2.5 }}
+                                    />
+                                  </div>
+                                  Photo
+                                </span>
+                              ) : (
+                                <span className="truncate">{lastMessage.content}</span>
+                              )}
+                            </>
+                          )
+                        ) : <span className="italic text-sm">Draft</span>}
+                      </p>
+                      {chat.unreadCount > 0 && lastMessage?.senderId !== currentUser?.id && (
+                        <div className="min-w-[22px] h-[22px] rounded-full bg-[var(--wa-primary)] text-[#111b21] flex items-center justify-center text-xs font-bold px-1.5 shrink-0">
+                          {chat.unreadCount}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </ContextMenuTrigger>
-            <ContextMenuContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)]">
-              <ContextMenuItem onClick={() => toggleArchiveChat(chat.id)} className="hover:bg-[var(--wa-hover)] cursor-pointer">
-                {userArchivedChats.includes(chat.id) ? 'Unarchive' : 'Archive'} chat
-              </ContextMenuItem>
-              {!chat.isGroup && otherParticipant && (
-                <ContextMenuItem
-                  onClick={() => toggleFavoriteContact(otherParticipant.id)}
-                  className="hover:bg-[var(--wa-hover)] cursor-pointer"
-                >
-                  {currentUser?.favorites?.includes(otherParticipant.id) ? 'Remove from' : 'Add to'} favorites
+              </ContextMenuTrigger>
+              <ContextMenuContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)]">
+                <ContextMenuItem onClick={() => toggleArchiveChat(chat.id)} className="hover:bg-[var(--wa-hover)] cursor-pointer">
+                  {userArchivedChats.includes(chat.id) ? 'Unarchive' : 'Archive'} chat
                 </ContextMenuItem>
-              )}
-              <ContextMenuItem className="hover:bg-[var(--wa-hover)] cursor-pointer text-red-400" onClick={() => deleteChat(chat.id)}>
-                Delete chat
-              </ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
+                {!chat.isGroup && otherParticipant && (
+                  <ContextMenuItem
+                    onClick={() => toggleFavoriteContact(otherParticipant.id)}
+                    className="hover:bg-[var(--wa-hover)] cursor-pointer"
+                  >
+                    {currentUser?.favorites?.includes(otherParticipant.id) ? 'Remove from' : 'Add to'} favorites
+                  </ContextMenuItem>
+                )}
+                <ContextMenuItem className="hover:bg-[var(--wa-hover)] cursor-pointer text-red-400" onClick={() => deleteChat(chat.id)}>
+                  Delete chat
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+
+            {/* In-List Ad */}
+            {
+              showAd && ad && (
+                <div
+                  className="mx-4 my-2 p-3 bg-[var(--wa-panel-bg)] rounded-lg border border-[var(--wa-border)] shadow-sm relative group cursor-pointer hover:bg-[var(--wa-hover)] transition-colors"
+                  onClick={() => {
+                    incrementAdClick(ad.id);
+                    if (ad.link) window.open(ad.link, '_blank');
+                  }}
+                  onMouseEnter={() => incrementAdView(ad.id)}
+                >
+                  <div className="flex gap-3 items-center">
+                    {ad.imageUrl && (
+                      <img src={ad.imageUrl} alt={ad.title} className="w-10 h-10 rounded-lg object-cover bg-gray-100" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-[var(--wa-text-primary)] text-sm truncate">{ad.title}</h4>
+                        <span className="text-[9px] text-[var(--wa-text-secondary)] border border-[var(--wa-border)] px-1 rounded uppercase tracking-wide shrink-0">Ad</span>
+                      </div>
+                      <p className="text-[var(--wa-text-secondary)] text-xs truncate">{ad.content}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+          </React.Fragment>
         );
       })}
 
-      {filteredChats.length === 0 && (
-        <div className="p-8 text-center text-[var(--wa-text-secondary)] text-sm mt-10">
-          {showArchived ? "No archived chats" : "No chats found"}
-        </div>
-      )}
-    </div>
+      {
+        filteredChats.length === 0 && (
+          <div className="p-8 text-center text-[var(--wa-text-secondary)] text-sm mt-10">
+            {showArchived ? "No archived chats" : "No chats found"}
+          </div>
+        )
+      }
+    </div >
   );
 
   const renderGroupsList = () => (

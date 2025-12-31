@@ -339,6 +339,23 @@ export const callsAPI = {
         }),
 };
 
+// ========== PUBLIC ADS API ==========
+export const adsAPI = {
+    getActive: async () => {
+        // Fetch active ads (public)
+        // Note: fetchWithAuth can handle public routes if token is missing
+        return fetchWithAuth('/ads');
+    },
+
+    click: async (adId: string) => {
+        return fetchWithAuth(`/ads/${adId}/click`, { method: 'POST' });
+    },
+
+    view: async (adId: string) => {
+        return fetchWithAuth(`/ads/${adId}/view`, { method: 'POST' });
+    }
+};
+
 // ========== ADMIN API ==========
 export const adminAPI = {
     getStats: async () => fetchWithAuth('/admin/stats'),
@@ -387,5 +404,6 @@ export default {
     posts: postsAPI,
     statuses: statusesAPI,
     calls: callsAPI,
+    ads: adsAPI,
     admin: adminAPI,
 };

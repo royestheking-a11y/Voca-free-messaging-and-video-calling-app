@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { authAPI, usersAPI, chatsAPI, postsAPI, statusesAPI, adminAPI, uploadAPI, callsAPI } from '../../lib/api';
+import { authAPI, usersAPI, chatsAPI, postsAPI, statusesAPI, adminAPI, uploadAPI, callsAPI, adsAPI } from '../../lib/api';
 import { User, Chat, Message, Advertisement, Report, StatusUpdate, UserSettings, Call, Post } from '../../lib/data';
 import { useSocket } from './SocketContext';
 
@@ -68,6 +68,7 @@ interface VocaContextType {
 
     // Ads
     createAd: (ad: Omit<Advertisement, 'id' | 'clicks' | 'views'>) => Promise<void>;
+    updateAd: (adId: string, updates: Partial<Advertisement>) => Promise<void>;
     deleteAd: (adId: string) => Promise<void>;
     toggleAd: (adId: string) => Promise<void>;
     incrementAdClick: (adId: string) => void;
@@ -239,6 +240,14 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 setAds(adsData);
                 setReports(reportsData);
                 setSystemSettings(settingsData);
+            } else {
+                // Fetch public active ads for regular users
+                try {
+                    const activeAds = await adsAPI.getActive();
+                    setAds(activeAds);
+                } catch (e) {
+                    console.error('Failed to fetch ads:', e);
+                }
             }
         } catch (err) {
             console.error('Error loading data:', err);
@@ -1023,6 +1032,15 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const updateAd = async (adId: string, updates: Partial<Advertisement>) => {
+        try {
+            const updatedAd = await adminAPI.updateAd(adId, updates);
+            setAds(prev => prev.map(a => a.id === adId ? updatedAd : a));
+        } catch (err) {
+            console.error('Update ad error:', err);
+        }
+    };
+
     const deleteAd = async (adId: string) => {
         try {
             await adminAPI.deleteAd(adId);
@@ -1177,6 +1195,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         deleteChat,
 
         createAd,
+        updateAd,
         deleteAd,
         toggleAd,
         incrementAdClick,

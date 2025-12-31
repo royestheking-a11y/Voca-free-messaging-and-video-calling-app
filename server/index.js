@@ -16,6 +16,7 @@ import statusRoutes from './routes/statuses.js';
 import callsRoutes from './routes/calls.js';
 import callsDebugRoutes from './routes/calls_debug.js';
 import adminRoutes from './routes/admin.js';
+import adsRoutes from './routes/ads.js';
 
 import User from './models/User.js';
 import Chat from './models/Chat.js';
@@ -83,6 +84,7 @@ app.use('/api/statuses', statusRoutes);
 app.use('/api/calls', callsDebugRoutes); // Debug route must be before general calls route
 app.use('/api/calls', callsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ads', adsRoutes);
 
 // Web Push
 import webpush from 'web-push';

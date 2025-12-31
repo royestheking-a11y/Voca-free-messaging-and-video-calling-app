@@ -721,7 +721,7 @@ const ModerationView = () => {
 // --- Advertisements ---
 
 const AdvertisementsView = () => {
-    const { ads, createAd, deleteAd, toggleAd, incrementAdClick, incrementAdView } = useVoca();
+    const { ads, createAd, updateAd, deleteAd, toggleAd, incrementAdClick, incrementAdView } = useVoca();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingAd, setEditingAd] = useState<Partial<Advertisement> | null>(null);
     const [showImageCropper, setShowImageCropper] = useState(false);
@@ -751,8 +751,7 @@ const AdvertisementsView = () => {
         };
 
         if (editingAd && editingAd.id) {
-            deleteAd(editingAd.id);
-            createAd(newAd);
+            updateAd(editingAd.id, newAd);
             toast.success("Advertisement updated successfully");
         } else {
             createAd(newAd);
