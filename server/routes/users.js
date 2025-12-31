@@ -198,12 +198,44 @@ router.delete('/:id/favorite', protect, async (req, res) => {
 // @access  Private/Admin
 router.delete('/:id', protect, adminOnly, async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const userId = req.params.id;
+        const user = await User.findByIdAndDelete(userId);
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        res.json({ message: 'User deleted successfully' });
+
+        // Cascade Delete all user data
+        // 1. Delete all messages sent by user
+        await Message.deleteMany({ senderId: userId });
+
+        // 2. Delete all status updates
+        await import('../models/Status.js').then(m => m.default.deleteMany({ userId: userId }));
+
+        // 3. Delete all posts
+        await import('../models/Post.js').then(m => m.default.deleteMany({ author: userId }));
+
+        // 4. Remove user from all chats (participants array)
+        await Chat.updateMany(
+            { participants: userId },
+            { $pull: { participants: userId } }
+        );
+
+        // 5. Delete empty chats (if any remain after removal) or chats where they were the only participant
+        const chats = await Chat.find({ participants: { $size: 0 } });
+        for (const chat of chats) {
+            await Message.deleteMany({ chatId: chat._id });
+            await Chat.findByIdAndDelete(chat._id);
+        }
+
+        // 6. Delete reports filed BY them or AGAINST them
+        await import('../models/Report.js').then(m => m.default.deleteMany({
+            $or: [{ reporterId: userId }, { reportedUserId: userId }]
+        }));
+
+        res.json({ message: 'User and all associated data deleted successfully' });
     } catch (error) {
+        console.error('Delete User Error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });

@@ -171,17 +171,20 @@ export const StatusViewer = ({ statuses, initialIndex = 0, onClose }: StatusView
                         <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                             {currentStatus.viewers && currentStatus.viewers.length > 0 ? (
                                 <div className="space-y-2">
-                                    {currentStatus.viewers.map((viewer: any) => (
-                                        <div key={viewer.id || viewer._id} className="flex items-center gap-3 p-2 hover:bg-[var(--wa-hover)] rounded-lg">
-                                            <Avatar className="h-10 w-10">
-                                                <AvatarImage src={viewer.avatar} />
-                                                <AvatarFallback>{viewer.name?.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1">
-                                                <p className="font-medium text-sm">{viewer.name}</p>
+                                    {currentStatus.viewers.map((viewer: any) => {
+                                        if (!viewer) return null;
+                                        return (
+                                            <div key={viewer.id || viewer._id} className="flex items-center gap-3 p-2 hover:bg-[var(--wa-hover)] rounded-lg">
+                                                <Avatar className="h-10 w-10">
+                                                    <AvatarImage src={viewer.avatar} />
+                                                    <AvatarFallback>{viewer.name?.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-sm">{viewer.name}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             ) : (
                                 <p className="text-center text-[var(--wa-text-secondary)] py-8">No views yet</p>

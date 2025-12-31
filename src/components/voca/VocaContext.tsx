@@ -16,7 +16,7 @@ interface VocaContextType {
     error: string | null;
 
     // Auth
-    login: (email: string, password: string) => Promise<{ success: boolean; isAdminPanel?: boolean }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; isAdminPanel?: boolean; error?: string }>;
     googleLogin: (dataOrCredential: string | { googleId: string; email: string; name: string; avatar: string }) => Promise<{ success: boolean; isAdminPanel?: boolean; error?: string }>;
     signup: (userData: any) => Promise<boolean>;
     logout: () => Promise<void>;
@@ -260,7 +260,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // ========== AUTH ==========
-    const login = async (email: string, password: string): Promise<{ success: boolean; isAdminPanel?: boolean }> => {
+    const login = async (email: string, password: string): Promise<{ success: boolean; isAdminPanel?: boolean; error?: string }> => {
         try {
             setLoading(true);
             setError(null);
@@ -291,7 +291,8 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         } catch (err: any) {
             console.error('Login error:', err);
             setError(err.message);
-            return { success: false };
+            // Return the specific error message to the caller
+            return { success: false, error: err.message || err.response?.data?.message };
         } finally {
             setLoading(false);
         }

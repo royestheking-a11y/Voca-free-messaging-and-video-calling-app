@@ -623,12 +623,16 @@ const ModerationView = () => {
                                             </TableCell>
                                             <TableCell className="text-gray-300">
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium text-white">{msg.senderName}</span>
-                                                    <span className="text-xs text-gray-500">{typeof msg.senderId === 'object' ? (msg.senderId._id || msg.senderId.id) : msg.senderId}</span>
+                                                    <span className="font-medium text-white">{msg.senderName || 'Unknown'}</span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {msg.senderId && typeof msg.senderId === 'object'
+                                                            ? (msg.senderId._id || msg.senderId.id)
+                                                            : (msg.senderId || 'N/A')}
+                                                    </span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-gray-500 text-xs">
-                                                {msg.chatName}
+                                                {msg.chatName || 'Unknown Chat'}
                                             </TableCell>
                                             <TableCell className="max-w-[300px]">
                                                 {msg.type === 'image' ? (

@@ -113,6 +113,7 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
     setIsLoading(true);
     try {
       const result = await login(email, password);
+      // login function returns { success, error, isAdminPanel }
       if (result.success) {
         toast.success("Welcome back to Voca");
         if (result.isAdminPanel) {
@@ -122,7 +123,12 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
           navigate(from, { replace: true });
         }
       } else {
-        toast.error("Invalid credentials", { description: "Please check your email and password." });
+        // If specific error message exists (like 'Your account is banned'), show it
+        if (result.error === 'Your account has been banned') {
+          toast.error("Access Denied", { description: "Your account is banned by the administrator." });
+        } else {
+          toast.error("Login Failed", { description: result.error || "Please check your email and password." });
+        }
       }
     } catch (err: any) {
       toast.error("Error", { description: err.message || "Something went wrong." });

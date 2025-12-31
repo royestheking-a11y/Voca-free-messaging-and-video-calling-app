@@ -167,7 +167,7 @@ export const ChatWindow = () => {
     const chatImage = activeChat.isGroup ? activeChat.groupImage : otherParticipant?.avatar;
     const status = activeChat.isGroup ?
         `${activeChat.participants.map(p => p.name.split(' ')[0]).join(', ')}` :
-        otherParticipant?.status === 'online' ? 'Online' : `Last seen ${new Date(otherParticipant?.lastSeen || '').toLocaleTimeString()}`;
+        otherParticipant?.status === 'online' ? 'Online' : `Last seen ${new Date(otherParticipant?.lastSeen || '').toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`;
 
     const isBlocked = !activeChat.isGroup && otherParticipant && currentUser?.blockedUsers?.includes(otherParticipant.id);
 
@@ -667,12 +667,7 @@ export const ChatWindow = () => {
                             <AvatarFallback className="bg-[#6a7f8a] text-white">{chatName?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <h3 className="font-normal text-[var(--wa-text-primary)] text-[16px] leading-tight flex items-center gap-1.5">
-                                {chatName}
-                                {activeChatId && typingUsers.get(activeChatId) === otherParticipant?.id && (
-                                    <span className="text-[var(--wa-primary)] text-xs font-medium animate-pulse ml-1">(typing...)</span>
-                                )}
-                            </h3>
+                            {chatName}
                             <p className={cn("text-xs truncate max-w-[200px] md:max-w-md transition-colors",
                                 isTyping ? "text-[var(--wa-primary)] font-medium" : "text-[var(--wa-text-secondary)]"
                             )}>
