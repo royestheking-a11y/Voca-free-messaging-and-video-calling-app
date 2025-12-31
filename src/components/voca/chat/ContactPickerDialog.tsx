@@ -10,11 +10,12 @@ import { User } from '../../../lib/data';
 interface ContactPickerDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelect: (userId: string) => void;
+    onSelect: (user: User) => void;
     title?: string;
+    filterIds?: string[];
 }
 
-export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select Contact", onlyContacts = false }: ContactPickerDialogProps & { onlyContacts?: boolean }) => {
+export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select Contact", filterIds }: ContactPickerDialogProps) => {
     const { users, currentUser } = useVoca();
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -22,9 +23,9 @@ export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select
         // Remove current user
         if (u.id === currentUser?.id) return false;
 
-        // If onlyContacts is true, only show favorites
-        if (onlyContacts) {
-            return currentUser?.favorites?.includes(u.id);
+        // If filterIds is provided, only show users in that list
+        if (filterIds && !filterIds.includes(u.id)) {
+            return false;
         }
 
         return true;
@@ -58,7 +59,7 @@ export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select
                             <div
                                 key={user.id}
                                 onClick={() => {
-                                    onSelect(user.id);
+                                    onSelect(user);
                                     onClose();
                                 }}
                                 className="flex items-center gap-3 p-3 hover:bg-[var(--wa-hover)] cursor-pointer rounded-lg transition-colors"

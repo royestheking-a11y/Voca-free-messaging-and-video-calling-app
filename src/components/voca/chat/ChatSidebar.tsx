@@ -1010,15 +1010,15 @@ export const ChatSidebar = () => {
         isOpen={showContactPicker}
         onClose={() => setShowContactPicker(false)}
         title={contactPickerMode === 'call' ? 'New Call' : 'New Chat'}
-        onlyContacts={contactPickerMode === 'call'}
-        onSelect={(userId) => {
+        filterIds={contactPickerMode === 'call' ? allMyContacts.map(u => u.id) : undefined}
+        onSelect={(user) => {
           if (contactPickerMode === 'call') {
-            startCall(userId, 'voice');
+            startCall(user.id, 'voice', user);
           } else if (contactPickerMode === 'favorite') {
-            // Handle adding favorite if this mode is used for that
+            toggleFavoriteContact(user.id);
           } else {
             // Default new chat behavior
-            createChat(userId);
+            createChat(user.id);
           }
         }}
       />
