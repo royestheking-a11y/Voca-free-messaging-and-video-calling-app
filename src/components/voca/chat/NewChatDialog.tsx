@@ -73,7 +73,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)] max-w-md p-0 h-[600px] flex flex-col gap-0 overflow-hidden">
+            <DialogContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)] max-w-md p-0 h-[85vh] md:h-[600px] flex flex-col gap-0 overflow-hidden">
                 <DialogHeader className="p-4 bg-[var(--wa-header-bg)] border-b border-[var(--wa-border)]">
                     <DialogTitle>New Chat</DialogTitle>
                     <DialogDescription className="sr-only">Search for a user or add a new contact to start chatting.</DialogDescription>
