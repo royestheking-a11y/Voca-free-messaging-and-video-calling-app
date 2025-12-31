@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Chat from '../models/Chat.js';
 import Message from '../models/Message.js';
+import cloudinary from '../config/cloudinary.js';
 
 const router = express.Router();
 

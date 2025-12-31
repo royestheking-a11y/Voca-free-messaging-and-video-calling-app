@@ -20,7 +20,7 @@ interface LoginPageProps {
 type AuthStep = 'credentials' | 'otp' | 'forgot-password' | 'reset-otp' | 'new-password';
 
 export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
-  const { login, signup } = useVoca();
+  const { login, signup, googleLogin } = useVoca();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -86,7 +86,7 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
           avatar: userInfo.picture
         };
 
-        const result = await useVoca().googleLogin(profileData);
+        const result = await googleLogin(profileData);
         if (result.success) {
           toast.success("Welcome to Voca");
           if (result.isAdminPanel) {
