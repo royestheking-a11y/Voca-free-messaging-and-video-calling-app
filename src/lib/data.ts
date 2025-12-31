@@ -60,7 +60,7 @@ export interface Message {
   timestamp: string;
   status: 'pending' | 'sent' | 'delivered' | 'read';
   reactions?: Record<string, string>;
-  isStarred?: boolean;
+  starredBy?: string[]; // Arrays of user IDs who starred this
   mediaUrl?: string; // For images/videos
   duration?: string; // For voice notes
   fileName?: string; // For docs
@@ -242,7 +242,7 @@ const MOCK_MESSAGES: Message[] = [
     type: 'text',
     timestamp: subMinutes(new Date(), 10).toISOString(),
     status: 'read',
-    isStarred: true
+    starredBy: ['me']
   },
   {
     id: 'm2',
@@ -286,7 +286,7 @@ const MOCK_MESSAGES: Message[] = [
     mediaUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60',
     timestamp: subMinutes(new Date(), 5).toISOString(),
     status: 'read',
-    isStarred: true
+    starredBy: ['me']
   }
 ];
 
@@ -295,7 +295,7 @@ const MOCK_CHATS: Chat[] = [
     id: 'c1',
     participants: [MOCK_USERS[0]],
     messages: [
-      { id: 'm10', senderId: 'u1', content: 'Meeting is at 3 PM', type: 'text', timestamp: subHours(new Date(), 1).toISOString(), status: 'read', isStarred: true },
+      { id: 'm10', senderId: 'u1', content: 'Meeting is at 3 PM', type: 'text', timestamp: subHours(new Date(), 1).toISOString(), status: 'read', starredBy: ['me'] },
       { id: 'm11', senderId: 'me', content: 'Got it, thanks!', type: 'text', timestamp: subHours(new Date(), 1).toISOString(), status: 'read' },
       { id: 'm12', senderId: 'u1', content: 'Design assets', type: 'image', mediaUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&auto=format&fit=crop&q=60', timestamp: subHours(new Date(), 1).toISOString(), status: 'read' }
     ],
@@ -314,7 +314,8 @@ const MOCK_CHATS: Chat[] = [
     participants: [MOCK_USERS[0], MOCK_USERS[1], MOCK_USERS[2]],
     messages: [
       { id: 'm20', senderId: 'u3', content: 'Who is bringing the pizza?', type: 'text', timestamp: subHours(new Date(), 5).toISOString(), status: 'read' },
-      { id: 'm21', senderId: 'u2', content: 'I can order it.', type: 'text', timestamp: subHours(new Date(), 5).toISOString(), status: 'read', isStarred: true }
+      { id: 'm15', senderId: 'u4', content: 'Lunch at 1?', type: 'text', timestamp: subMinutes(new Date(), 30).toISOString(), status: 'read', starredBy: ['me'] },
+      { id: 'm21', senderId: 'u2', content: 'I can order it.', type: 'text', timestamp: subHours(new Date(), 5).toISOString(), status: 'read', starredBy: ['me'] }
     ],
     unreadCount: 0,
     isGroup: true,

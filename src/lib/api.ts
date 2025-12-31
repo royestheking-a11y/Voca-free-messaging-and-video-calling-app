@@ -216,7 +216,7 @@ export const chatsAPI = {
 
     starMessage: async (chatId: string, messageId: string) =>
         fetchWithAuth(`/chats/${chatId}/messages/${messageId}/star`, {
-            method: 'POST',
+            method: 'PUT',
         }),
 
     archive: async (chatId: string) =>

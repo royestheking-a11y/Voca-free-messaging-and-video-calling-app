@@ -248,26 +248,6 @@ router.put('/:chatId/messages/:msgId', protect, async (req, res) => {
     }
 });
 
-// @route   POST /api/chats/:chatId/messages/:msgId/star
-// @desc    Toggle star status of a message
-// @access  Private
-router.post('/:chatId/messages/:msgId/star', protect, async (req, res) => {
-    try {
-        const message = await Message.findById(req.params.msgId);
-        if (!message) {
-            return res.status(404).json({ message: 'Message not found' });
-        }
-
-        // Toggle star
-        message.isStarred = !message.isStarred;
-        await message.save();
-
-        res.json(message);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-});
-
 // @route   POST /api/chats/:id/archive
 // @desc    Toggle archive chat
 // @access  Private
@@ -303,6 +283,42 @@ router.delete('/:id', protect, async (req, res) => {
         res.json({ message: 'Chat deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// @route   PUT /api/chats/:chatId/messages/:messageId/star
+// @desc    Toggle star status of a message for the user
+// @access  Private
+router.put('/:chatId/messages/:messageId/star', protect, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const msg = await Message.findById(messageId);
+
+        if (!msg) {
+            return res.status(404).json({ message: 'Message not found' });
+        }
+
+        const userId = req.user._id;
+        const isStarred = msg.starredBy.includes(userId);
+
+        if (isStarred) {
+            // Unstar
+            await Message.findByIdAndUpdate(messageId, {
+                $pull: { starredBy: userId }
+            });
+        } else {
+            // Star
+            await Message.findByIdAndUpdate(messageId, {
+                $addToSet: { starredBy: userId }
+            });
+        }
+
+        const updatedMsg = await Message.findById(messageId);
+        res.json(updatedMsg);
+
+    } catch (err) {
+        console.error('Error in star message:', err);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

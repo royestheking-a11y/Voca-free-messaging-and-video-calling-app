@@ -19,7 +19,7 @@ interface MessageBubbleProps {
 
 export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: MessageBubbleProps) => {
     const { deleteMessage, starMessage, activeChatId, currentUser, chats } = useVoca();
-    const { emitDeleteMessage, emitStarMessage } = useSocket();
+    const { emitDeleteMessage } = useSocket();
     const [isPlaying, setIsPlaying] = useState(false);
 
     // Helper to emit delete event if needed
@@ -29,16 +29,6 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
         const otherParticipant = activeChat?.participants.find(p => p.id !== currentUser?.id);
         if (otherParticipant) {
             emitDeleteMessage(activeChatId!, message.id, otherParticipant.id, true);
-        }
-    };
-
-    // Helper for Star
-    const handleStar = () => {
-        starMessage(activeChatId!, message.id);
-        const activeChat = chats.find(c => c.id === activeChatId);
-        const otherParticipant = activeChat?.participants.find(p => p.id !== currentUser?.id);
-        if (otherParticipant) {
-            emitStarMessage(activeChatId!, message.id, otherParticipant.id);
         }
     };
 
@@ -256,9 +246,9 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                             <DropdownMenuItem className="focus:bg-[var(--wa-hover)] cursor-pointer" onClick={onReply}>
                                 <Reply className="w-4 h-4 mr-2" /> Reply
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="focus:bg-[var(--wa-hover)] cursor-pointer" onClick={handleStar}>
-                                <Star className={cn("w-4 h-4 mr-2", message.isStarred && "fill-yellow-400 text-yellow-400")} />
-                                {message.isStarred ? 'Unstar' : 'Star'}
+                            <DropdownMenuItem className="focus:bg-[var(--wa-hover)] cursor-pointer" onClick={() => starMessage(activeChatId!, message.id)}>
+                                <Star className={cn("w-4 h-4 mr-2", message.starredBy?.includes(currentUser?.id || '') && "fill-yellow-400 text-yellow-400")} />
+                                {message.starredBy?.includes(currentUser?.id || '') ? 'Unstar' : 'Star'}
                             </DropdownMenuItem>
                             {isEditable && (
                                 <DropdownMenuItem className="focus:bg-[var(--wa-hover)] cursor-pointer" onClick={onEdit}>
@@ -444,7 +434,9 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                                     ))}
                                 </div>
                                 <span className="text-xs text-[var(--wa-text-primary)]/80 font-mono flex justify-between">
-                                    <span>{message.duration || "0:05"}</span>
+                                    {message.starredBy?.includes(currentUser?.id || '') && (
+                                        <Star className="w-3 h-3 text-[var(--wa-text-secondary)] fill-[var(--wa-text-secondary)] opacity-70" />
+                                    )}        <span>{message.duration || "0:05"}</span>
                                 </span>
                             </div>
                         </div>
@@ -468,7 +460,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                     "flex items-center justify-end gap-1 px-2 pb-1.5 -mt-1 select-none float-right",
                     (isImage || isDoc) ? "absolute bottom-1 right-2 bg-black/30 rounded-full px-2 py-0.5" : ""
                 )}>
-                    {message.isStarred && (
+                    {message.starredBy?.includes(currentUser?.id || '') && (
                         <Star className={cn(
                             "w-3 h-3 fill-current mb-[1px]",
                             (isImage || isDoc) ? "text-white/90" : "text-[var(--wa-text-secondary)]"

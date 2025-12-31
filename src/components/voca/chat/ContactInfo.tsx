@@ -60,7 +60,7 @@ export const ContactInfo = ({ user, onClose, isGroup, groupName, groupImage, onS
             c.participants.some(p => p.id === currentUser?.id)
         );
 
-    const starredMessages = relevantChat?.messages.filter(m => m.isStarred && !m.isDeleted) || [];
+    const starredMessages = relevantChat?.messages.filter(m => m.starredBy?.includes(currentUser?.id || '') && !m.isDeleted) || [];
     const mediaMessages = relevantChat?.messages.filter(m => m.type === 'image' && !m.isDeleted) || [];
     const docMessages = relevantChat?.messages.filter(m => m.type === 'doc' && !m.isDeleted) || [];
     const linkMessages = relevantChat?.messages.filter(m => !m.isDeleted && (m.content.includes('http') || m.content.includes('https'))) || [];
