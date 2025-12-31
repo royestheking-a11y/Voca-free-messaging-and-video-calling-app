@@ -62,6 +62,10 @@ router.post('/', protect, async (req, res) => {
         const postObj = populatedPost.toJSON();
         postObj.user = postObj.userId;
 
+        // Emit socket event for real-time updates
+        const io = req.app.get('io');
+        io.emit('post:new', postObj);
+
         res.status(201).json(postObj);
     } catch (error) {
         console.error('Create post error:', error);

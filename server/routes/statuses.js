@@ -46,6 +46,10 @@ router.post('/', protect, async (req, res) => {
         const populatedStatus = await Status.findById(status._id)
             .populate('userId', 'name avatar');
 
+        // Emit socket event for real-time updates
+        const io = req.app.get('io');
+        io.emit('status:new', populatedStatus);
+
         res.status(201).json(populatedStatus);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

@@ -823,10 +823,34 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 fetchCalls();
             };
 
+            const handleNewStatus = (newStatus: StatusUpdate) => {
+                console.log('🌟 New status received:', newStatus.id);
+                // Avoid using stale state by using functional update
+                setStatuses(prev => {
+                    // Avoid duplicates
+                    if (prev.some(s => s.id === newStatus.id)) return prev;
+                    return [newStatus, ...prev];
+                });
+            };
+
+            const handleNewPost = (newPost: Post) => {
+                console.log('📝 New post received:', newPost.id);
+                // Avoid using stale state by using functional update
+                setPosts(prev => {
+                    // Avoid duplicates
+                    if (prev.some(p => p.id === newPost.id)) return prev;
+                    return [newPost, ...prev];
+                });
+            };
+
             socket.on('call:history-updated', handleCallHistoryUpdate);
+            socket.on('status:new', handleNewStatus);
+            socket.on('post:new', handleNewPost);
 
             return () => {
                 socket.off('call:history-updated', handleCallHistoryUpdate);
+                socket.off('status:new', handleNewStatus);
+                socket.off('post:new', handleNewPost);
             };
         }
     }, [fetchCalls, socket]);

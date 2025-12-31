@@ -379,7 +379,7 @@ const seedData = async () => {
                 isAdminPanel: true, // Special flag for admin panel only
                 verified: true,
                 status: 'online',
-                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop',
+                avatar: 'https://res.cloudinary.com/dfvc27xla/image/upload/v1766864808/voca/profiles/voca-team-avatar.png',
                 about: 'Admin Panel Access',
                 joinedAt: new Date()
             });
@@ -392,7 +392,7 @@ const seedData = async () => {
                 role: 'admin',
                 verified: true,
                 status: 'online',
-                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
+                avatar: 'https://res.cloudinary.com/dfvc27xla/image/upload/v1766864808/voca/profiles/voca-team-avatar.png',
                 about: 'System Administrator',
                 joinedAt: new Date()
             });
