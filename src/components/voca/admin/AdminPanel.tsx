@@ -472,7 +472,7 @@ const UserManagementView = () => {
 // --- Moderation (God Mode) ---
 
 const ModerationView = () => {
-    const { deleteMessage, users } = useVoca();
+    const { deleteMessage, users, currentUser } = useVoca();
     const [searchTerm, setSearchTerm] = useState('');
     const [viewingImage, setViewingImage] = useState<string | null>(null);
     const [showDeleted, setShowDeleted] = useState(true);
@@ -499,6 +499,7 @@ const ModerationView = () => {
 
     // Helper to get user name from ID
     const getUserName = (userId: string): string => {
+        if (currentUser?.id === userId) return `${currentUser.name} (You)`;
         const user = users.find(u => u.id === userId);
         // If user not in context (lazy loaded), try to find in message population if available
         // But for now, fallback to ID is okay
