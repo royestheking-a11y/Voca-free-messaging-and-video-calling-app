@@ -139,43 +139,45 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[var(--wa-app-bg)] min-h-0 pb-4">
-                            {filteredUsers.length > 0 ? (
-                                <div className="py-2">
-                                    <div className="px-4 py-2 text-[var(--wa-primary)] text-xs font-bold uppercase tracking-wider">Search Results</div>
-                                    {filteredUsers.map(user => (
-                                        <div
-                                            key={user.id}
-                                            onClick={() => handleCreateChat(user.id)}
-                                            className="px-4 py-3 flex items-center gap-4 cursor-pointer hover:bg-[var(--wa-hover)] transition-colors"
-                                        >
-                                            <Avatar>
-                                                <AvatarImage src={user.avatar} />
-                                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1">
-                                                <h3 className="text-[var(--wa-text-primary)] font-medium">{user.name}</h3>
-                                                <p className="text-[var(--wa-text-secondary)] text-sm line-clamp-1">{user.about || "Hey there! I am using Voca."}</p>
+                        <ScrollArea className="flex-1 bg-[var(--wa-app-bg)] min-h-0">
+                            <div className="pb-4">
+                                {filteredUsers.length > 0 ? (
+                                    <div className="py-2">
+                                        <div className="px-4 py-2 text-[var(--wa-primary)] text-xs font-bold uppercase tracking-wider">Search Results</div>
+                                        {filteredUsers.map(user => (
+                                            <div
+                                                key={user.id}
+                                                onClick={() => handleCreateChat(user.id)}
+                                                className="px-4 py-3 flex items-center gap-4 cursor-pointer hover:bg-[var(--wa-hover)] transition-colors"
+                                            >
+                                                <Avatar>
+                                                    <AvatarImage src={user.avatar} />
+                                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1">
+                                                    <h3 className="text-[var(--wa-text-primary)] font-medium">{user.name}</h3>
+                                                    <p className="text-[var(--wa-text-secondary)] text-sm line-clamp-1">{user.about || "Hey there! I am using Voca."}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-40 text-[var(--wa-text-secondary)] p-6 text-center">
-                                    {searchQuery ? (
-                                        <>
-                                            <p>No users found.</p>
-                                            <p className="text-sm mt-1">Try a different email.</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Search className="w-8 h-8 opacity-20 mb-2" />
-                                            <p>Search for a user to start chatting</p>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-40 text-[var(--wa-text-secondary)] p-6 text-center">
+                                        {searchQuery ? (
+                                            <>
+                                                <p>No users found.</p>
+                                                <p className="text-sm mt-1">Try a different email.</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Search className="w-8 h-8 opacity-20 mb-2" />
+                                                <p>Search for a user to start chatting</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
                     </div>
                 )}
             </DialogContent>
