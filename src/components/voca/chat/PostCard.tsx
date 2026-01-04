@@ -20,7 +20,13 @@ export const PostCard = ({ post }: PostCardProps) => {
     const [commentText, setCommentText] = useState('');
 
     const isLiked = currentUser ? post.likes.includes(currentUser.id) : false;
-    const isOwnPost = currentUser?.id === post.userId;
+
+    // Handle both string ID and populated user object
+    const postUserId = typeof post.userId === 'string'
+        ? post.userId
+        : (post.userId as any)?._id || (post.userId as any)?.id;
+
+    const isOwnPost = currentUser?.id === postUserId;
 
     const handleLike = () => {
         likePost(post.id);

@@ -11,7 +11,9 @@ router.get('/', protect, async (req, res) => {
     try {
         const { limit = 20, skip = 0 } = req.query;
 
-        const posts = await Post.find()
+        const posts = await Post.find({
+            userId: { $in: [...req.user.favorites, req.user._id] }
+        })
             .populate('userId', 'name avatar verified isVocaTeam blockedUsers')
             .populate('comments.userId', 'name avatar')
             .sort({ timestamp: -1 })
