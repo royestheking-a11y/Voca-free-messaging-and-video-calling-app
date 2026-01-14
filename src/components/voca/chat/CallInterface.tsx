@@ -51,8 +51,12 @@ const CallInterfaceComponent = ({
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
     const remoteStreamRef = useRef<MediaStream | null>(null);
+
+    // Separate refs for fullscreen and minimized views
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const minimizedLocalVideoRef = useRef<HTMLVideoElement>(null);
+    const minimizedRemoteVideoRef = useRef<HTMLVideoElement>(null);
     const remoteAudioRef = useRef<HTMLAudioElement>(null);
     const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]);
     const ringtoneRef = useRef<HTMLAudioElement | null>(null);
@@ -185,44 +189,40 @@ const CallInterfaceComponent = ({
         return () => cleanup();
     }, []);
 
-    // Attach local stream to PiP when available (do NOT depend on isIncoming/isVideo to prevent re-renders)
+    // Attach local stream to video elements when available
     useEffect(() => {
-        if (localVideoRef.current && localStream) {
-            console.log('📹 [EFFECT] Attaching local stream to PiP', {
+        const targetRef = isMinimized ? minimizedLocalVideoRef.current : localVideoRef.current;
+
+        if (targetRef && localStream) {
+            console.log('📹 [EFFECT] Attaching local stream to', isMinimized ? 'minimized' : 'fullscreen', 'PiP', {
                 streamId: localStream.id,
                 tracks: localStream.getTracks().length
             });
-            localVideoRef.current.srcObject = localStream;
-            // Explicitly play local video (it is muted so it should allow autoplay, but being safe)
-            localVideoRef.current.play().catch(e => console.error('📹 Error playing local PiP:', e));
+            targetRef.srcObject = localStream;
+            targetRef.play().catch(e => console.error('📹 Error playing local video:', e));
         }
-    }, [localStream, isVideo, isMinimized]); // Re-run when video UI appears OR minimizes
+    }, [localStream, isVideo, isMinimized]);
 
-    // Attach remote stream to video/audio when available (do NOT depend on isIncoming/isVideo)
+    // Attach remote stream to video/audio elements when available  
     useEffect(() => {
-        if (remoteVideoRef.current && remoteStream) {
-            console.log('📺 [EFFECT] Attaching remote stream to main video', {
+        const targetVideoRef = isMinimized ? minimizedRemoteVideoRef.current : remoteVideoRef.current;
+
+        if (targetVideoRef && remoteStream && isVideo) {
+            console.log('📺 [EFFECT] Attaching remote stream to', isMinimized ? 'minimized' : 'fullscreen', 'video', {
                 streamId: remoteStream.id,
                 tracks: remoteStream.getTracks().length
             });
-            remoteVideoRef.current.srcObject = remoteStream;
-            remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video from effect:', e));
+            targetVideoRef.srcObject = remoteStream;
+            targetVideoRef.play().catch(e => console.error('❌ Error playing remote video:', e));
         }
 
-        // Always attach to audio element if it exists, as a fallback/primary audio source
-        // This ensures audio works even if video element fails or is minimized without video
-        if (remoteAudioRef.current && remoteStream) {
-            // Only if NOT playing through video element? 
-            // Actually, letting both play might cause echo/issues.
-            // Safer: Only play audio ref if !isVideo OR isMinimized (and video might be small/missing)
-            // But if isVideo=true, we rely on video element.
-            if (!isVideo) {
-                console.log('🔊 [EFFECT] Attaching remote stream to audio element');
-                remoteAudioRef.current.srcObject = remoteStream;
-                remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
-            }
+        // Attach to audio element for voice calls
+        if (remoteAudioRef.current && remoteStream && !isVideo) {
+            console.log('🔊 [EFFECT] Attaching remote stream to audio element');
+            remoteAudioRef.current.srcObject = remoteStream;
+            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio:', e));
         }
-    }, [remoteStream, isVideo, isMinimized]); // Re-run when video UI appears OR minimizes
+    }, [remoteStream, isVideo, isMinimized]);
 
     // Handle Ringtone
     useEffect(() => {
@@ -604,14 +604,13 @@ const CallInterfaceComponent = ({
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                drag
-                dragMomentum={false}
-                className="fixed z-[9999] bottom-24 right-4 w-32 h-48 sm:w-40 sm:h-60 bg-black rounded-xl shadow-2xl border border-white/20 overflow-hidden cursor-grab active:cursor-grabbing pointer-events-auto"
+                className="fixed z-[9999] bottom-24 right-4 w-32 h-48 sm:w-40 sm:h-60 bg-black rounded-xl shadow-2xl border border-white/20 overflow-hidden pointer-events-auto cursor-pointer"
+                onClick={() => setIsMinimized(false)} // Click anywhere to restore
             >
                 {/* Content */}
                 {isVideo ? (
                     <video
-                        ref={remoteVideoRef}
+                        ref={minimizedRemoteVideoRef}
                         autoPlay
                         playsInline
                         className="w-full h-full object-cover"
@@ -629,21 +628,18 @@ const CallInterfaceComponent = ({
                     </div>
                 )}
 
-                {/* Overlay Controls */}
-                <div
-                    className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 hover:opacity-100"
-                    onClick={() => setIsMinimized(false)} // Click anywhere to restore
-                >
+                {/* Expand Icon Hint */}
+                <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 hover:opacity-100 pointer-events-none">
                     <div className="p-2 rounded-full bg-white/20 backdrop-blur text-white">
-                        <Monitor className="w-5 h-5" /> {/* Use Expand Icon if available, or Monitor/Maximize */}
+                        <Monitor className="w-5 h-5" />
                     </div>
                 </div>
 
                 {/* PiP Local Video (if video call) */}
                 {isVideo && localStream && (
-                    <div className="absolute bottom-2 right-2 w-10 h-14 bg-black border border-white/20 rounded-md overflow-hidden">
+                    <div className="absolute bottom-2 right-2 w-10 h-14 bg-black border border-white/20 rounded-md overflow-hidden pointer-events-none">
                         <video
-                            ref={localVideoRef}
+                            ref={minimizedLocalVideoRef}
                             autoPlay
                             playsInline
                             muted
@@ -883,7 +879,7 @@ const CallInterfaceComponent = ({
                             <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl max-w-full overflow-x-auto no-scrollbar pointer-events-auto">
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => setIsMinimized(true)}
+                                    onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
                                     className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0 bg-white/10 text-white hover:bg-white/20")}
                                 >
                                     <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -891,7 +887,7 @@ const CallInterfaceComponent = ({
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={toggleVideoState}
+                                    onClick={(e) => { e.stopPropagation(); toggleVideoState(); }}
                                     className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", isVideoEnabled ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
                                 >
                                     {isVideoEnabled ? <Video className="w-5 h-5 sm:w-6 sm:h-6" /> : <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -899,7 +895,7 @@ const CallInterfaceComponent = ({
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={toggleScreenShare}
+                                    onClick={(e) => { e.stopPropagation(); toggleScreenShare(); }}
                                     className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", isScreenSharing ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
                                     title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
                                 >
@@ -909,7 +905,7 @@ const CallInterfaceComponent = ({
                                 {hasMultipleCameras && isVideoEnabled && (
                                     <motion.button
                                         whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                        onClick={toggleCamera}
+                                        onClick={(e) => { e.stopPropagation(); toggleCamera(); }}
                                         className="p-3 sm:p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20 flex-shrink-0"
                                         title="Switch Camera"
                                     >
@@ -919,7 +915,7 @@ const CallInterfaceComponent = ({
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={toggleMute}
+                                    onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                                     className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", !isMuted ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
                                 >
                                     {isMuted ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
@@ -927,7 +923,7 @@ const CallInterfaceComponent = ({
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleEnd()}
+                                    onClick={(e) => { e.stopPropagation(); handleEnd(); }}
                                     className="p-3 sm:p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:bg-red-600 flex-shrink-0"
                                 >
                                     <PhoneOff className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
@@ -1008,21 +1004,21 @@ const CallInterfaceComponent = ({
                 className="relative z-20 m-4 p-6 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
             >
                 <div className="flex items-center justify-center gap-8">
-                    <button onClick={toggleMute} className="flex flex-col items-center gap-2 group">
+                    <button onClick={(e) => { e.stopPropagation(); toggleMute(); }} className="flex flex-col items-center gap-2 group">
                         <div className={cn("p-6 rounded-full transition-all shadow-lg", isMuted ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
                             {isMuted ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
                         </div>
                         <span className="text-white text-xs font-medium tracking-wide">Mute</span>
                     </button>
 
-                    <button onClick={() => handleEnd()} className="flex flex-col items-center gap-2 group">
+                    <button onClick={(e) => { e.stopPropagation(); handleEnd(); }} className="flex flex-col items-center gap-2 group">
                         <div className="p-6 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40 hover:bg-red-600 hover:scale-105 transition-all active:scale-95">
                             <PhoneOff className="w-8 h-8 fill-current" />
                         </div>
                         <span className="text-white text-xs font-medium tracking-wide">End</span>
                     </button>
 
-                    <button onClick={() => setIsMinimized(true)} className="flex flex-col items-center gap-2 group">
+                    <button onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }} className="flex flex-col items-center gap-2 group">
                         <div className={cn("p-6 rounded-full transition-all shadow-lg bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
                             <MessageSquare className="w-8 h-8" />
                         </div>
