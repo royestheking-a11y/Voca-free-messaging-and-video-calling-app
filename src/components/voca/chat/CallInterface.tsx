@@ -766,7 +766,6 @@ const CallInterfaceComponent = ({
                     playsInline
                     className="absolute inset-0 w-full h-full object-cover"
                     style={{ zIndex: 1 }}
-                    onClick={() => setIsControlsVisible(!isControlsVisible)}
                     onLoadedMetadata={(e) => {
                         console.log('📹 Remote video metadata loaded:', {
                             videoWidth: e.currentTarget.videoWidth,
