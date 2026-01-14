@@ -26,7 +26,8 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                 u.id !== currentUser?.id &&
                 !currentUser?.blockedUsers?.includes(u.id) &&
                 !u.blockedUsers?.includes(currentUser?.id || '') &&
-                u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                // STRICT PRIVACY: Only exact email match
+                u.email.toLowerCase() === searchQuery.toLowerCase()
             )
             .sort((a, b) => a.name.localeCompare(b.name))
         : [];
@@ -119,7 +120,7 @@ export const NewChatDialog = ({ isOpen, onClose }: NewChatDialogProps) => {
                                 <div className="relative">
                                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--wa-text-secondary)]" />
                                     <Input
-                                        placeholder="Search email"
+                                        placeholder="Search by exact email address..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="pl-9 bg-[var(--wa-header-bg)] border-none text-[var(--wa-text-primary)] h-9 focus-visible:ring-1 ring-[var(--wa-primary)]"
