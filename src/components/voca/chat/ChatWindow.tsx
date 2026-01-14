@@ -15,6 +15,9 @@ import { Smile, Paperclip, Mic, Send, Phone, Video, MoreVertical, Search, Image 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import { MediaPreviewDialog } from './MediaPreviewDialog';
+import { AttachmentMenu } from './AttachmentMenu';
+import { CreateEventDialog } from './CreateEventDialog';
+import { CreatePollDialog } from './CreatePollDialog';
 import { cn } from '../../ui/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -56,6 +59,10 @@ export const ChatWindow = () => {
     // Search State
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Event Dialog State
+    const [showEventDialog, setShowEventDialog] = useState(false);
+    const [showPollDialog, setShowPollDialog] = useState(false);
 
     // Safety Tools State
     const [showSafetyTools, setShowSafetyTools] = useState(false);
@@ -312,24 +319,26 @@ export const ChatWindow = () => {
 
 
 
-    const handleSend = async (e?: React.FormEvent) => {
-        e?.preventDefault();
-        if (!inputText.trim()) return;
+    const handleSend = async (e?: React.FormEvent, contentOverride?: string) => {
+        if (e && typeof e !== 'string') e.preventDefault();
 
-        if (editingMessageId && activeChat && otherParticipant) {
-            editMessage(activeChat.id, editingMessageId, inputText);
-            emitEditMessage(activeChat.id, editingMessageId, otherParticipant.id, inputText);
+        const content = contentOverride || inputText;
+        if (!content.trim()) return;
+
+        if (editingMessageId && activeChat && otherParticipant && !contentOverride) {
+            editMessage(activeChat.id, editingMessageId, content);
+            emitEditMessage(activeChat.id, editingMessageId, otherParticipant.id, content);
             setEditingMessageId(null);
             toast.success("Message edited");
         } else if (activeChat && otherParticipant) {
-            const message = await sendMessage(activeChat.id, inputText, 'text', undefined, undefined, replyTo?.id);
+            const message = await sendMessage(activeChat.id, content, 'text', undefined, undefined, replyTo?.id);
             if (message) {
                 // Emit socket event to notify recipient in real-time
                 emitSocketMessage(otherParticipant.id, activeChat.id, message);
             }
-            setReplyTo(null);
+            if (!contentOverride) setReplyTo(null);
         }
-        setInputText('');
+        if (!contentOverride) setInputText('');
     };
 
     const handleEdit = (message: any) => {
@@ -934,42 +943,70 @@ export const ChatWindow = () => {
                                         </PopoverContent>
                                     </Popover>
 
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
                                             <Button variant="ghost" size="icon" className="text-[var(--wa-text-secondary)] hover:bg-transparent hover:text-[var(--wa-text-primary)] transition-colors">
                                                 <Paperclip className="w-6 h-6" />
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="start" sideOffset={10} className="w-52 p-2 mb-2 bg-[var(--wa-panel-bg)] rounded-2xl shadow-xl border-[var(--wa-border)] animate-in slide-in-from-bottom-2 fade-in duration-200">
-                                            <DropdownMenuItem
-                                                className="flex items-center gap-3 p-3 cursor-pointer rounded-xl hover:bg-[var(--wa-hover)] focus:bg-[var(--wa-hover)]"
-                                                onClick={() => handleFileUpload('image')}
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-[var(--wa-primary)]/10 flex items-center justify-center text-[var(--wa-primary)] shadow-sm">
-                                                    <ImageIcon className="w-5 h-5" />
-                                                </div>
-                                                <span className="font-medium text-[var(--wa-text-primary)]">Photos & Videos</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="flex items-center gap-3 p-3 cursor-pointer rounded-xl hover:bg-[var(--wa-hover)] focus:bg-[var(--wa-hover)]"
-                                                onClick={() => setShowCamera(true)}
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-[var(--wa-primary)]/10 flex items-center justify-center text-[var(--wa-primary)] shadow-sm">
-                                                    <Camera className="w-5 h-5" />
-                                                </div>
-                                                <span className="font-medium text-[var(--wa-text-primary)]">Camera</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="flex items-center gap-3 p-3 cursor-pointer rounded-xl hover:bg-[var(--wa-hover)] focus:bg-[var(--wa-hover)]"
-                                                onClick={() => handleFileUpload('doc')}
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-[var(--wa-primary)]/10 flex items-center justify-center text-[var(--wa-primary)] shadow-sm">
-                                                    <FileText className="w-5 h-5" />
-                                                </div>
-                                                <span className="font-medium text-[var(--wa-text-primary)]">Document</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            align="start"
+                                            side="top"
+                                            sideOffset={10}
+                                            className="w-auto p-0 bg-[#0f1c24] border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                                        >
+                                            <AttachmentMenu
+                                                onSelect={(type) => {
+                                                    // Close popover logic would need state uplifting if we want strict control,
+                                                    // but PopoverContent usually closes on interaction if not prevented.
+                                                    // Actually radix-ui popover might need a click to close manually if inside custom component?
+                                                    // Usually simpler to just trigger the action.
+
+                                                    switch (type) {
+                                                        case 'image':
+                                                            handleFileUpload('image');
+                                                            break;
+                                                        case 'camera':
+                                                            setShowCamera(true);
+                                                            break;
+                                                        case 'document':
+                                                            handleFileUpload('doc');
+                                                            break;
+                                                        case 'event':
+                                                            setShowEventDialog(true);
+                                                            break;
+                                                        case 'poll':
+                                                            setShowPollDialog(true);
+                                                            break;
+                                                        case 'location':
+                                                        case 'contact':
+                                                        case 'audio':
+                                                            toast.info(`${type.charAt(0).toUpperCase() + type.slice(1)} sharing coming soon`);
+                                                            break;
+                                                    }
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+
+                                    <CreateEventDialog
+                                        isOpen={showEventDialog}
+                                        onClose={() => setShowEventDialog(false)}
+                                        onSend={(eventData) => {
+                                            // Format event message
+                                            const eventText = `📅 Event: ${eventData.eventName}\n${eventData.description ? `${eventData.description}\n` : ''}🕒 ${eventData.date} at ${eventData.time}\n📍 ${eventData.location || 'No location'}`;
+                                            handleSend(undefined, eventText);
+                                        }}
+                                    />
+
+                                    <CreatePollDialog
+                                        isOpen={showPollDialog}
+                                        onClose={() => setShowPollDialog(false)}
+                                        onSend={(question, options, multiple) => {
+                                            const pollText = `📊 Poll: ${question}\n${options.map((opt, i) => `${i + 1}. ${opt}`).join('\n')}\n(${multiple ? 'Multiple answers allowed' : 'Single answer'})`;
+                                            handleSend(undefined, pollText);
+                                        }}
+                                    />
 
                                     <form onSubmit={handleSend} className="flex-1 flex gap-2">
                                         <Input
