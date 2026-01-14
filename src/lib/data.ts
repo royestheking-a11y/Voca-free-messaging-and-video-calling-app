@@ -56,7 +56,7 @@ export interface Message {
   id: string;
   senderId: string;
   content: string;
-  type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' | 'audio' | 'contact';
+  type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' | 'audio' | 'contact' | 'location';
   timestamp: string;
   status: 'pending' | 'sent' | 'delivered' | 'read';
   reactions?: Record<string, string>;

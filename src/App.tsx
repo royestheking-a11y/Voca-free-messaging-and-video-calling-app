@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import 'leaflet/dist/leaflet.css';
 import { VocaProvider, useVoca } from './components/voca/VocaContext';
 import { SocketProvider } from './components/voca/SocketContext';
 import { LoginPage } from './components/voca/auth/LoginPage';

@@ -8,7 +8,7 @@ import { Button } from '../../ui/button';
 import {
   Search, Plus, MoreVertical, MessageSquare, CircleDashed,
   Users, Phone, Camera, Archive, PhoneIncoming, PhoneOutgoing,
-  Video, Star, ArrowLeft, Clock, Check, CheckCheck, Edit, FileText, BarChart2
+  Video, Star, ArrowLeft, Clock, Check, CheckCheck, Edit, FileText, BarChart2, MapPin
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { cn } from '../../ui/utils';
@@ -640,10 +640,70 @@ export const ChatSidebar = () => {
                                         </linearGradient>
                                       </defs>
                                     </svg>
-                                    {/* Headphones Icon */}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="url(#orange-gradient-sidebar)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-headphones"><path d="M3 14v-3a9 9 0 0 1 18 0v3" /><path d="M2 19a3 3 0 0 0 3 3h2v-9H2v6z" /><path d="M22 19a3 3 0 0 1-3 3h-2v-9h5v6z" /></svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="url(#orange-gradient-sidebar)" strokeWidth="2.5" className="w-3 h-3">
+                                      <path d="M9 18V5l12-2v13" />
+                                      <circle cx="6" cy="18" r="3" />
+                                      <circle cx="18" cy="16" r="3" />
+                                    </svg>
                                   </div>
                                   Audio
+                                </span>
+                              ) : lastMessage.type === 'contact' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Contact Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-teal-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="teal-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#2dd4bf" />
+                                          <stop offset="100%" stopColor="#0d9488" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    <Users
+                                      className="w-3 h-3 drop-shadow-sm"
+                                      style={{ stroke: "url(#teal-gradient-sidebar)", strokeWidth: 2.5 }}
+                                    />
+                                  </div>
+                                  Contact
+                                </span>
+                              ) : lastMessage.type === 'location' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Location Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-rose-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="rose-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#fb7185" />
+                                          <stop offset="100%" stopColor="#e11d48" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    <MapPin // Assuming MapPin is imported. If not, I will add it. I saw MapPin used in LocationShareDialog, need to check imports in Sidebar.
+                                      className="w-3 h-3 drop-shadow-sm"
+                                      style={{ stroke: "url(#rose-gradient-sidebar)", strokeWidth: 2.5 }}
+                                    />
+                                  </div>
+                                  Location
+                                </span>
+                              ) : lastMessage.type === 'video' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Video Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-blue-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="blue-gradient-sidebar-vid" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#60A5FA" />
+                                          <stop offset="100%" stopColor="#3B82F6" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    <Video
+                                      className="w-3 h-3 drop-shadow-sm"
+                                      style={{ stroke: "url(#blue-gradient-sidebar-vid)", strokeWidth: 2.5 }}
+                                    />
+                                  </div>
+                                  Video
                                 </span>
                               ) : lastMessage.type === 'voice' ? (
                                 <span className="flex items-center gap-1.5">
@@ -711,7 +771,7 @@ export const ChatSidebar = () => {
                     </div>
                   </div>
                 </div>
-              </ContextMenuTrigger>
+              </ContextMenuTrigger >
               <ContextMenuContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)]">
                 <ContextMenuItem onClick={() => toggleArchiveChat(chat.id)} className="hover:bg-[var(--wa-hover)] cursor-pointer">
                   {userArchivedChats.includes(chat.id) ? 'Unarchive' : 'Archive'} chat
@@ -728,7 +788,7 @@ export const ChatSidebar = () => {
                   Delete chat
                 </ContextMenuItem>
               </ContextMenuContent>
-            </ContextMenu>
+            </ContextMenu >
 
             {/* In-List Ad */}
             {
@@ -756,7 +816,7 @@ export const ChatSidebar = () => {
                 </div>
               )
             }
-          </React.Fragment>
+          </React.Fragment >
         );
       })}
 

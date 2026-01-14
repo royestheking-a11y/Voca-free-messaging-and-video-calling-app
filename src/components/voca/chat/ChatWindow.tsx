@@ -19,6 +19,7 @@ import { AttachmentMenu } from './AttachmentMenu';
 import { CreateEventDialog } from './CreateEventDialog';
 import { CreatePollDialog } from './CreatePollDialog';
 import { ContactSelectionDialog } from './ContactSelectionDialog';
+import { LocationShareDialog } from './LocationShareDialog';
 import { cn } from '../../ui/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -71,6 +72,7 @@ export const ChatWindow = () => {
     const [showEventDialog, setShowEventDialog] = useState(false);
     const [showPollDialog, setShowPollDialog] = useState(false);
     const [showContactDialog, setShowContactDialog] = useState(false);
+    const [showLocationDialog, setShowLocationDialog] = useState(false);
 
     // Safety Tools State
     const [showSafetyTools, setShowSafetyTools] = useState(false);
@@ -1004,6 +1006,9 @@ export const ChatWindow = () => {
                                                             case 'contact':
                                                                 setShowContactDialog(true);
                                                                 break;
+                                                            case 'location':
+                                                                setShowLocationDialog(true);
+                                                                break;
                                                             case 'audio':
                                                             case 'image':
                                                                 handleFileUpload(type);
@@ -1129,6 +1134,15 @@ export const ChatWindow = () => {
                         });
                         sendMessage(activeChatId!, content, 'contact');
                     }
+                }}
+            />
+
+            <LocationShareDialog
+                isOpen={showLocationDialog}
+                onClose={() => setShowLocationDialog(false)}
+                onShare={(location) => {
+                    const content = JSON.stringify(location);
+                    sendMessage(activeChatId!, content, 'location');
                 }}
             />
 

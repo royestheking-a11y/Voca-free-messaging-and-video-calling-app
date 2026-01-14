@@ -4,7 +4,7 @@ import { Message } from '../../../lib/data';
 import { cn } from '../../ui/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { format } from 'date-fns';
-import { Check, CheckCheck, FileText, Download, ChevronDown, Trash2, Star, Reply, Ban, Play, Pause, Edit2, Video, Phone, MessageCircle } from 'lucide-react';
+import { Check, CheckCheck, FileText, Download, ChevronDown, Trash2, Star, Reply, Ban, Play, Pause, Edit2, Video, Phone, MessageCircle, MapPin } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../ui/dropdown-menu';
 import { useVoca } from '../VocaContext';
@@ -288,6 +288,70 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                             </div>
                             <span>Message</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Location Rendering Logic
+    if (message.type === 'location') {
+        let locationData: any;
+        try {
+            locationData = JSON.parse(message.content);
+        } catch (e) {
+            locationData = { lat: 0, lng: 0, name: "Unknown Location" };
+        }
+
+        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${locationData.lat},${locationData.lng}`;
+
+        return (
+            <div className={cn("flex w-full mb-3 justify-center")}>
+                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl overflow-hidden min-w-[320px] max-w-[90%] select-none group/location">
+                    {/* Map Preview Area */}
+                    <div className="relative h-40 w-full bg-[#eef0f3] overflow-hidden group-hover/location:opacity-95 transition-opacity">
+                        {/* Static Map Background Pattern */}
+                        <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')] bg-cover bg-center opacity-30 invert dark:invert-0" />
+
+                        {/* Pin Animation */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                            <div className="relative">
+                                <div className="w-4 h-4 bg-[var(--wa-primary)] rounded-full animate-ping absolute inset-0 opacity-75"></div>
+                                <div className="w-4 h-4 bg-[var(--wa-primary)] rounded-full relative shadow-lg ring-4 ring-white dark:ring-gray-800"></div>
+                                <div className="w-1 h-3 bg-[var(--wa-primary)] absolute left-1.5 top-3 rounded-b-full"></div>
+                            </div>
+                        </div>
+
+                        {/* Coordinates Overlay */}
+                        <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded text-[10px] font-mono">
+                            {locationData.lat.toFixed(4)}, {locationData.lng.toFixed(4)}
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4 border-b border-[var(--wa-border)]/50">
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[var(--wa-primary)]/10 flex items-center justify-center shrink-0">
+                                <MapPin className="w-5 h-5 text-[var(--wa-primary)]" />
+                            </div>
+                            <div>
+                                <h3 className="text-[var(--wa-text-primary)] font-medium text-base line-clamp-1">{locationData.name || "Access Location"}</h3>
+                                <p className="text-[var(--wa-text-secondary)] text-sm line-clamp-2 mt-0.5">{locationData.address || "Click to view details"}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="bg-[var(--wa-hover)]/30 p-2">
+                        <a
+                            href={mapUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full flex items-center justify-center gap-2 py-3 text-[var(--wa-primary)] bg-[var(--wa-primary)]/10 hover:bg-[var(--wa-primary)]/15 active:bg-[var(--wa-primary)]/20 rounded-xl cursor-pointer transition-colors font-semibold text-sm"
+                        >
+                            <MapPin className="w-4 h-4" />
+                            View on Google Maps
+                        </a>
                     </div>
                 </div>
             </div>
