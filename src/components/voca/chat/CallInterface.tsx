@@ -205,15 +205,29 @@ const CallInterfaceComponent = ({
 
     // Attach remote stream to video/audio elements when available  
     useEffect(() => {
+        console.log('🔄 [STREAM ATTACHMENT] Effect triggered', {
+            isVideo,
+            isMinimized,
+            hasRemoteStream: !!remoteStream,
+            remoteStreamId: remoteStream?.id,
+            trackCount: remoteStream?.getTracks().length
+        });
+
         const targetVideoRef = isMinimized ? minimizedRemoteVideoRef.current : remoteVideoRef.current;
 
         if (targetVideoRef && remoteStream && isVideo) {
             console.log('📺 [EFFECT] Attaching remote stream to', isMinimized ? 'minimized' : 'fullscreen', 'video', {
                 streamId: remoteStream.id,
-                tracks: remoteStream.getTracks().length
+                tracks: remoteStream.getTracks().map(t => `${t.kind}:${t.enabled}`)
             });
             targetVideoRef.srcObject = remoteStream;
             targetVideoRef.play().catch(e => console.error('❌ Error playing remote video:', e));
+        } else {
+            console.warn('⚠️ [EFFECT] Cannot attach remote stream', {
+                hasTargetRef: !!targetVideoRef,
+                hasRemoteStream: !!remoteStream,
+                isVideo
+            });
         }
 
         // Attach to audio element for voice calls
@@ -765,16 +779,19 @@ const CallInterfaceComponent = ({
                     autoPlay
                     playsInline
                     className="absolute inset-0 w-full h-full object-cover"
-                    style={{ zIndex: 1 }}
+                    style={{ zIndex: 1, backgroundColor: '#000' }}
                     onLoadedMetadata={(e) => {
-                        console.log('📹 Remote video metadata loaded:', {
+                        console.log('📹 [REMOTE VIDEO] Metadata loaded:', {
                             videoWidth: e.currentTarget.videoWidth,
                             videoHeight: e.currentTarget.videoHeight,
-                            duration: e.currentTarget.duration
+                            duration: e.currentTarget.duration,
+                            readyState: e.currentTarget.readyState,
+                            srcObject: !!e.currentTarget.srcObject
                         });
                     }}
-                    onPlay={() => console.log('▶️ Remote video started playing')}
-                    onError={(e) => console.error('❌ Remote video error:', e)}
+                    onPlay={() => console.log('▶️ [REMOTE VIDEO] Started playing')}
+                    onError={(e) => console.error('❌ [REMOTE VIDEO] Error:', e)}
+                    onLoadStart={() => console.log('🔄 [REMOTE VIDEO] Load start')}
                 />
 
                 {/* Top Overlay */}
