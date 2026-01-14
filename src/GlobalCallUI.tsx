@@ -9,11 +9,18 @@ export const GlobalCallUI = () => {
 
     const [isMinimized, setIsMinimized] = React.useState(false);
 
+    console.log('🌐 GlobalCallUI Render:', { hasActiveCall: !!activeCall, isMinimized });
+
     // Handle call minimize - navigate to chat with call participant
     const handleMinimize = async () => {
-        if (!activeCall?.participant) return;
+        console.log('📉 GlobalCallUI: handleMinimize called');
+        if (!activeCall?.participant) {
+            console.error('❌ GlobalCallUI: No participant for minimize');
+            return;
+        }
 
         setIsMinimized(true);
+        console.log('✅ GlobalCallUI: isMinimized set to true');
 
         // Find existing chat with this participant
         const existingChat = chats.find(
@@ -24,17 +31,22 @@ export const GlobalCallUI = () => {
 
         // If no chat exists, create one
         if (!chatId) {
+            console.log('📝 GlobalCallUI: Creating new chat for minimize');
             const newChat = await createChat(activeCall.participant.id);
             chatId = newChat?.id;
         }
 
         if (chatId) {
+            console.log('🚀 GlobalCallUI: Navigating to chat', chatId);
             setActiveChatId(chatId);
             navigate(`/chat/${chatId}`);
+        } else {
+            console.error('❌ GlobalCallUI: Failed to find/create chat');
         }
     };
 
     const handleMaximize = () => {
+        console.log('🔍 GlobalCallUI: handleMaximize called');
         setIsMinimized(false);
     };
 
