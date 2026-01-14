@@ -823,23 +823,18 @@ const CallInterfaceComponent = ({
                             className="absolute bottom-8 left-0 right-0 z-30 flex justify-center px-2"
                         >
                             <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
-                                <motion.button
-                                    whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => {
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         console.log('🟢 Message button clicked!');
-                                        console.log('🔹 onMinimize exists?', !!onMinimize);
-                                        if (onMinimize) {
-                                            console.log('🚀 Calling onMinimize...');
-                                            onMinimize();
-                                        } else {
-                                            console.log('❌ onMinimize is undefined!');
-                                        }
+                                        onMinimize?.();
                                     }}
-                                    className="p-2 sm:p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20"
+                                    className="relative z-50 p-2 sm:p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20 active:scale-95"
                                     title="Minimize to chat"
                                 >
                                     <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
-                                </motion.button>
+                                </button>
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
@@ -977,20 +972,16 @@ const CallInterfaceComponent = ({
                     </button>
 
                     <button
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             console.log('🟢 Voice call - Message button clicked!');
-                            console.log('🔹 onMinimize exists?', !!onMinimize);
-                            if (onMinimize) {
-                                console.log('🚀 Calling onMinimize...');
-                                onMinimize();
-                            } else {
-                                console.log('❌ onMinimize is undefined!');
-                            }
+                            onMinimize?.();
                         }}
-                        className="flex flex-col items-center gap-2 group"
+                        className="relative z-50 flex flex-col items-center gap-2 group active:scale-95 transition-transform"
                         title="Minimize to chat"
                     >
-                        <div className="p-6 rounded-full transition-all shadow-lg bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105">
+                        <div className="p-6 rounded-full transition-all shadow-lg bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20">
                             <MessageSquare className="w-8 h-8" />
                         </div>
                         <span className="text-white text-xs font-medium tracking-wide">Chat</span>
