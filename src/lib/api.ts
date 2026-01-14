@@ -197,7 +197,7 @@ export const chatsAPI = {
     getMessages: async (chatId: string, limit = 50) =>
         fetchWithAuth(`/chats/${chatId}/messages?limit=${limit}`),
 
-    sendMessage: async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' | 'audio' = 'text', mediaUrl?: string, replyToId?: string) =>
+    sendMessage: async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' | 'audio' | 'contact' = 'text', mediaUrl?: string, replyToId?: string) =>
         fetchWithAuth(`/chats/${chatId}/messages`, {
             method: 'POST',
             body: JSON.stringify({ content, type, mediaUrl, replyToId }),

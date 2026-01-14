@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Message } from '../../../lib/data';
 import { cn } from '../../ui/utils';
-import { Avatar } from '../../ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { format } from 'date-fns';
 import { Check, CheckCheck, FileText, Download, ChevronDown, Trash2, Star, Reply, Ban, Play, Pause, Edit2, Video, Phone } from 'lucide-react';
 import { Button } from '../../ui/button';
@@ -18,8 +19,9 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: MessageBubbleProps) => {
-    const { deleteMessage, starMessage, activeChatId, currentUser, chats } = useVoca();
+    const { deleteMessage, starMessage, activeChatId, currentUser, chats, createChat, setActiveChatId } = useVoca();
     const { emitDeleteMessage } = useSocket();
+    const navigate = useNavigate();
     const [isPlaying, setIsPlaying] = useState(false);
 
     // Helper to emit delete event if needed
@@ -223,6 +225,66 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                                     <span>{message.duration}</span>
                                 </>
                             )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Contact Rendering Logic
+    if (message.type === 'contact') {
+        let contactData: any;
+        try {
+            contactData = JSON.parse(message.content);
+        } catch (e) {
+            contactData = { name: "Unknown Contact" };
+        }
+
+        const handleMessageContact = async () => {
+            if (!contactData.contactId) return;
+
+            // Check if chat exists
+            const existingChat = chats.find(c =>
+                !c.isGroup && c.participants.some(p => p.id === contactData.contactId)
+            );
+
+            if (existingChat) {
+                setActiveChatId(existingChat.id);
+                navigate(`/chat/${existingChat.id}`);
+            } else {
+                // Create new chat
+                const newChat = await createChat(contactData.contactId);
+                if (newChat) {
+                    setActiveChatId(newChat.id);
+                    navigate(`/chat/${newChat.id}`);
+                }
+            }
+        };
+
+        return (
+            <div className={cn("flex w-full mb-3 justify-center")}>
+                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl overflow-hidden min-w-[280px] max-w-[85%] select-none group/contact">
+                    {/* Header */}
+                    <div className="p-4 flex items-center gap-3 border-b border-[var(--wa-border)]/50">
+                        <Avatar className="w-12 h-12">
+                            <AvatarImage src={contactData.avatar} />
+                            <AvatarFallback>{contactData.name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-[var(--wa-text-primary)] font-medium text-lg truncate">{contactData.name}</h3>
+                            <p className="text-[var(--wa-text-secondary)] text-xs truncate">Voca Contact</p>
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="bg-[var(--wa-hover)]/30 p-2">
+                        <div
+                            onClick={handleMessageContact}
+                            className="w-full flex items-center justify-center gap-2 py-2 text-[var(--wa-primary)] hover:bg-[var(--wa-hover)] rounded-lg cursor-pointer transition-colors font-medium text-sm"
+                        >
+                            <span className="text-lg">💬</span>
+                            Message
                         </div>
                     </div>
                 </div>

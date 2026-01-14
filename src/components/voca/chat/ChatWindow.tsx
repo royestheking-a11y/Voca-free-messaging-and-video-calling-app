@@ -18,6 +18,7 @@ import { MediaPreviewDialog } from './MediaPreviewDialog';
 import { AttachmentMenu } from './AttachmentMenu';
 import { CreateEventDialog } from './CreateEventDialog';
 import { CreatePollDialog } from './CreatePollDialog';
+import { ContactSelectionDialog } from './ContactSelectionDialog';
 import { cn } from '../../ui/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -69,6 +70,7 @@ export const ChatWindow = () => {
     // Event Dialog State
     const [showEventDialog, setShowEventDialog] = useState(false);
     const [showPollDialog, setShowPollDialog] = useState(false);
+    const [showContactDialog, setShowContactDialog] = useState(false);
 
     // Safety Tools State
     const [showSafetyTools, setShowSafetyTools] = useState(false);
@@ -999,6 +1001,9 @@ export const ChatWindow = () => {
                                                             case 'event':
                                                                 setShowEventDialog(true);
                                                                 break;
+                                                            case 'contact':
+                                                                setShowContactDialog(true);
+                                                                break;
                                                             case 'audio':
                                                             case 'image':
                                                                 handleFileUpload(type);
@@ -1109,7 +1114,24 @@ export const ChatWindow = () => {
                 />
             )}
 
-            {/* Event & Poll Dialogs */}
+            {/* Event & Poll & Contact Dialogs */}
+            <ContactSelectionDialog
+                isOpen={showContactDialog}
+                onClose={() => setShowContactDialog(false)}
+                onSelect={(user: any) => {
+                    if (user && user.id) {
+                        const content = JSON.stringify({
+                            contactId: user.id,
+                            name: user.name,
+                            avatar: user.avatar,
+                            about: user.about,
+                            email: user.email
+                        });
+                        sendMessage(activeChatId!, content, 'contact');
+                    }
+                }}
+            />
+
             <CreateEventDialog
                 isOpen={showEventDialog}
                 onClose={() => setShowEventDialog(false)}
@@ -1139,6 +1161,7 @@ export const ChatWindow = () => {
                         question,
                         options: options.map(opt => ({ id: crypto.randomUUID(), text: opt, voterIds: [] })), // { id, text, voterIds: [] }
                         allowMultiple
+
                     });
                     sendMessage(activeChatId!, content, 'poll');
                     setShowPollDialog(false);
