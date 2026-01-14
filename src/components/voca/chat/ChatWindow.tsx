@@ -13,7 +13,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Smile, Paperclip, Mic, Send, Phone, Video, MoreVertical, Search, Image as ImageIcon, FileText, Camera, ArrowLeft, X, Trash2, ChevronUp, ChevronDown, Lock, ChevronLeft, StopCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '../../ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
 import { MediaPreviewDialog } from './MediaPreviewDialog';
 import { AttachmentMenu } from './AttachmentMenu';
 import { CreateEventDialog } from './CreateEventDialog';
@@ -932,7 +932,7 @@ export const ChatWindow = () => {
                                 <div className={cn("flex-1 flex items-center gap-2 transition-all duration-200", isRecording ? "opacity-0 pointer-events-none absolute z-[-1]" : "opacity-100 relative z-10")}>
 
                                     {/* PILL CONTAINER for Input and Inner Icons */}
-                                    <div className="relative flex-1 flex items-center bg-[var(--wa-input-bg)] rounded-[26px] px-2 py-1 gap-1 border border-[var(--wa-border)] shadow-sm focus-within:bg-[var(--wa-input-bg)]/90 transition-colors">
+                                    <div className="flex-1 flex items-center bg-[var(--wa-input-bg)] rounded-[26px] px-2 py-1 gap-1 border border-[var(--wa-border)] shadow-sm focus-within:bg-[var(--wa-input-bg)]/90 transition-colors">
 
                                         {/* EMOJI BUTTON (Left) */}
                                         <Popover>
@@ -977,18 +977,16 @@ export const ChatWindow = () => {
 
                                         {/* ATTACHMENT (Paperclip) */}
                                         <Popover open={isAttachmentMenuOpen} onOpenChange={setIsAttachmentMenuOpen}>
-                                            <PopoverAnchor>
-                                                <div className="absolute left-1/2 -top-12 w-1 h-1 invisible pointer-events-none" />
-                                            </PopoverAnchor>
                                             <PopoverTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] hover:bg-transparent rounded-full h-9 w-9 shrink-0 rotate-45 transition-colors">
                                                     <Paperclip className="w-5 h-5" strokeWidth={1.5} />
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent
-                                                align="center"
+                                                align="start"
                                                 side="top"
                                                 sideOffset={12}
+                                                collisionPadding={16}
                                                 className="w-auto p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                                             >
                                                 <AttachmentMenu
