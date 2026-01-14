@@ -31,7 +31,7 @@ interface VocaContextType {
     activeCall: { type: 'voice' | 'video', isIncoming: boolean, participant?: User, offer?: RTCSessionDescriptionInit } | null;
     startCall: (participantId: string, type: 'voice' | 'video', fallbackParticipant?: User) => void;
     endCall: (duration?: string, status?: 'missed' | 'completed', isRemote?: boolean) => void;
-    createChat: (participantId: string) => Promise<void>;
+    createChat: (participantId: string) => Promise<Chat | undefined>;
     createGroupChat: (name: string, participantIds: string[], image?: string) => Promise<void>;
     toggleArchiveChat: (chatId: string) => Promise<void>;
     toggleFavoriteContact: (contactId: string) => Promise<void>;
@@ -534,8 +534,10 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                 return [...prev, chat];
             });
             setActiveChatIdInternal(chat.id);
+            return chat;
         } catch (err) {
             console.error('Create chat error:', err);
+            return undefined;
         }
     };
 

@@ -7,9 +7,13 @@ export const GlobalCallUI = () => {
     const { activeCall, endCall, chats, createChat, setActiveChatId, currentUser } = useVoca();
     const navigate = useNavigate();
 
+    const [isMinimized, setIsMinimized] = React.useState(false);
+
     // Handle call minimize - navigate to chat with call participant
     const handleMinimize = async () => {
         if (!activeCall?.participant) return;
+
+        setIsMinimized(true);
 
         // Find existing chat with this participant
         const existingChat = chats.find(
@@ -20,11 +24,7 @@ export const GlobalCallUI = () => {
 
         // If no chat exists, create one
         if (!chatId) {
-            await createChat(activeCall.participant.id);
-            // Find the newly created chat
-            const newChat = chats.find(
-                (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
-            );
+            const newChat = await createChat(activeCall.participant.id);
             chatId = newChat?.id;
         }
 
@@ -32,6 +32,10 @@ export const GlobalCallUI = () => {
             setActiveChatId(chatId);
             navigate(`/chat/${chatId}`);
         }
+    };
+
+    const handleMaximize = () => {
+        setIsMinimized(false);
     };
 
     if (!activeCall || !currentUser) return null;
@@ -42,6 +46,8 @@ export const GlobalCallUI = () => {
             type={activeCall.type}
             onEnd={endCall}
             onMinimize={handleMinimize}
+            onMaximize={handleMaximize}
+            isMinimized={isMinimized}
             isIncoming={activeCall.isIncoming}
             offer={activeCall.offer}
             participantId={activeCall.participant!.id}

@@ -3,64 +3,16 @@ import { Outlet, useMatch, useNavigate } from 'react-router-dom';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatWindow } from './ChatWindow';
 import { useVoca } from '../VocaContext';
-import { CallInterface } from './CallInterface';
-import { FloatingCallBar } from './FloatingCallBar';
+
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { cn } from '../../ui/utils';
 
 export const ChatLayout = () => {
-    const { activeChatId, setActiveChatId, activeCall, endCall, chats, createChat } = useVoca();
+    const { activeChatId, setActiveChatId, chats, createChat } = useVoca();
     const [isMobile, setIsMobile] = useState(false);
-    const [isCallMinimized, setIsCallMinimized] = useState(false);
     const navigate = useNavigate();
 
-    // Handle call minimize - navigate to chat with call participant
-    const handleMinimizeCall = async () => {
-        console.log('🔍 handleMinimizeCall called');
-
-        if (!activeCall?.participant) {
-            console.log('❌ No active call or participant');
-            return;
-        }
-
-        console.log('👤 Call participant:', activeCall.participant.name);
-
-        // Find existing chat with this participant
-        const existingChat = chats.find(
-            (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
-        );
-
-        console.log('💬 Existing chat found:', existingChat?.id);
-
-        let chatId = existingChat?.id;
-
-        // If no chat exists, create one
-        if (!chatId) {
-            console.log('📝 Creating new chat...');
-            try {
-                await createChat(activeCall.participant.id);
-                // Refetch to find the newly created chat
-                const newChat = chats.find(
-                    (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
-                );
-                chatId = newChat?.id;
-                console.log('✅ New chat created:', chatId);
-            } catch (error) {
-                console.error('❌ Error creating chat:', error);
-            }
-        }
-
-        if (chatId) {
-            console.log('🚀 Navigating to chat:', chatId);
-            setActiveChatId(chatId);
-            navigate(`/chat/${chatId}`);
-            setIsCallMinimized(true);
-            console.log('✅ Call minimized successfully');
-        } else {
-            console.log('❌ Could not get chat ID');
-        }
-    };
 
     // Check routes to determine mobile view state
     const chatMatch = useMatch('/chat/:id');
@@ -127,39 +79,7 @@ export const ChatLayout = () => {
                 </div>
             </div>
 
-            {/* Floating Call Indicator (when minimized) */}
-            {activeCall && isCallMinimized && (
-                <div onClick={() => setIsCallMinimized(false)}>
-                    <FloatingCallBar />
-                </div>
-            )}
 
-            {/* Global Call Interface Overlay (when not minimized) */}
-            {activeCall && !isCallMinimized && (
-                <div className="absolute inset-0 z-50">
-                    {/* Minimize button - tap back gesture */}
-                    <button
-                        onClick={() => setIsCallMinimized(true)}
-                        className="absolute top-4 left-4 z-[110] p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors"
-                        aria-label="Minimize call"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
-
-                    <CallInterface
-                        participant={activeCall.participant!}
-                        type={activeCall.type}
-                        onEnd={(duration, status, isRemote) => {
-                            endCall(duration, status, isRemote);
-                            setIsCallMinimized(false); // Reset minimize state when call ends
-                        }}
-                        onMinimize={handleMinimizeCall}
-                        isIncoming={activeCall.isIncoming}
-                        offer={activeCall.offer}
-                        participantId={activeCall.participant!.id}
-                    />
-                </div>
-            )}
         </div>
     );
 };

@@ -16,6 +16,8 @@ interface CallInterfaceProps {
     isIncoming?: boolean;
     offer?: RTCSessionDescriptionInit;
     participantId: string;
+    isMinimized?: boolean;
+    onMaximize?: () => void;
 }
 
 // Global singleton for ringtone to prevent double-playing or leaks
@@ -28,7 +30,9 @@ const CallInterfaceComponent = ({
     onMinimize,
     isIncoming: initialIncoming,
     offer: initialOffer,
-    participantId
+    participantId,
+    isMinimized = false,
+    onMaximize
 }: CallInterfaceProps) => {
     const { socket } = useSocket();
 
@@ -184,7 +188,7 @@ const CallInterfaceComponent = ({
             // Explicitly play local video (it is muted so it should allow autoplay, but being safe)
             localVideoRef.current.play().catch(e => console.error('📹 Error playing local PiP:', e));
         }
-    }, [localStream]); // ONLY depend on localStream, not isIncoming/isVideo
+    }, [localStream, isMinimized]); // Re-run when switching to PiP
 
     // Attach remote stream to video/audio when available (do NOT depend on isIncoming/isVideo)
     useEffect(() => {
@@ -200,7 +204,7 @@ const CallInterfaceComponent = ({
             remoteAudioRef.current.srcObject = remoteStream;
             remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
         }
-    }, [remoteStream]); // ONLY depend on remoteStream
+    }, [remoteStream, isMinimized, isVideo]); // Re-run when switching to PiP or toggling video
 
     // Handle Ringtone
     useEffect(() => {
@@ -599,6 +603,74 @@ const CallInterfaceComponent = ({
     };
 
     // --- RENDER ---
+
+    // 4. PIP MODE (Minimized)
+    if (isMinimized) {
+        return (
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="fixed bottom-24 right-4 z-[100] w-48 h-64 sm:w-64 sm:h-80 bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/20 cursor-pointer hover:scale-105 transition-transform"
+                onClick={onMaximize}
+                drag
+                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            >
+                {isVideo ? (
+                    <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-[#0f172a] flex flex-col items-center justify-center p-4">
+                        <Avatar className="w-16 h-16 border-2 border-white/20 mb-2">
+                            <AvatarImage src={participant.avatar} />
+                            <AvatarFallback>{participant.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <h3 className="text-white text-sm font-bold truncate max-w-full text-center">{participant.name}</h3>
+                        <span className="text-green-400 text-xs font-medium mt-1">{formatDuration(duration)}</span>
+                    </div>
+                )}
+
+                {/* Local Video Overlay (for Video Call PiP) */}
+                {isVideo && isVideoEnabled && (
+                    <div className="absolute top-2 right-2 w-12 h-16 bg-black/50 rounded-xl overflow-hidden border border-white/30">
+                        <video
+                            ref={localVideoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                )}
+
+                {/* Controls Overlay */}
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center z-20" onClick={e => e.stopPropagation()}>
+                    <button
+                        onClick={onMaximize}
+                        className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm"
+                    >
+                        <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={toggleMute}
+                        className={cn("p-2 rounded-full transition-all", isMuted ? "bg-white text-black" : "bg-white/20 text-white")}
+                    >
+                        {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    </button>
+                    <button
+                        onClick={() => handleEnd()}
+                        className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600"
+                    >
+                        <PhoneOff className="w-4 h-4" />
+                    </button>
+                </div>
+            </motion.div>
+        );
+    }
 
     // 1. INCOMING CALL SCREEN (WhatsApp Style)
     if (isIncoming) {
