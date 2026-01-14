@@ -18,9 +18,10 @@ const MENU_ITEMS = [
 
 export const AttachmentMenu: React.FC<AttachmentMenuProps> = ({ onSelect }) => {
     return (
-        <div className="p-2 bg-[var(--wa-panel-bg)] w-full">
+        <div className="p-2 bg-[var(--wa-panel-bg)] w-fit">
             <div
-                className="grid grid-cols-4 gap-2 place-items-center"
+                className="grid gap-y-4 gap-x-4 justify-items-center"
+                style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
             >
                 {MENU_ITEMS.map((item) => (
                     <button

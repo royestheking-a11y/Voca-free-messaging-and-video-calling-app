@@ -58,6 +58,9 @@ export const ChatWindow = () => {
 
     // Search State
     const [isSearching, setIsSearching] = useState(false);
+
+    // Attachment Menu State
+    const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Event Dialog State
@@ -968,21 +971,21 @@ export const ChatWindow = () => {
                                         </form>
 
                                         {/* ATTACHMENT (Paperclip) */}
-                                        <Popover>
+                                        <Popover open={isAttachmentMenuOpen} onOpenChange={setIsAttachmentMenuOpen}>
                                             <PopoverTrigger asChild>
                                                 <Button variant="ghost" size="icon" className="text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] hover:bg-transparent rounded-full h-9 w-9 shrink-0 rotate-45 transition-colors">
                                                     <Paperclip className="w-5 h-5" strokeWidth={1.5} />
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent
-                                                align="end"
+                                                align="center"
                                                 side="top"
-                                                sideOffset={8}
-                                                alignOffset={-5}
-                                                className="w-[320px] p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                                                sideOffset={12}
+                                                className="w-auto p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                                             >
                                                 <AttachmentMenu
                                                     onSelect={(type) => {
+                                                        setIsAttachmentMenuOpen(false);
                                                         switch (type) {
                                                             case 'image': handleFileUpload('image'); break;
                                                             case 'camera': setShowCamera(true); break;
