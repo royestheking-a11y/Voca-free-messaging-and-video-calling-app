@@ -31,6 +31,10 @@ const CallInterfaceComponent = ({
     participantId
 }: CallInterfaceProps) => {
     const { socket } = useSocket();
+
+    // Debug: Check if onMinimize callback is provided
+    console.log('📞 CallInterface - onMinimize callback:', onMinimize ? 'provided ✅' : 'missing ❌');
+
     const [isVideo, setIsVideo] = useState(initialType === 'video');
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoEnabled, setIsVideoEnabled] = useState(true);

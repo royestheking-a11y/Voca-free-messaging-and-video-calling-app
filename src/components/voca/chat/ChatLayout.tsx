@@ -17,29 +17,48 @@ export const ChatLayout = () => {
 
     // Handle call minimize - navigate to chat with call participant
     const handleMinimizeCall = async () => {
-        if (!activeCall?.participant) return;
+        console.log('🔍 handleMinimizeCall called');
+
+        if (!activeCall?.participant) {
+            console.log('❌ No active call or participant');
+            return;
+        }
+
+        console.log('👤 Call participant:', activeCall.participant.name);
 
         // Find existing chat with this participant
         const existingChat = chats.find(
             (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
         );
 
+        console.log('💬 Existing chat found:', existingChat?.id);
+
         let chatId = existingChat?.id;
 
         // If no chat exists, create one
         if (!chatId) {
-            await createChat(activeCall.participant.id);
-            // Find the newly created chat
-            const newChat = chats.find(
-                (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
-            );
-            chatId = newChat?.id;
+            console.log('📝 Creating new chat...');
+            try {
+                await createChat(activeCall.participant.id);
+                // Refetch to find the newly created chat
+                const newChat = chats.find(
+                    (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
+                );
+                chatId = newChat?.id;
+                console.log('✅ New chat created:', chatId);
+            } catch (error) {
+                console.error('❌ Error creating chat:', error);
+            }
         }
 
         if (chatId) {
+            console.log('🚀 Navigating to chat:', chatId);
             setActiveChatId(chatId);
             navigate(`/chat/${chatId}`);
             setIsCallMinimized(true);
+            console.log('✅ Call minimized successfully');
+        } else {
+            console.log('❌ Could not get chat ID');
         }
     };
 
