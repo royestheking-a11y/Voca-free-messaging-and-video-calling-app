@@ -18,7 +18,7 @@ const MENU_ITEMS = [
 
 export const AttachmentMenu: React.FC<AttachmentMenuProps> = ({ onSelect }) => {
     return (
-        <div className="p-2 bg-[var(--wa-panel-bg)] w-fit">
+        <div className="p-4 bg-[var(--wa-panel-bg)] w-full max-w-[400px] mx-auto">
             <div
                 className="grid gap-y-4 gap-x-4 justify-items-center"
                 style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
