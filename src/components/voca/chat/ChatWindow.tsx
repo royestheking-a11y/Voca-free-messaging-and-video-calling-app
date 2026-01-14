@@ -1123,7 +1123,7 @@ export const ChatWindow = () => {
             <ContactSelectionDialog
                 isOpen={showContactDialog}
                 onClose={() => setShowContactDialog(false)}
-                onSelect={(user: any) => {
+                onSelect={async (user: any) => {
                     if (user && user.id) {
                         const content = JSON.stringify({
                             contactId: user.id,
@@ -1132,7 +1132,10 @@ export const ChatWindow = () => {
                             about: user.about,
                             email: user.email
                         });
-                        sendMessage(activeChatId!, content, 'contact');
+                        const message = await sendMessage(activeChatId!, content, 'contact');
+                        if (message && otherParticipant) {
+                            emitSocketMessage(otherParticipant.id, activeChatId!, message);
+                        }
                     }
                 }}
             />
@@ -1140,16 +1143,19 @@ export const ChatWindow = () => {
             <LocationShareDialog
                 isOpen={showLocationDialog}
                 onClose={() => setShowLocationDialog(false)}
-                onShare={(location) => {
+                onShare={async (location) => {
                     const content = JSON.stringify(location);
-                    sendMessage(activeChatId!, content, 'location');
+                    const message = await sendMessage(activeChatId!, content, 'location');
+                    if (message && otherParticipant) {
+                        emitSocketMessage(otherParticipant.id, activeChatId!, message);
+                    }
                 }}
             />
 
             <CreateEventDialog
                 isOpen={showEventDialog}
                 onClose={() => setShowEventDialog(false)}
-                onSend={(eventData) => {
+                onSend={async (eventData) => {
                     // Send as structured JSON
                     const content = JSON.stringify({
                         eventName: eventData.eventName,
@@ -1161,7 +1167,10 @@ export const ChatWindow = () => {
                         allowGuests: eventData.allowGuests,
                         // Additional metadata can be added here
                     });
-                    sendMessage(activeChatId!, content, 'event');
+                    const message = await sendMessage(activeChatId!, content, 'event');
+                    if (message && otherParticipant) {
+                        emitSocketMessage(otherParticipant.id, activeChatId!, message);
+                    }
                     setShowEventDialog(false);
                 }}
             />
@@ -1169,7 +1178,7 @@ export const ChatWindow = () => {
             <CreatePollDialog
                 isOpen={showPollDialog}
                 onClose={() => setShowPollDialog(false)}
-                onSend={(question, options, allowMultiple) => {
+                onSend={async (question, options, allowMultiple) => {
                     // Send as structured JSON with initial vote counts
                     const content = JSON.stringify({
                         question,
@@ -1177,7 +1186,10 @@ export const ChatWindow = () => {
                         allowMultiple
 
                     });
-                    sendMessage(activeChatId!, content, 'poll');
+                    const message = await sendMessage(activeChatId!, content, 'poll');
+                    if (message && otherParticipant) {
+                        emitSocketMessage(otherParticipant.id, activeChatId!, message);
+                    }
                     setShowPollDialog(false);
                 }}
             />
