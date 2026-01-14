@@ -992,8 +992,22 @@ export const ChatWindow = () => {
                                                     onSelect={(type) => {
                                                         setIsAttachmentMenuOpen(false);
                                                         switch (type) {
-                                                            case 'poll': setShowPollDialog(true); break;
-                                                            default: toast.info("Coming soon"); break;
+                                                            case 'poll':
+                                                                setShowPollDialog(true);
+                                                                break;
+                                                            case 'event':
+                                                                setShowEventDialog(true);
+                                                                break;
+                                                            case 'audio':
+                                                            case 'image':
+                                                                handleFileUpload(type);
+                                                                break;
+                                                            case 'document':
+                                                                handleFileUpload('doc');
+                                                                break;
+                                                            default:
+                                                                toast.info("Coming soon");
+                                                                break;
                                                         }
                                                     }}
                                                 />

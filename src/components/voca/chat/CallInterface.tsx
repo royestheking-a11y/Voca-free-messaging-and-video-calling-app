@@ -656,8 +656,22 @@ const CallInterfaceComponent = ({
                         onClick={handleReject}
                         className="flex flex-col items-center gap-3 group active:scale-95 transition-transform"
                     >
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:bg-red-600 transition-colors">
-                            <PhoneOff className="w-8 h-8 sm:w-9 sm:h-9 text-white fill-current" />
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500/10 flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:bg-red-500/20 transition-all border border-red-500/50 backdrop-blur-sm">
+                            {/* 3D Phone Off Icon */}
+                            <div className="relative w-8 h-8 sm:w-9 sm:h-9">
+                                <svg width="0" height="0" className="absolute">
+                                    <defs>
+                                        <linearGradient id="red-gradient-call" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor="#f87171" />
+                                            <stop offset="100%" stopColor="#ef4444" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <PhoneOff
+                                    className="w-full h-full drop-shadow-sm"
+                                    style={{ stroke: "url(#red-gradient-call)", strokeWidth: 2.5 }}
+                                />
+                            </div>
                         </div>
                         <span className="text-white/90 text-sm font-medium tracking-wide">Decline</span>
                     </button>
@@ -667,8 +681,29 @@ const CallInterfaceComponent = ({
                         onClick={handleAccept}
                         className="flex flex-col items-center gap-3 group active:scale-95 transition-transform"
                     >
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 animate-bounce-subtle group-hover:bg-green-600 transition-colors">
-                            {isVideo ? <Video className="w-8 h-8 sm:w-9 sm:h-9 text-white fill-current" /> : <Phone className="w-8 h-8 sm:w-9 sm:h-9 text-white fill-current" />}
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-500/10 flex items-center justify-center shadow-lg shadow-green-500/20 animate-bounce-subtle group-hover:bg-green-500/20 transition-all border border-green-500/50 backdrop-blur-sm">
+                            {/* 3D Accept Icon */}
+                            <div className="relative w-8 h-8 sm:w-9 sm:h-9">
+                                <svg width="0" height="0" className="absolute">
+                                    <defs>
+                                        <linearGradient id="green-gradient-call" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor="#4ade80" />
+                                            <stop offset="100%" stopColor="#22c55e" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                {isVideo ? (
+                                    <Video
+                                        className="w-full h-full drop-shadow-sm"
+                                        style={{ stroke: "url(#green-gradient-call)", strokeWidth: 2.5 }}
+                                    />
+                                ) : (
+                                    <Phone
+                                        className="w-full h-full drop-shadow-sm"
+                                        style={{ stroke: "url(#green-gradient-call)", strokeWidth: 2.5 }}
+                                    />
+                                )}
+                            </div>
                         </div>
                         <span className="text-white/90 text-sm font-medium tracking-wide">Accept</span>
                     </button>

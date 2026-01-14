@@ -164,7 +164,20 @@ io.on('connection', (socket) => {
             if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
                 const payload = JSON.stringify({
                     title: sender?.name || 'Voca User',
-                    body: message.type === 'image' ? '📷 Photo' : message.content,
+                    body: (() => {
+                        switch (message.type) {
+                            case 'image': return '📷 Photo';
+                            case 'video': return '🎥 Video';
+                            case 'audio': return '🎵 Audio';
+                            case 'voice': return '🎤 Voice Message';
+                            case 'doc': return '📄 Document';
+                            case 'poll': return '📊 Poll';
+                            case 'event': return '📅 Event';
+                            case 'contact': return '👤 Contact';
+                            case 'location': return '📍 Location';
+                            default: return message.content || 'New Message';
+                        }
+                    })(),
                     icon: sender?.avatar || '/pwa-192x192.png',
                     tag: `chat-${chatId}`, // Group messages from same chat
                     renotify: true,

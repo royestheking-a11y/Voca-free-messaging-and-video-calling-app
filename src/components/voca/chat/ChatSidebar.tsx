@@ -8,7 +8,7 @@ import { Button } from '../../ui/button';
 import {
   Search, Plus, MoreVertical, MessageSquare, CircleDashed,
   Users, Phone, Camera, Archive, PhoneIncoming, PhoneOutgoing,
-  Video, Star, ArrowLeft, Clock, Check, CheckCheck, Edit, FileText
+  Video, Star, ArrowLeft, Clock, Check, CheckCheck, Edit, FileText, BarChart2
 } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { cn } from '../../ui/utils';
@@ -627,6 +627,74 @@ export const ChatSidebar = () => {
                                     />
                                   </div>
                                   Photo
+                                </span>
+                              ) : lastMessage.type === 'audio' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Audio Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-orange-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="orange-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#FB923C" />
+                                          <stop offset="100%" stopColor="#EA580C" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    {/* Headphones Icon */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="url(#orange-gradient-sidebar)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-headphones"><path d="M3 14v-3a9 9 0 0 1 18 0v3" /><path d="M2 19a3 3 0 0 0 3 3h2v-9H2v6z" /><path d="M22 19a3 3 0 0 1-3 3h-2v-9h5v6z" /></svg>
+                                  </div>
+                                  Audio
+                                </span>
+                              ) : lastMessage.type === 'voice' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Mic Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-green-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="green-mic-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#4ADE80" />
+                                          <stop offset="100%" stopColor="#22C55E" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    {/* Mic Icon */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="url(#green-mic-gradient-sidebar)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mic"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
+                                  </div>
+                                  Voice message
+                                </span>
+                              ) : lastMessage.type === 'poll' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Poll Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-yellow-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="yellow-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#FACC15" />
+                                          <stop offset="100%" stopColor="#EAB308" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    {/* Chart Icon */}
+                                    <BarChart2 className="w-3 h-3 drop-shadow-sm" style={{ stroke: "url(#yellow-gradient-sidebar)", strokeWidth: 2.5 }} />
+                                  </div>
+                                  Poll
+                                </span>
+                              ) : lastMessage.type === 'event' ? (
+                                <span className="flex items-center gap-1.5">
+                                  {/* 3D Event Icon */}
+                                  <div className="w-4 h-4 rounded-md bg-pink-500/10 flex items-center justify-center border border-white/5">
+                                    <svg width="0" height="0" className="absolute">
+                                      <defs>
+                                        <linearGradient id="pink-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#EC4899" />
+                                          <stop offset="100%" stopColor="#DB2777" />
+                                        </linearGradient>
+                                      </defs>
+                                    </svg>
+                                    {/* Calendar Icon */}
+                                    <Clock className="w-3 h-3 drop-shadow-sm" style={{ stroke: "url(#pink-gradient-sidebar)", strokeWidth: 2.5 }} />
+                                  </div>
+                                  Event
                                 </span>
                               ) : (
                                 <span className="truncate">{lastMessage.content}</span>
