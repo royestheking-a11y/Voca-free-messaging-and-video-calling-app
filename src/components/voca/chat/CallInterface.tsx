@@ -603,7 +603,6 @@ const CallInterfaceComponent = ({
     };
 
     // --- RENDER ---
-    console.log('🖼️ CallInterface Render Block:', { isMinimized, isVideo, status, isIncoming: isIncoming });
 
     // 4. PIP MODE (Minimized)
     if (isMinimized) {
@@ -615,7 +614,8 @@ const CallInterfaceComponent = ({
                 className="fixed bottom-24 right-4 z-[100] w-48 h-64 sm:w-64 sm:h-80 bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/20 cursor-pointer hover:scale-105 transition-transform"
                 onClick={onMaximize}
                 drag
-                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                dragMomentum={false}
+
             >
                 {isVideo ? (
                     <video
