@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../../../lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Phone, ChevronUp, Lock, Monitor, MonitorOff, MessageSquare, SwitchCamera } from 'lucide-react';
-import { CallChatOverlay } from './CallChatOverlay';
 import { cn } from '../../ui/utils';
 import { useSocket } from '../SocketContext';
 import * as webrtc from '../../../lib/webrtc';
@@ -13,6 +12,7 @@ interface CallInterfaceProps {
     participant: User;
     type: 'voice' | 'video';
     onEnd: (duration?: string, status?: 'missed' | 'completed', isRemote?: boolean) => void;
+    onMinimize?: () => void;
     isIncoming?: boolean;
     offer?: RTCSessionDescriptionInit;
     participantId: string;
@@ -25,6 +25,7 @@ const CallInterfaceComponent = ({
     participant,
     type: initialType,
     onEnd,
+    onMinimize,
     isIncoming: initialIncoming,
     offer: initialOffer,
     participantId
@@ -34,7 +35,6 @@ const CallInterfaceComponent = ({
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoEnabled, setIsVideoEnabled] = useState(true);
     const [isScreenSharing, setIsScreenSharing] = useState(false);
-    const [showChat, setShowChat] = useState(false);
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const [canShare, setCanShare] = useState(false);
     const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -760,15 +760,6 @@ const CallInterfaceComponent = ({
                     )}
                 </AnimatePresence>
 
-                {/* Call Chat Overlay */}
-                <AnimatePresence>
-                    {showChat && (
-                        <CallChatOverlay
-                            participantId={participantId}
-                            onClose={() => setShowChat(false)}
-                        />
-                    )}
-                </AnimatePresence>
 
                 {/* Local Video PiP - Draggable */}
                 <motion.div
@@ -830,8 +821,9 @@ const CallInterfaceComponent = ({
                             <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => setShowChat(!showChat)}
-                                    className={cn("p-2 sm:p-4 rounded-full transition-all", showChat ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
+                                    onClick={onMinimize}
+                                    className="p-2 sm:p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20"
+                                    title="Minimize to chat"
                                 >
                                     <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </motion.button>
@@ -971,8 +963,8 @@ const CallInterfaceComponent = ({
                         <span className="text-white text-xs font-medium tracking-wide">End</span>
                     </button>
 
-                    <button onClick={() => setShowChat(!showChat)} className="flex flex-col items-center gap-2 group">
-                        <div className={cn("p-6 rounded-full transition-all shadow-lg", showChat ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
+                    <button onClick={onMinimize} className="flex flex-col items-center gap-2 group" title="Minimize to chat">
+                        <div className="p-6 rounded-full transition-all shadow-lg bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105">
                             <MessageSquare className="w-8 h-8" />
                         </div>
                         <span className="text-white text-xs font-medium tracking-wide">Chat</span>
@@ -980,15 +972,6 @@ const CallInterfaceComponent = ({
                 </div>
             </motion.div>
 
-            {/* Call Chat Overlay (Voice) */}
-            <AnimatePresence>
-                {showChat && (
-                    <CallChatOverlay
-                        participantId={participantId}
-                        onClose={() => setShowChat(false)}
-                    />
-                )}
-            </AnimatePresence>
 
             {/* Hidden audio element for voice calls */}
             <audio ref={remoteAudioRef} autoPlay playsInline />

@@ -10,10 +10,38 @@ import { Button } from '../../ui/button';
 import { cn } from '../../ui/utils';
 
 export const ChatLayout = () => {
-    const { activeChatId, setActiveChatId, activeCall, endCall } = useVoca();
+    const { activeChatId, setActiveChatId, activeCall, endCall, chats, createChat } = useVoca();
     const [isMobile, setIsMobile] = useState(false);
     const [isCallMinimized, setIsCallMinimized] = useState(false);
     const navigate = useNavigate();
+
+    // Handle call minimize - navigate to chat with call participant
+    const handleMinimizeCall = async () => {
+        if (!activeCall?.participant) return;
+
+        // Find existing chat with this participant
+        const existingChat = chats.find(
+            (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
+        );
+
+        let chatId = existingChat?.id;
+
+        // If no chat exists, create one
+        if (!chatId) {
+            await createChat(activeCall.participant.id);
+            // Find the newly created chat
+            const newChat = chats.find(
+                (c) => !c.isGroup && c.participants.some((p) => p.id === activeCall.participant!.id)
+            );
+            chatId = newChat?.id;
+        }
+
+        if (chatId) {
+            setActiveChatId(chatId);
+            navigate(`/chat/${chatId}`);
+            setIsCallMinimized(true);
+        }
+    };
 
     // Check routes to determine mobile view state
     const chatMatch = useMatch('/chat/:id');
@@ -106,6 +134,7 @@ export const ChatLayout = () => {
                             endCall(duration, status, isRemote);
                             setIsCallMinimized(false); // Reset minimize state when call ends
                         }}
+                        onMinimize={handleMinimizeCall}
                         isIncoming={activeCall.isIncoming}
                         offer={activeCall.offer}
                         participantId={activeCall.participant!.id}
