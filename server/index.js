@@ -284,8 +284,8 @@ io.on('connection', (socket) => {
                         callerId: socket.userId
                     },
                     actions: [
-                        { action: 'answer', title: 'Answer ✅' },
-                        { action: 'decline', title: 'Decline ❌' }
+                        { action: 'answer', title: 'Answer', icon: 'https://cdn-icons-png.flaticon.com/512/190/190411.png' }, // Green Phone
+                        { action: 'decline', title: 'Decline', icon: 'https://cdn-icons-png.flaticon.com/512/1632/1632602.png' } // Red Phone Hanging
                     ]
                 });
 
