@@ -600,102 +600,80 @@ const CallInterfaceComponent = ({
 
     // --- RENDER ---
 
-    // 1. INCOMING CALL SCREEN (Premium)
+    // 1. INCOMING CALL SCREEN (WhatsApp Style)
     if (isIncoming) {
         return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex flex-col items-center justify-between"
-                style={{
-                    // Deep, colorful gradient background
-                    background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
-                }}
-            >
-                {/* Floating Particles / Gradient Orbs */}
-                <div className="absolute inset-0 overflow-hidden z-0">
-                    <motion.div
-                        animate={{ scale: [1, 1.2, 1], x: [0, 50, 0] }}
-                        transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-                        className="absolute top-[-20%] left-[-20%] w-[500px] h-[500px] rounded-full bg-purple-500/20 blur-[120px]"
+            <div className="fixed inset-0 z-[100] flex flex-col items-center bg-[#0f1c24] text-white overflow-hidden">
+                {/* Background Image / Blur */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src={participant.avatar}
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-60 blur-3xl scale-110"
                     />
-                    <motion.div
-                        animate={{ scale: [1, 1.2, 1], x: [0, -50, 0] }}
-                        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                        className="absolute bottom-[-20%] right-[-20%] w-[500px] h-[500px] rounded-full bg-blue-500/20 blur-[120px]"
-                    />
+                    <div className="absolute inset-0 bg-black/40" />
                 </div>
 
-                {/* Header */}
-                <div className="relative z-10 w-full flex flex-col items-center px-4 sm:px-8 pt-4 sm:pt-8 pb-safe">
-                    <motion.div
-                        initial={{ y: -20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        className="flex items-center gap-2 mb-4 sm:mb-6 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20"
-                    >
-                        <span className="text-sm font-medium text-white">Incoming {isVideo ? 'Video' : 'Voice'} Call</span>
-                    </motion.div>
+                {/* Top Info */}
+                <div className="relative z-10 flex flex-col items-center mt-16 sm:mt-24 w-full px-4 animate-in fade-in slide-in-from-top-10 duration-700">
+                    <div className="flex items-center gap-2 text-white/80 mb-6 bg-black/20 px-4 py-2 rounded-full backdrop-blur-md border border-white/5 shadow-sm">
+                        {isVideo ? <Video className="w-4 h-4 fill-current" /> : <Phone className="w-4 h-4 fill-current" />}
+                        <span className="text-sm font-medium tracking-wide border-l border-white/20 pl-2 ml-1">Voca {isVideo ? 'Video' : 'Voice'} Call</span>
+                    </div>
 
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="relative my-4 sm:my-6"
-                    >
-                        {/* Glowing Ring Animation */}
-                        <motion.div
-                            animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.2, 0.5] }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                            className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 blur-xl opacity-50"
-                        />
-                        <Avatar className="w-28 h-28 sm:w-32 sm:h-32 border-[3px] border-white/20 shadow-2xl relative z-10">
-                            <AvatarImage src={participant.avatar} className="object-cover" />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-600 text-2xl sm:text-3xl font-light text-white">
-                                {participant.name[0]}
-                            </AvatarFallback>
-                        </Avatar>
-                    </motion.div>
-
-                    <h1 className="text-3xl sm:text-4xl text-white font-bold mt-2 sm:mt-4 mb-2 tracking-tight text-center">{participant.name}</h1>
-                    <p className="text-indigo-200/80 text-base sm:text-lg font-light">Voca call...</p>
+                    <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-center text-white drop-shadow-md">{participant.name}</h1>
+                    <p className="text-white/70 font-medium text-lg tracking-wide">Incoming call...</p>
                 </div>
 
-                {/* Bottom Actions - Premium Slide/Tap */}
-                <div className="relative z-10 w-full px-4 sm:px-8 pb-8 sm:pb-12 flex items-center justify-center gap-8 sm:gap-12 safe-bottom">
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleReject}
-                        className="flex flex-col items-center gap-3 group"
-                    >
-                        <div className="w-16 h-16 rounded-full bg-red-500/10 backdrop-blur-md border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all duration-300 shadow-lg shadow-red-500/20">
-                            <PhoneOff className="w-7 h-7" />
-                        </div>
-                        <span className="text-white text-sm font-medium">Decline</span>
-                    </motion.button>
-
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleAccept}
-                        className="flex flex-col items-center gap-3 group"
-                    >
-                        <div className="w-20 h-20 rounded-full bg-[#00a884] flex items-center justify-center text-white shadow-[0_0_40px_rgba(0,168,132,0.4)] relative overflow-hidden group-hover:shadow-[0_0_60px_rgba(0,168,132,0.6)] transition-all duration-300">
+                {/* Center Avatar with Pulse */}
+                <div className="relative z-10 flex-1 flex items-center justify-center w-full">
+                    <div className="relative">
+                        {/* Pulse Rings */}
+                        {[1, 2, 3].map(i => (
                             <motion.div
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="absolute inset-0 bg-white/20 rounded-full blur-md"
+                                key={i}
+                                animate={{ scale: [1, 1.6], opacity: [0.4, 0] }}
+                                transition={{ duration: 2, repeat: Infinity, delay: i * 0.6, ease: "easeOut" }}
+                                className="absolute inset-0 rounded-full border border-white/30 bg-white/5"
                             />
-                            {isVideo ? (
-                                <Video className="w-8 h-8 fill-current relative z-10" />
-                            ) : (
-                                <Phone className="w-8 h-8 fill-current relative z-10" />
-                            )}
+                        ))}
+
+                        {/* Main Avatar */}
+                        <div className="relative z-20 w-32 h-32 sm:w-40 sm:h-40 rounded-full border-[3px] border-white/20 shadow-2xl overflow-hidden bg-[#1e293b]">
+                            <img
+                                src={participant.avatar}
+                                alt={participant.name}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
-                        <span className="text-white/80 text-sm font-medium">Accept</span>
-                    </motion.button>
+                    </div>
                 </div>
-            </motion.div>
+
+                {/* Bottom Actions */}
+                <div className="relative z-10 w-full px-8 sm:px-12 pb-16 sm:pb-24 flex items-center justify-between max-w-md mx-auto animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
+                    {/* Decline */}
+                    <button
+                        onClick={handleReject}
+                        className="flex flex-col items-center gap-3 group active:scale-95 transition-transform"
+                    >
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:bg-red-600 transition-colors">
+                            <PhoneOff className="w-8 h-8 sm:w-9 sm:h-9 text-white fill-current" />
+                        </div>
+                        <span className="text-white/90 text-sm font-medium tracking-wide">Decline</span>
+                    </button>
+
+                    {/* Accept */}
+                    <button
+                        onClick={handleAccept}
+                        className="flex flex-col items-center gap-3 group active:scale-95 transition-transform"
+                    >
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 animate-bounce-subtle group-hover:bg-green-600 transition-colors">
+                            {isVideo ? <Video className="w-8 h-8 sm:w-9 sm:h-9 text-white fill-current" /> : <Phone className="w-8 h-8 sm:w-9 sm:h-9 text-white fill-current" />}
+                        </div>
+                        <span className="text-white/90 text-sm font-medium tracking-wide">Accept</span>
+                    </button>
+                </div>
+            </div>
         );
     }
 
