@@ -978,7 +978,7 @@ export const ChatWindow = () => {
                                                 align="start"
                                                 side="top"
                                                 sideOffset={12}
-                                                className="w-auto p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                                                className="w-[340px] p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                                             >
                                                 <AttachmentMenu
                                                     onSelect={(type) => {
