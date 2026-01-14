@@ -18,7 +18,7 @@ const MENU_ITEMS = [
 
 export const AttachmentMenu: React.FC<AttachmentMenuProps> = ({ onSelect }) => {
     return (
-        <div className="p-4 bg-[var(--wa-panel-bg)] w-full max-w-[400px] mx-auto">
+        <div className="p-2 bg-[var(--wa-panel-bg)] w-fit">
             <div
                 className="grid gap-y-4 gap-x-4 justify-items-center"
                 style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
@@ -30,18 +30,18 @@ export const AttachmentMenu: React.FC<AttachmentMenuProps> = ({ onSelect }) => {
                         className="flex flex-col items-center gap-1.5 group w-full rounded-xl transition-colors hover:bg-white/5 active:bg-white/10 p-1"
                     >
                         <div
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform shadow-sm group-active:scale-95 border border-white/5"
+                            className="w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition-transform shadow-sm group-active:scale-95 border border-white/5"
                             style={{
                                 backgroundColor: 'var(--wa-input-bg)', // Adapts to theme (dark/light) - Screenshots show dark square
                             }}
                         >
                             <item.icon
-                                className="w-7 h-7"
+                                className="w-6 h-6 md:w-8 md:h-8"
                                 style={{ color: item.color }}
                                 strokeWidth={2}
                             />
                         </div>
-                        <span className="text-[11px] font-medium text-[var(--wa-text-secondary)] tracking-wide group-hover:text-[var(--wa-text-primary)] text-center">
+                        <span className="text-[10px] md:text-[12px] font-medium text-[var(--wa-text-secondary)] tracking-wide group-hover:text-[var(--wa-text-primary)] text-center">
                             {item.label}
                         </span>
                     </button>
