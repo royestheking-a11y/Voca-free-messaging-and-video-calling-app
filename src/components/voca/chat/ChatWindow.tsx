@@ -975,11 +975,10 @@ export const ChatWindow = () => {
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent
-                                                align="end"
-                                                alignOffset={-10}
+                                                align="center"
                                                 side="top"
                                                 sideOffset={12}
-                                                className="w-[328px] p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                                                className="w-auto p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                                             >
                                                 <AttachmentMenu
                                                     onSelect={(type) => {
