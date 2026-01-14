@@ -32,7 +32,7 @@ export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select
     });
 
     const filteredUsers = availableUsers.filter(u => {
-        if (!searchTerm) return true;
+        if (!searchTerm) return false; // Strict privacy: show nothing by default
         // privacy: only show user if EXACT email match
         return u.email?.toLowerCase() === searchTerm.toLowerCase();
     });
