@@ -920,25 +920,25 @@ export const ChatWindow = () => {
                                     </div>
                                 )}
 
-                                {/* INPUT AREA (Hidden when recording) */}
-                                <div className={cn("flex-1 flex items-center gap-1 transition-opacity duration-200", isRecording ? "opacity-0 pointer-events-none" : "opacity-100")}>
+                                {/* INPUT AREA */}
+                                <div className={cn("flex-1 flex items-center gap-2 transition-all duration-200", isRecording ? "opacity-0 pointer-events-none absolute z-[-1]" : "opacity-100 relative z-10")}>
 
                                     {/* PILL CONTAINER for Input and Inner Icons */}
-                                    <div className="flex-1 flex items-center bg-[#2a3942] rounded-[24px] px-2 py-1 gap-1 border border-white/5 transition-all focus-within:bg-[#2a3942]/90 shadow-sm relative z-10">
+                                    <div className="flex-1 flex items-center bg-[var(--wa-input-bg)] rounded-[26px] px-2 py-1 gap-1 border border-[var(--wa-border)] shadow-sm focus-within:bg-[var(--wa-input-bg)]/90 transition-colors">
 
                                         {/* EMOJI BUTTON (Left) */}
                                         <Popover>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="text-[#8696a0] hover:text-[#e9edef] hover:bg-transparent rounded-full h-10 w-10 shrink-0 transition-colors">
+                                                <Button variant="ghost" size="icon" className="text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] hover:bg-transparent rounded-full h-9 w-9 shrink-0 transition-colors">
                                                     <Smile className="w-6 h-6" strokeWidth={1.5} />
                                                 </Button>
                                             </PopoverTrigger>
-                                            <PopoverContent side="top" align="start" className="w-80 bg-[#1f2c34] border-[#2a3942] p-2 rounded-2xl shadow-xl z-50">
+                                            <PopoverContent side="top" align="start" className="w-80 bg-[var(--wa-panel-bg)] border-[var(--wa-border)] p-3 rounded-2xl shadow-xl">
                                                 <div className="grid grid-cols-8 gap-1">
                                                     {COMMON_EMOJIS.map(emoji => (
                                                         <button
                                                             key={emoji}
-                                                            className="text-2xl hover:bg-[#2a3942] rounded p-1 transition-colors"
+                                                            className="text-2xl hover:bg-[var(--wa-hover)] rounded p-1 transition-colors"
                                                             onClick={() => setInputText(prev => prev + emoji)}
                                                         >
                                                             {emoji}
@@ -963,22 +963,22 @@ export const ChatWindow = () => {
                                                     }
                                                 }}
                                                 placeholder="Message"
-                                                className="bg-transparent border-none focus-visible:ring-0 text-[15px] text-[#e9edef] placeholder-[#8696a0] h-9 px-2 shadow-none"
+                                                className="bg-transparent border-none focus-visible:ring-0 text-[16px] leading-5 text-[var(--wa-text-primary)] placeholder:text-[var(--wa-text-secondary)] h-9 px-2 shadow-none"
                                             />
                                         </form>
 
                                         {/* ATTACHMENT (Paperclip) */}
                                         <Popover>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="text-[#8696a0] hover:text-[#e9edef] hover:bg-transparent rounded-full h-10 w-10 shrink-0 rotate-45 transition-colors">
+                                                <Button variant="ghost" size="icon" className="text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] hover:bg-transparent rounded-full h-9 w-9 shrink-0 rotate-45 transition-colors">
                                                     <Paperclip className="w-5 h-5" strokeWidth={1.5} />
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent
                                                 align="start"
                                                 side="top"
-                                                sideOffset={10}
-                                                className="w-auto p-0 bg-[#1f2c34] border border-[#2a3942] rounded-2xl shadow-2xl overflow-hidden z-50"
+                                                sideOffset={12}
+                                                className="w-auto p-0 bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                                             >
                                                 <AttachmentMenu
                                                     onSelect={(type) => {
@@ -1000,49 +1000,41 @@ export const ChatWindow = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="text-[#8696a0] hover:text-[#e9edef] hover:bg-transparent rounded-full h-10 w-10 shrink-0 transition-colors"
+                                                className="text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] hover:bg-transparent rounded-full h-9 w-9 shrink-0 transition-colors"
                                                 onClick={() => setShowCamera(true)}
                                             >
                                                 <Camera className="w-6 h-6" strokeWidth={1.5} />
                                             </Button>
                                         )}
                                     </div>
-                                </div>
 
-                                {/* MIC / SEND BUTTON (Outside, Green Circle) */}
-                                <div className="ml-2 shrink-0 z-20">
-                                    {inputText.trim() ? (
-                                        // SEND BUTTON
-                                        <Button
-                                            onClick={() => handleSend()}
-                                            size="icon"
-                                            className="bg-[#00a884] hover:bg-[#008f72] text-[#111b21] rounded-full h-12 w-12 transition-transform transform hover:scale-105 active:scale-95 shadow-md flex items-center justify-center p-0"
-                                        >
-                                            <Send className="w-5 h-5 ml-0.5" />
-                                        </Button>
-                                    ) : (
-                                        // MIC BUTTON
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className={cn(
-                                                "bg-[#00a884] hover:bg-[#008f72] text-[#111b21] rounded-full h-12 w-12 transition-all duration-200 shadow-md flex items-center justify-center p-0",
-                                                isRecording && "scale-110 bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                                            )}
-                                            style={{
-                                                transform: isRecording && !isRecordingLocked
-                                                    ? `translate(${-cancelOffset}px, ${-dragOffset}px) scale(1.2)`
-                                                    : undefined,
-                                                touchAction: 'none'
-                                            }}
-                                            onPointerDown={handlePointerDown}
-                                            onPointerMove={handlePointerMove}
-                                            onPointerUp={handlePointerUp}
-                                            onPointerCancel={handlePointerUp}
-                                        >
-                                            <Mic className={cn("w-6 h-6", isRecording ? "text-white" : "text-[#111b21]")} fill={isRecording ? "currentColor" : "currentColor"} />
-                                        </Button>
-                                    )}
+                                    {/* MIC / SEND BUTTON (Outside, Green Circle) */}
+                                    <div className="shrink-0 z-20">
+                                        {inputText.trim() ? (
+                                            <Button
+                                                onClick={() => handleSend()}
+                                                size="icon"
+                                                className="bg-[#00a884] hover:bg-[#008f72] text-white rounded-full h-12 w-12 shadow-lg flex items-center justify-center transition-transform active:scale-95"
+                                            >
+                                                <Send className="w-5 h-5 ml-0.5" />
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn(
+                                                    "bg-[#00a884] hover:bg-[#008f72] text-white rounded-full h-12 w-12 shadow-md flex items-center justify-center transition-all",
+                                                    isRecording && "bg-red-500 hover:bg-red-600 scale-110",
+                                                )}
+                                                onPointerDown={handlePointerDown}
+                                                onPointerMove={handlePointerMove}
+                                                onPointerUp={handlePointerUp}
+                                                onPointerCancel={handlePointerUp}
+                                            >
+                                                <Mic className={cn("w-6 h-6", isRecording && "animate-pulse")} />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
