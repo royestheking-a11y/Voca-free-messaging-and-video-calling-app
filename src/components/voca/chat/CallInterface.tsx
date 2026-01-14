@@ -878,7 +878,7 @@ const CallInterfaceComponent = ({
                             initial={{ y: 100 }}
                             animate={{ y: 0 }}
                             exit={{ y: 100 }}
-                            className="fixed bottom-8 left-0 right-0 z-[110] flex justify-center px-4"
+                            className="fixed bottom-8 left-0 right-0 z-[110] flex justify-center px-4 pointer-events-none"
                         >
                             <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl max-w-full overflow-x-auto no-scrollbar pointer-events-auto">
                                 <motion.button
