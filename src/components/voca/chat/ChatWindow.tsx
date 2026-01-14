@@ -1092,6 +1092,27 @@ export const ChatWindow = () => {
                     onReport={handleReport}
                 />
             )}
+
+            {/* Event & Poll Dialogs */}
+            <CreateEventDialog
+                isOpen={showEventDialog}
+                onClose={() => setShowEventDialog(false)}
+                onSend={(eventData) => {
+                    // Handle event creation - for now sending as special text or custom type
+                    sendMessage(activeChatId!, `📅 Event: ${eventData.eventName} on ${eventData.date} at ${eventData.time}`, 'text');
+                    setShowEventDialog(false);
+                }}
+            />
+
+            <CreatePollDialog
+                isOpen={showPollDialog}
+                onClose={() => setShowPollDialog(false)}
+                onSend={(question, options, allowMultiple) => {
+                    // Handle poll creation
+                    sendMessage(activeChatId!, `📊 Poll: ${question}`, 'text'); // Placeholder for real poll logic
+                    setShowPollDialog(false);
+                }}
+            />
         </div>
     );
 };
