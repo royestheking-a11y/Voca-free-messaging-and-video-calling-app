@@ -656,7 +656,7 @@ const CallInterfaceComponent = ({
                         onClick={handleReject}
                         className="flex flex-col items-center gap-3 group active:scale-95 transition-transform"
                     >
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#1F2937] flex items-center justify-center shadow-lg group-hover:bg-[#374151] transition-all">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/40 group-hover:bg-red-600 transition-all">
                             {/* 3D Phone Off Icon */}
                             <div className="relative w-8 h-8 sm:w-9 sm:h-9">
                                 <svg width="0" height="0" className="absolute">
@@ -681,7 +681,7 @@ const CallInterfaceComponent = ({
                         onClick={handleAccept}
                         className="flex flex-col items-center gap-3 group active:scale-95 transition-transform"
                     >
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-500/10 flex items-center justify-center shadow-lg shadow-green-500/20 animate-bounce-subtle group-hover:bg-green-500/20 transition-all border border-green-500/50 backdrop-blur-sm">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/40 animate-bounce-subtle group-hover:bg-green-600 transition-all">
                             {/* 3D Accept Icon */}
                             <div className="relative w-8 h-8 sm:w-9 sm:h-9">
                                 <svg width="0" height="0" className="absolute">
