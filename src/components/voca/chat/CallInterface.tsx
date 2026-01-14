@@ -821,7 +821,7 @@ const CallInterfaceComponent = ({
                             <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={onMinimize}
+                                    onClick={() => onMinimize?.()}
                                     className="p-2 sm:p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20"
                                     title="Minimize to chat"
                                 >
@@ -963,7 +963,7 @@ const CallInterfaceComponent = ({
                         <span className="text-white text-xs font-medium tracking-wide">End</span>
                     </button>
 
-                    <button onClick={onMinimize} className="flex flex-col items-center gap-2 group" title="Minimize to chat">
+                    <button onClick={() => onMinimize?.()} className="flex flex-col items-center gap-2 group" title="Minimize to chat">
                         <div className="p-6 rounded-full transition-all shadow-lg bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105">
                             <MessageSquare className="w-8 h-8" />
                         </div>
