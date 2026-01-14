@@ -922,142 +922,125 @@ export const ChatWindow = () => {
 
                                 {/* INPUT AREA (Hidden when recording) */}
                                 <div className={cn("flex-1 flex items-center gap-1 transition-opacity duration-200", isRecording ? "opacity-0 pointer-events-none" : "opacity-100")}>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="text-[var(--wa-text-secondary)] hover:bg-transparent hover:text-[var(--wa-text-primary)] hidden md:flex transition-colors">
-                                                <Smile className="w-6 h-6" />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent side="top" align="start" className="w-80 bg-[var(--wa-panel-bg)] border-[var(--wa-border)] p-2">
-                                            <div className="grid grid-cols-8 gap-1">
-                                                {COMMON_EMOJIS.map(emoji => (
-                                                    <button
-                                                        key={emoji}
-                                                        className="text-2xl hover:bg-[var(--wa-hover)] rounded p-1 transition-colors"
-                                                        onClick={() => setInputText(prev => prev + emoji)}
-                                                    >
-                                                        {emoji}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
 
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="text-[var(--wa-text-secondary)] hover:bg-transparent hover:text-[var(--wa-text-primary)] transition-colors">
-                                                <Paperclip className="w-6 h-6" />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            align="start"
-                                            side="top"
-                                            sideOffset={10}
-                                            className="w-auto p-0 bg-[#0f1c24] border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
-                                        >
-                                            <AttachmentMenu
-                                                onSelect={(type) => {
-                                                    // Close popover logic would need state uplifting if we want strict control,
-                                                    // but PopoverContent usually closes on interaction if not prevented.
-                                                    // Actually radix-ui popover might need a click to close manually if inside custom component?
-                                                    // Usually simpler to just trigger the action.
+                                    {/* PILL CONTAINER for Input and Inner Icons */}
+                                    <div className="flex-1 flex items-center bg-[#2a3942] rounded-[24px] px-2 py-1 gap-1 border border-white/5 transition-all focus-within:bg-[#2a3942]/90 shadow-sm relative z-10">
 
-                                                    switch (type) {
-                                                        case 'image':
-                                                            handleFileUpload('image');
-                                                            break;
-                                                        case 'camera':
-                                                            setShowCamera(true);
-                                                            break;
-                                                        case 'document':
-                                                            handleFileUpload('doc');
-                                                            break;
-                                                        case 'event':
-                                                            setShowEventDialog(true);
-                                                            break;
-                                                        case 'poll':
-                                                            setShowPollDialog(true);
-                                                            break;
-                                                        case 'location':
-                                                        case 'contact':
-                                                        case 'audio':
-                                                            toast.info(`${type.charAt(0).toUpperCase() + type.slice(1)} sharing coming soon`);
-                                                            break;
+                                        {/* EMOJI BUTTON (Left) */}
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="text-[#8696a0] hover:text-[#e9edef] hover:bg-transparent rounded-full h-10 w-10 shrink-0 transition-colors">
+                                                    <Smile className="w-6 h-6" strokeWidth={1.5} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent side="top" align="start" className="w-80 bg-[#1f2c34] border-[#2a3942] p-2 rounded-2xl shadow-xl z-50">
+                                                <div className="grid grid-cols-8 gap-1">
+                                                    {COMMON_EMOJIS.map(emoji => (
+                                                        <button
+                                                            key={emoji}
+                                                            className="text-2xl hover:bg-[#2a3942] rounded p-1 transition-colors"
+                                                            onClick={() => setInputText(prev => prev + emoji)}
+                                                        >
+                                                            {emoji}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+
+                                        {/* TEXT INPUT */}
+                                        <form onSubmit={handleSend} className="flex-1 min-w-0">
+                                            <Input
+                                                value={inputText}
+                                                onChange={(e) => {
+                                                    setInputText(e.target.value);
+                                                    handleTyping();
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleSend();
                                                     }
                                                 }}
+                                                placeholder="Message"
+                                                className="bg-transparent border-none focus-visible:ring-0 text-[15px] text-[#e9edef] placeholder-[#8696a0] h-9 px-2 shadow-none"
                                             />
-                                        </PopoverContent>
-                                    </Popover>
+                                        </form>
 
-                                    <CreateEventDialog
-                                        isOpen={showEventDialog}
-                                        onClose={() => setShowEventDialog(false)}
-                                        onSend={(eventData) => {
-                                            // Format event message
-                                            const eventText = `📅 Event: ${eventData.eventName}\n${eventData.description ? `${eventData.description}\n` : ''}🕒 ${eventData.date} at ${eventData.time}\n📍 ${eventData.location || 'No location'}`;
-                                            handleSend(undefined, eventText);
-                                        }}
-                                    />
+                                        {/* ATTACHMENT (Paperclip) */}
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="text-[#8696a0] hover:text-[#e9edef] hover:bg-transparent rounded-full h-10 w-10 shrink-0 rotate-45 transition-colors">
+                                                    <Paperclip className="w-5 h-5" strokeWidth={1.5} />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                align="start"
+                                                side="top"
+                                                sideOffset={10}
+                                                className="w-auto p-0 bg-[#1f2c34] border border-[#2a3942] rounded-2xl shadow-2xl overflow-hidden z-50"
+                                            >
+                                                <AttachmentMenu
+                                                    onSelect={(type) => {
+                                                        switch (type) {
+                                                            case 'image': handleFileUpload('image'); break;
+                                                            case 'camera': setShowCamera(true); break;
+                                                            case 'document': handleFileUpload('doc'); break;
+                                                            case 'event': setShowEventDialog(true); break;
+                                                            case 'poll': setShowPollDialog(true); break;
+                                                            default: toast.info("Coming soon"); break;
+                                                        }
+                                                    }}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
 
-                                    <CreatePollDialog
-                                        isOpen={showPollDialog}
-                                        onClose={() => setShowPollDialog(false)}
-                                        onSend={(question, options, multiple) => {
-                                            const pollText = `📊 Poll: ${question}\n${options.map((opt, i) => `${i + 1}. ${opt}`).join('\n')}\n(${multiple ? 'Multiple answers allowed' : 'Single answer'})`;
-                                            handleSend(undefined, pollText);
-                                        }}
-                                    />
-
-                                    <form onSubmit={handleSend} className="flex-1 flex gap-2">
-                                        <Input
-                                            value={inputText}
-                                            onChange={(e) => {
-                                                setInputText(e.target.value);
-                                                handleTyping();
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    handleSend();
-                                                }
-                                            }}
-                                            placeholder="Type a message"
-                                            className="bg-[var(--wa-input-bg)] border-none focus-visible:ring-0 text-[15px] h-10 px-4 py-3 rounded-lg shadow-inner placeholder:text-[var(--wa-text-secondary)] text-[var(--wa-text-primary)]"
-                                        />
-                                    </form>
+                                        {/* CAMERA (Inside Input if empty text) */}
+                                        {!inputText.trim() && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-[#8696a0] hover:text-[#e9edef] hover:bg-transparent rounded-full h-10 w-10 shrink-0 transition-colors"
+                                                onClick={() => setShowCamera(true)}
+                                            >
+                                                <Camera className="w-6 h-6" strokeWidth={1.5} />
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* ACTION BUTTON (Send or Mic) - Always rendered to maintain pointer capture */}
-                                <div className="ml-2 z-20">
-                                    {inputText.trim() && !isRecording ? (
+                                {/* MIC / SEND BUTTON (Outside, Green Circle) */}
+                                <div className="ml-2 shrink-0 z-20">
+                                    {inputText.trim() ? (
+                                        // SEND BUTTON
                                         <Button
                                             onClick={() => handleSend()}
                                             size="icon"
-                                            className="bg-[#00a884] hover:bg-[#008f72] text-[#111b21] rounded-full h-10 w-10 transition-transform transform hover:scale-105 active:scale-95 shadow-md"
+                                            className="bg-[#00a884] hover:bg-[#008f72] text-[#111b21] rounded-full h-12 w-12 transition-transform transform hover:scale-105 active:scale-95 shadow-md flex items-center justify-center p-0"
                                         >
                                             <Send className="w-5 h-5 ml-0.5" />
                                         </Button>
                                     ) : (
+                                        // MIC BUTTON
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             className={cn(
-                                                "text-[var(--wa-text-secondary)] hover:bg-transparent transition-all duration-75",
-                                                isRecording && "bg-[var(--wa-primary)] text-white hover:bg-[var(--wa-primary)] rounded-full h-12 w-12 shadow-lg scale-110",
-                                                isRecording && !isRecordingLocked && "cursor-grab active:cursor-grabbing"
+                                                "bg-[#00a884] hover:bg-[#008f72] text-[#111b21] rounded-full h-12 w-12 transition-all duration-200 shadow-md flex items-center justify-center p-0",
+                                                isRecording && "scale-110 bg-red-500 hover:bg-red-600 text-white animate-pulse"
                                             )}
                                             style={{
                                                 transform: isRecording && !isRecordingLocked
                                                     ? `translate(${-cancelOffset}px, ${-dragOffset}px) scale(1.2)`
                                                     : undefined,
-                                                touchAction: 'none' // Prevent default touch behaviors
+                                                touchAction: 'none'
                                             }}
                                             onPointerDown={handlePointerDown}
                                             onPointerMove={handlePointerMove}
                                             onPointerUp={handlePointerUp}
                                             onPointerCancel={handlePointerUp}
                                         >
-                                            <Mic className={cn("w-6 h-6", isRecording && "text-white animate-pulse")} />
+                                            <Mic className={cn("w-6 h-6", isRecording ? "text-white" : "text-[#111b21]")} fill={isRecording ? "currentColor" : "currentColor"} />
                                         </Button>
                                     )}
                                 </div>
