@@ -825,33 +825,33 @@ const CallInterfaceComponent = ({
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 20 }}
-                            className="absolute bottom-8 left-0 right-0 z-30 flex justify-center"
+                            className="absolute bottom-8 left-0 right-0 z-30 flex justify-center px-2"
                         >
-                            <div className="flex items-center gap-4 px-6 py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
+                            <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={() => setShowChat(!showChat)}
-                                    className={cn("p-4 rounded-full transition-all", showChat ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
+                                    className={cn("p-2 sm:p-4 rounded-full transition-all", showChat ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
                                 >
-                                    <MessageSquare className="w-6 h-6" />
+                                    <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </motion.button>
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={toggleVideoState}
-                                    className={cn("p-4 rounded-full transition-all", isVideoEnabled ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
+                                    className={cn("p-2 sm:p-4 rounded-full transition-all", isVideoEnabled ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
                                 >
-                                    {isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                                    {isVideoEnabled ? <Video className="w-5 h-5 sm:w-6 sm:h-6" /> : <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" />}
                                 </motion.button>
 
                                 {canShare && (
                                     <motion.button
                                         whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                         onClick={toggleScreenShare}
-                                        className={cn("p-4 rounded-full transition-all", isScreenSharing ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
+                                        className={cn("p-2 sm:p-4 rounded-full transition-all", isScreenSharing ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
                                         title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
                                     >
-                                        {isScreenSharing ? <MonitorOff className="w-6 h-6" /> : <Monitor className="w-6 h-6" />}
+                                        {isScreenSharing ? <MonitorOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Monitor className="w-5 h-5 sm:w-6 sm:h-6" />}
                                     </motion.button>
                                 )}
 
@@ -859,27 +859,27 @@ const CallInterfaceComponent = ({
                                     <motion.button
                                         whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                         onClick={toggleCamera}
-                                        className="p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20"
+                                        className="p-2 sm:p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20"
                                         title="Switch Camera"
                                     >
-                                        <SwitchCamera className="w-6 h-6" />
+                                        <SwitchCamera className="w-5 h-5 sm:w-6 sm:h-6" />
                                     </motion.button>
                                 )}
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={toggleMute}
-                                    className={cn("p-4 rounded-full transition-all", !isMuted ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
+                                    className={cn("p-2 sm:p-4 rounded-full transition-all", !isMuted ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
                                 >
-                                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                                    {isMuted ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
                                 </motion.button>
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={() => handleEnd()}
-                                    className="p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:bg-red-600"
+                                    className="p-2 sm:p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:bg-red-600"
                                 >
-                                    <PhoneOff className="w-6 h-6 fill-current" />
+                                    <PhoneOff className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
                                 </motion.button>
                             </div>
                         </motion.div>
