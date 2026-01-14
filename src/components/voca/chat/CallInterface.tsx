@@ -615,10 +615,10 @@ const CallInterfaceComponent = ({
                 </div>
 
                 {/* Top Info */}
-                <div className="relative z-10 flex flex-col items-center mt-32 sm:mt-40 w-full px-4 animate-in fade-in slide-in-from-top-10 duration-700">
-                    <div className="flex items-center gap-3 text-white/80 mb-6 bg-black/20 px-5 py-2.5 rounded-full backdrop-blur-md border border-white/5 shadow-sm">
+                <div className="relative z-10 flex flex-col items-center mt-36 sm:mt-44 w-full px-4 animate-in fade-in slide-in-from-top-10 duration-700">
+                    <div className="flex items-center gap-2 text-white/80 mb-6 bg-black/20 px-4 py-2 rounded-full backdrop-blur-md border border-white/5 shadow-sm">
                         {isVideo ? <Video className="w-4 h-4 fill-current" /> : <Phone className="w-4 h-4 fill-current" />}
-                        <span className="text-sm font-medium tracking-wide border-l border-white/20 pl-3">Voca {isVideo ? 'Video' : 'Voice'} Call</span>
+                        <span className="text-sm font-medium tracking-wide border-l border-white/20 pl-2 ml-1">Voca {isVideo ? 'Video' : 'Voice'} Call</span>
                     </div>
 
                     <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-center text-white drop-shadow-md">{participant.name}</h1>
@@ -650,7 +650,7 @@ const CallInterfaceComponent = ({
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="relative z-10 w-full px-8 pb-16 sm:pb-24 flex items-center justify-center gap-16 sm:gap-24 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
+                <div className="relative z-10 w-full px-8 pb-16 sm:pb-24 flex items-center justify-center gap-12 sm:gap-16 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-200">
                     {/* Decline */}
                     <button
                         onClick={handleReject}
