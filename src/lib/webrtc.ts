@@ -83,6 +83,15 @@ export const getUserMedia = async (constraints: { audio: boolean; video: boolean
 };
 
 /**
+ * Check if device/browser supports screen sharing
+ */
+export const canScreenShare = (): boolean => {
+    // Check if getDisplayMedia is supported
+    // Mobile browsers (iOS Safari, most Android browsers) don't support this
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+};
+
+/**
  * Request display media (screen sharing)
  */
 export const getDisplayMedia = async (): Promise<MediaStream> => {
@@ -293,10 +302,36 @@ export const switchCamera = async (
 
 export const deviceHasMultipleCameras = async (): Promise<boolean> => {
     try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(d => d.kind === 'videoinput');
-        return videoDevices.length > 1;
-    } catch {
+        // First enumerate - might have limited info if no permissions yet
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        let videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+        // If we have multiple devices with labels, we're good
+        const devicesWithLabels = videoDevices.filter(d => d.label && d.label.trim() !== '');
+        if (devicesWithLabels.length > 1) {
+            return true;
+        }
+
+        // If we have multiple devices but no labels (no permission yet),
+        // we can still assume multiple cameras exist
+        if (videoDevices.length > 1) {
+            return true;
+        }
+
+        // On mobile, even with one camera detected, facingMode might allow front/back toggle
+        // Check if we're on mobile by looking for touch support
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (isMobile && videoDevices.length >= 1) {
+            // Mobile devices typically have front and back cameras
+            // Return true to show the switch button
+            return true;
+        }
+
         return false;
+    } catch (error) {
+        console.warn('Error checking camera count:', error);
+        // On error, assume mobile might have multiple cameras
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        return isMobile;
     }
 };
