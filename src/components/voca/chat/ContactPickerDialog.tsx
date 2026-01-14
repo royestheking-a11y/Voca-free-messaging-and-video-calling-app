@@ -31,7 +31,11 @@ export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select
         return true;
     });
 
-    const filteredUsers = availableUsers.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredUsers = availableUsers.filter(u => {
+        if (!searchTerm) return true;
+        // privacy: only show user if EXACT email match
+        return u.email?.toLowerCase() === searchTerm.toLowerCase();
+    });
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -45,7 +49,7 @@ export const ContactPickerDialog = ({ isOpen, onClose, onSelect, title = "Select
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--wa-text-secondary)]" />
                         <Input
-                            placeholder="Search contacts..."
+                            placeholder="Search by exact email address..."
                             className="pl-9 bg-[var(--wa-header-bg)] border-none text-[var(--wa-text-primary)] h-9 placeholder:text-[var(--wa-text-secondary)]"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
