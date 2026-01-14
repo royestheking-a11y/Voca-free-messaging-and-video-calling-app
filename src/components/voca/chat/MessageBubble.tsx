@@ -225,7 +225,183 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
         );
     }
 
-    // ... rest of the component (return logic for other types)
+    // Poll Rendering Logic
+    if (message.type === 'poll') {
+        const { editMessage } = useVoca(); // Get editMessage from context
+        let pollData: any;
+        try {
+            pollData = JSON.parse(message.content);
+        } catch (e) {
+            pollData = { question: message.content, options: [], allowMultiple: false };
+        }
+
+        const totalVotes = pollData.options?.reduce((acc: number, opt: any) => acc + (opt.voterIds?.length || 0), 0) || 0;
+
+        const handleVote = async (optionId: string) => {
+            if (!currentUser || !activeChatId) return;
+
+            // Create deep copy to modify
+            const newPollData = JSON.parse(JSON.stringify(pollData));
+            const optionIndex = newPollData.options.findIndex((o: any) => o.id === optionId);
+            if (optionIndex === -1) return;
+
+            const option = newPollData.options[optionIndex];
+            const hasVoted = option.voterIds.includes(currentUser.id);
+
+            if (hasVoted) {
+                // Remove vote
+                option.voterIds = option.voterIds.filter((id: string) => id !== currentUser!.id);
+            } else {
+                // Add vote
+                if (!newPollData.allowMultiple) {
+                    // Remove from others if single choice
+                    newPollData.options.forEach((opt: any) => {
+                        opt.voterIds = opt.voterIds.filter((id: string) => id !== currentUser!.id);
+                    });
+                }
+                option.voterIds.push(currentUser.id);
+            }
+
+            // Update message content via editMessage (optimistic UI will update if editMessage supports it, otherwise reload)
+            // Note: In a real high-concurrency app, this should use a specific vote endpoint.
+            await editMessage(activeChatId, message.id, JSON.stringify(newPollData));
+        };
+
+        return (
+            <div className={cn("flex w-full mb-3 justify-center")}>
+                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl p-4 min-w-[280px] max-w-[85%] select-none">
+                    <div className="mb-4">
+                        <h3 className="text-[var(--wa-text-primary)] font-medium text-lg leading-snug">{pollData.question}</h3>
+                        <p className="text-[var(--wa-text-secondary)] text-xs mt-1">
+                            {pollData.allowMultiple ? "Select one or more" : "Select one option"}
+                        </p>
+                    </div>
+
+                    <div className="space-y-3">
+                        {pollData.options?.map((option: any) => {
+                            const voteCount = option.voterIds?.length || 0;
+                            const percentage = totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
+                            const isVoted = option.voterIds?.includes(currentUser?.id);
+
+                            return (
+                                <div key={option.id} className="relative group cursor-pointer" onClick={() => handleVote(option.id)}>
+                                    {/* Progress Bar Background */}
+                                    <div className="absolute inset-0 bg-[var(--wa-hover)] rounded-lg overflow-hidden">
+                                        <div
+                                            className="h-full bg-[var(--wa-primary)]/10 transition-all duration-500 ease-out"
+                                            style={{ width: `${percentage}%` }}
+                                        />
+                                    </div>
+
+                                    <div className="relative flex items-center p-3 gap-3 z-10">
+                                        <div className={cn(
+                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                                            isVoted ? "border-[var(--wa-primary)] bg-[var(--wa-primary)]" : "border-[var(--wa-text-secondary)]"
+                                        )}>
+                                            {isVoted && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
+                                        </div>
+                                        <span className="flex-1 text-[var(--wa-text-primary)] font-medium">{option.text}</span>
+                                        {voteCount > 0 && (
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="flex -space-x-1.5">
+                                                    {/* Placeholder avatars for voters - in real app fetch user avatars */}
+                                                    {option.voterIds.slice(0, 3).map((voterId: string) => (
+                                                        <Avatar key={voterId} className="w-4 h-4 border border-[var(--wa-panel-bg)]">
+                                                            <div className="w-full h-full bg-gray-300" />
+                                                        </Avatar>
+                                                    ))}
+                                                </div>
+                                                <span className="text-xs text-[var(--wa-text-secondary)] font-medium">{voteCount}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-[var(--wa-border)] flex justify-between items-center">
+                        <span className="text-[var(--wa-text-secondary)] text-xs">{format(new Date(message.timestamp), 'h:mm a')} • View votes</span>
+                        {/* Vote Button (if needed) or simple confirmation */}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Event Rendering Logic
+    if (message.type === 'event') {
+        let eventData;
+        try {
+            eventData = JSON.parse(message.content);
+        } catch (e) {
+            // Fallback if parsing fails or legacy format
+            return (
+                <div className={cn("flex w-full mb-1", isMe ? "justify-end" : "justify-start")}>
+                    <div className={cn(
+                        "px-3 py-2 rounded-lg max-w-[85%] md:max-w-[65%] text-sm bg-red-500/10 text-red-500",
+                        isMe ? "rounded-tr-none" : "rounded-tl-none"
+                    )}>
+                        Invalid Event Data
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className={cn("flex w-full mb-3 justify-center")}>
+                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl overflow-hidden min-w-[300px] max-w-[85%] select-none group/event cursor-pointer transition-transform active:scale-[0.99]">
+                    {/* Header with Icon background */}
+                    <div className="bg-[#00a884]/10 p-4 border-b border-[#00a884]/10 flex items-start gap-3">
+                        <div className="w-10 h-10 bg-[#00a884] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#00a884]/20">
+                            <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-[var(--wa-text-primary)] font-semibold text-lg leading-tight truncate">{eventData.eventName}</h3>
+                            <p className="text-[var(--wa-text-secondary)] text-xs mt-0.5 line-clamp-2">{eventData.description || "No description"}</p>
+                        </div>
+                    </div>
+
+                    {/* Details Body */}
+                    <div className="p-4 space-y-3">
+                        <div className="flex items-center gap-3 text-[var(--wa-text-primary)]">
+                            <div className="w-8 flex justify-center text-[var(--wa-text-secondary)]">📅</div>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-medium">{eventData.date}</span>
+                                <span className="text-xs text-[var(--wa-text-secondary)]">{eventData.time}</span>
+                            </div>
+                        </div>
+
+                        {eventData.location && (
+                            <div className="flex items-center gap-3 text-[var(--wa-text-primary)]">
+                                <div className="w-8 flex justify-center text-[var(--wa-text-secondary)]">📍</div>
+                                <span className="text-sm">{eventData.location}</span>
+                            </div>
+                        )}
+
+                        {eventData.isVocaCall && (
+                            <div className="flex items-center gap-3 text-[var(--wa-text-primary)]">
+                                <div className="w-8 flex justify-center text-[var(--wa-text-secondary)]">📞</div>
+                                <span className="text-sm text-[#00a884]">Voca Call Link included</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="bg-[var(--wa-hover)]/30 p-2 flex gap-2">
+                        {eventData.isVocaCall && (
+                            <Button className="flex-1 bg-[#00a884] hover:bg-[#008f72] text-white rounded-lg h-9 shadow-sm transition-all">
+                                Join Call
+                            </Button>
+                        )}
+                        <Button variant="outline" className="flex-1 border-[var(--wa-border)] text-[var(--wa-text-primary)] hover:bg-[var(--wa-hover)] rounded-lg h-9">
+                            Add to Calendar
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     return (
         <div id={`message-${message.id}`} className={cn("flex w-full mb-1 group/bubble", isMe ? "justify-end" : "justify-start")}>
             <div

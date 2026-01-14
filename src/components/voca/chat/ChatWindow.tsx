@@ -1098,8 +1098,18 @@ export const ChatWindow = () => {
                 isOpen={showEventDialog}
                 onClose={() => setShowEventDialog(false)}
                 onSend={(eventData) => {
-                    // Handle event creation - for now sending as special text or custom type
-                    sendMessage(activeChatId!, `📅 Event: ${eventData.eventName} on ${eventData.date} at ${eventData.time}`, 'text');
+                    // Send as structured JSON
+                    const content = JSON.stringify({
+                        eventName: eventData.eventName,
+                        description: eventData.description,
+                        date: eventData.date,
+                        time: eventData.time,
+                        location: eventData.location,
+                        isVocaCall: eventData.isVocaCall,
+                        allowGuests: eventData.allowGuests,
+                        // Additional metadata can be added here
+                    });
+                    sendMessage(activeChatId!, content, 'event');
                     setShowEventDialog(false);
                 }}
             />
@@ -1108,8 +1118,13 @@ export const ChatWindow = () => {
                 isOpen={showPollDialog}
                 onClose={() => setShowPollDialog(false)}
                 onSend={(question, options, allowMultiple) => {
-                    // Handle poll creation
-                    sendMessage(activeChatId!, `📊 Poll: ${question}`, 'text'); // Placeholder for real poll logic
+                    // Send as structured JSON with initial vote counts
+                    const content = JSON.stringify({
+                        question,
+                        options: options.map(opt => ({ id: crypto.randomUUID(), text: opt, voterIds: [] })), // { id, text, voterIds: [] }
+                        allowMultiple
+                    });
+                    sendMessage(activeChatId!, content, 'poll');
                     setShowPollDialog(false);
                 }}
             />

@@ -24,7 +24,7 @@ interface VocaContextType {
     updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
 
     // Chat
-    sendMessage: (chatId: string, content: string, type?: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call', mediaUrl?: string, duration?: string, replyToId?: string) => Promise<Message | undefined>;
+    sendMessage: (chatId: string, content: string, type?: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event', mediaUrl?: string, duration?: string, replyToId?: string) => Promise<Message | undefined>;
     deleteMessage: (chatId: string, messageId: string, forEveryone: boolean) => Promise<void>;
     starMessage: (chatId: string, messageId: string) => void;
     setActiveChatId: (id: string | null) => Promise<void>;
@@ -403,17 +403,43 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const sendMessage = async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' = 'text', mediaUrl?: string, duration?: string, replyToId?: string): Promise<Message | undefined> => {
+    const sendMessage = useCallback(async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' = 'text', mediaUrl?: string, duration?: string, replyToId?: string): Promise<Message | undefined> => {
         if (!currentUser) return undefined;
         try {
-            const message = await chatsAPI.sendMessage(chatId, content, type, mediaUrl, replyToId);
+            // Optimistic update
+            const tempId = 'temp-' + Date.now();
+            const newMessage: Message = {
+                id: tempId,
+                senderId: currentUser!.id,
+                content,
+                type,
+                timestamp: new Date().toISOString(),
+                status: 'pending',
+                mediaUrl,
+                duration,
+                replyToId
+            };
 
-            // Update local state
             setChats(prev => prev.map(chat => {
                 if (chat.id === chatId) {
                     return {
                         ...chat,
-                        messages: [...chat.messages, message]
+                        messages: [...chat.messages, newMessage]
+                    };
+                }
+                return chat;
+            }));
+
+            const message = await chatsAPI.sendMessage(chatId, content, type, mediaUrl, replyToId);
+
+            // Update local state with actual message ID and status
+            setChats(prev => prev.map(chat => {
+                if (chat.id === chatId) {
+                    return {
+                        ...chat,
+                        messages: chat.messages.map(m =>
+                            m.id === tempId ? message : m
+                        )
                     };
                 }
                 return chat;
@@ -426,7 +452,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             console.error('Send message error:', err);
             return undefined;
         }
-    };
+    }, [currentUser, chats]);
 
     const deleteMessage = async (chatId: string, messageId: string, forEveryone: boolean) => {
         try {
