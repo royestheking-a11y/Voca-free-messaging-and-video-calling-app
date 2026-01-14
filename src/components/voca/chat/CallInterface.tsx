@@ -38,9 +38,40 @@ const CallInterfaceComponent = ({
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
+    const [isIncoming, setIsIncoming] = useState(initialIncoming);
+    const [status, setStatus] = useState(initialIncoming ? 'incoming' : 'connecting');
+    const [duration, setDuration] = useState(0);
+    const [isControlsVisible, setIsControlsVisible] = useState(true);
+
+    // State to trigger re-renders when streams are ready (Fixes PiP not showing)
+    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
+    const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+    const localStreamRef = useRef<MediaStream | null>(null);
+    const remoteStreamRef = useRef<MediaStream | null>(null);
+    const localVideoRef = useRef<HTMLVideoElement>(null);
+    const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const remoteAudioRef = useRef<HTMLAudioElement>(null);
+    const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]);
+    const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+    const remoteStreamIdRef = useRef<string | null>(null);
+    const hasInitialized = useRef(false); // Prevent duplicate initialization
+
     useEffect(() => {
+        // Initial check
         webrtc.deviceHasMultipleCameras().then(setHasMultipleCameras);
     }, []);
+
+    // Re-check cameras when local stream is ready (permissions granted)
+    useEffect(() => {
+        if (localStream) {
+            webrtc.deviceHasMultipleCameras().then(v => {
+                console.log('📷 Re-checking cameras after stream ready:', v);
+                setHasMultipleCameras(v);
+            });
+        }
+    }, [localStream]);
 
     const toggleCamera = async () => {
         if (!peerConnectionRef.current || !localStreamRef.current) return;
@@ -71,25 +102,6 @@ const CallInterfaceComponent = ({
             toast.error("Failed to switch camera");
         }
     };
-    const [isIncoming, setIsIncoming] = useState(initialIncoming);
-    const [status, setStatus] = useState(initialIncoming ? 'incoming' : 'connecting');
-    const [duration, setDuration] = useState(0);
-    const [isControlsVisible, setIsControlsVisible] = useState(true);
-
-    // State to trigger re-renders when streams are ready (Fixes PiP not showing)
-    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-
-    const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-    const localStreamRef = useRef<MediaStream | null>(null);
-    const remoteStreamRef = useRef<MediaStream | null>(null);
-    const localVideoRef = useRef<HTMLVideoElement>(null);
-    const remoteVideoRef = useRef<HTMLVideoElement>(null);
-    const remoteAudioRef = useRef<HTMLAudioElement>(null);
-    const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([]);
-    const ringtoneRef = useRef<HTMLAudioElement | null>(null);
-    const remoteStreamIdRef = useRef<string | null>(null);
-    const hasInitialized = useRef(false); // Prevent duplicate initialization
 
     useEffect(() => {
         setIsVideoEnabled(initialType === 'video');
@@ -801,62 +813,62 @@ const CallInterfaceComponent = ({
                 <AnimatePresence>
                     {isControlsVisible && (
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                            className="absolute bottom-8 left-0 right-0 z-30 flex justify-center"
+                            initial={{ y: 100 }}
+                            animate={{ y: 0 }}
+                            exit={{ y: 100 }}
+                            className="absolute bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
                         >
-                            <div className="flex items-center gap-4 px-6 py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
+                            <div className="pointer-events-auto flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl max-w-full overflow-x-auto no-scrollbar">
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={() => setShowChat(!showChat)}
-                                    className={cn("p-4 rounded-full transition-all", showChat ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
+                                    className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", showChat ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
                                 >
-                                    <MessageSquare className="w-6 h-6" />
+                                    <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </motion.button>
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={toggleVideoState}
-                                    className={cn("p-4 rounded-full transition-all", isVideoEnabled ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
+                                    className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", isVideoEnabled ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
                                 >
-                                    {isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                                    {isVideoEnabled ? <Video className="w-5 h-5 sm:w-6 sm:h-6" /> : <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" />}
                                 </motion.button>
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={toggleScreenShare}
-                                    className={cn("p-4 rounded-full transition-all", isScreenSharing ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
+                                    className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", isScreenSharing ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
                                     title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
                                 >
-                                    {isScreenSharing ? <MonitorOff className="w-6 h-6" /> : <Monitor className="w-6 h-6" />}
+                                    {isScreenSharing ? <MonitorOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Monitor className="w-5 h-5 sm:w-6 sm:h-6" />}
                                 </motion.button>
 
                                 {hasMultipleCameras && isVideoEnabled && (
                                     <motion.button
                                         whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                         onClick={toggleCamera}
-                                        className="p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20"
+                                        className="p-3 sm:p-4 rounded-full transition-all bg-white/10 text-white hover:bg-white/20 flex-shrink-0"
                                         title="Switch Camera"
                                     >
-                                        <SwitchCamera className="w-6 h-6" />
+                                        <SwitchCamera className="w-5 h-5 sm:w-6 sm:h-6" />
                                     </motion.button>
                                 )}
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={toggleMute}
-                                    className={cn("p-4 rounded-full transition-all", !isMuted ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
+                                    className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", !isMuted ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-black")}
                                 >
-                                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                                    {isMuted ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
                                 </motion.button>
 
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={() => handleEnd()}
-                                    className="p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:bg-red-600"
+                                    className="p-3 sm:p-4 bg-red-500 rounded-full text-white shadow-lg shadow-red-500/30 hover:bg-red-600 flex-shrink-0"
                                 >
-                                    <PhoneOff className="w-6 h-6 fill-current" />
+                                    <PhoneOff className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
                                 </motion.button>
                             </div>
                         </motion.div>
