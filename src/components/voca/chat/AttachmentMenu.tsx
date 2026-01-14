@@ -30,18 +30,18 @@ export const AttachmentMenu: React.FC<AttachmentMenuProps> = ({ onSelect }) => {
                         className="flex flex-col items-center gap-1.5 group w-full rounded-xl transition-colors hover:bg-white/5 active:bg-white/10 p-1"
                     >
                         <div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center transition-transform shadow-sm group-active:scale-95 border border-white/5"
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform shadow-sm group-active:scale-95 border border-white/5"
                             style={{
                                 backgroundColor: 'var(--wa-input-bg)', // Adapts to theme (dark/light) - Screenshots show dark square
                             }}
                         >
                             <item.icon
-                                className="w-8 h-8"
+                                className="w-7 h-7"
                                 style={{ color: item.color }}
                                 strokeWidth={2}
                             />
                         </div>
-                        <span className="text-[12px] font-medium text-[var(--wa-text-secondary)] tracking-wide group-hover:text-[var(--wa-text-primary)] text-center">
+                        <span className="text-[11px] font-medium text-[var(--wa-text-secondary)] tracking-wide group-hover:text-[var(--wa-text-primary)] text-center">
                             {item.label}
                         </span>
                     </button>
