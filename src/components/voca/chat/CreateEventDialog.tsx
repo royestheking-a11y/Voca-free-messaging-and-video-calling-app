@@ -16,15 +16,33 @@ export const CreateEventDialog = ({ isOpen, onClose, onSend }: CreateEventDialog
     const [eventName, setEventName] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
-    const [displayDate, setDisplayDate] = useState('Jan 14, 2026'); // Default matching screenshot for now, usually use real date
-    const [displayTime, setDisplayTime] = useState('7:30 PM');
+    const [date, setDate] = useState('2026-01-14');
+    const [time, setTime] = useState('19:30');
+
+    // End Date State
+    const [showEndTime, setShowEndTime] = useState(false);
+    const [endDate, setEndDate] = useState('2026-01-14');
+    const [endTime, setEndTime] = useState('20:30');
+
+    // Toggle State
     const [isVocaCall, setIsVocaCall] = useState(false);
     const [allowGuests, setAllowGuests] = useState(false);
 
-    // Dark theme matching the screenshot
-    // Background: #0f1c24 (approx dark slate) or #111b21 (standard WA dark)
-    // Inputs: Transparent with placeholder styling
-    // Text: White / Gray
+    // Toggle Styles
+    const switchStyles = "data-[state=checked]:bg-[#00a884] data-[state=unchecked]:bg-[#37404a] [&>span]:bg-[#cfd4d6] data-[state=checked]:[&>span]:bg-white border-2 border-transparent transition-colors cursor-pointer";
+
+    const formatDate = (d: string) => {
+        if (!d) return 'Select Date';
+        return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const formatTime = (t: string) => {
+        if (!t) return 'Time';
+        const [hours, mins] = t.split(':');
+        const date = new Date();
+        date.setHours(parseInt(hours), parseInt(mins));
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
@@ -61,18 +79,79 @@ export const CreateEventDialog = ({ isOpen, onClose, onSend }: CreateEventDialog
 
                     <div className="h-px bg-white/10 w-full" />
 
-                    {/* Date & Time */}
+                    {/* Date & Time Section */}
                     <div className="space-y-6">
                         <div className="flex items-start gap-4">
                             <Calendar className="w-6 h-6 text-[#8696a0] mt-1" />
                             <div className="flex-1 space-y-4">
-                                <div className="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 -ml-2 rounded-lg transition-colors">
-                                    <span className="text-base text-[#e9edef]">{displayDate}</span>
-                                    <span className="text-base text-[#e9edef]">{displayTime}</span>
+                                {/* Start Date/Time Inputs */}
+                                <div className="flex gap-3">
+                                    <div className="relative flex-1 group">
+                                        <div className="absolute inset-0 opacity-0 cursor-pointer">
+                                            <input
+                                                type="date"
+                                                value={date}
+                                                onChange={(e) => setDate(e.target.value)}
+                                                className="w-full h-full cursor-pointer"
+                                            />
+                                        </div>
+                                        <div className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                                            <span className="text-base text-[#e9edef] block">{date ? formatDate(date) : 'Select Date'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="relative w-24 group">
+                                        <div className="absolute inset-0 opacity-0 cursor-pointer">
+                                            <input
+                                                type="time"
+                                                value={time}
+                                                onChange={(e) => setTime(e.target.value)}
+                                                className="w-full h-full cursor-pointer"
+                                            />
+                                        </div>
+                                        <div className="p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer text-right">
+                                            <span className="text-base text-[#e9edef] block">{time ? formatTime(time) : 'Time'}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <button className="text-[#00a884] text-sm font-medium hover:text-[#00c897] transition-colors">
-                                    Add end time
-                                </button>
+
+                                {/* End Date Logic */}
+                                {showEndTime ? (
+                                    <div className="flex gap-3 animate-in slide-in-from-top-2 duration-200">
+                                        <div className="relative flex-1 group">
+                                            <div className="absolute inset-0 opacity-0 cursor-pointer">
+                                                <input
+                                                    type="date"
+                                                    value={endDate}
+                                                    onChange={(e) => setEndDate(e.target.value)}
+                                                    className="w-full h-full cursor-pointer"
+                                                />
+                                            </div>
+                                            <div className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                                                <span className="text-base text-[#e9edef] block">{endDate ? formatDate(endDate) : 'Select End Date'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="relative w-24 group">
+                                            <div className="absolute inset-0 opacity-0 cursor-pointer">
+                                                <input
+                                                    type="time"
+                                                    value={endTime}
+                                                    onChange={(e) => setEndTime(e.target.value)}
+                                                    className="w-full h-full cursor-pointer"
+                                                />
+                                            </div>
+                                            <div className="p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer text-right">
+                                                <span className="text-base text-[#e9edef] block">{endTime ? formatTime(endTime) : 'Time'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setShowEndTime(true)}
+                                        className="text-[#00a884] text-sm font-medium hover:text-[#00c897] transition-colors"
+                                    >
+                                        Add end time
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -97,7 +176,7 @@ export const CreateEventDialog = ({ isOpen, onClose, onSend }: CreateEventDialog
                             <Switch
                                 checked={isVocaCall}
                                 onCheckedChange={setIsVocaCall}
-                                className="data-[state=checked]:bg-[#00a884] data-[state=unchecked]:bg-[#37404a]"
+                                className={switchStyles}
                             />
                         </div>
                     </div>
@@ -113,7 +192,7 @@ export const CreateEventDialog = ({ isOpen, onClose, onSend }: CreateEventDialog
                         <Switch
                             checked={allowGuests}
                             onCheckedChange={setAllowGuests}
-                            className="data-[state=checked]:bg-[#00a884] data-[state=unchecked]:bg-[#37404a]"
+                            className={switchStyles}
                         />
                     </div>
 
@@ -124,7 +203,17 @@ export const CreateEventDialog = ({ isOpen, onClose, onSend }: CreateEventDialog
                     <button
                         onClick={() => {
                             if (!eventName) return;
-                            onSend({ eventName, description, date: displayDate, time: displayTime, location, isVocaCall, allowGuests });
+                            onSend({
+                                eventName,
+                                description,
+                                date: formatDate(date),
+                                time: formatTime(time),
+                                endDate: showEndTime ? formatDate(endDate) : null,
+                                endTime: showEndTime ? formatTime(endTime) : null,
+                                location,
+                                isVocaCall,
+                                allowGuests
+                            });
                             onClose();
                         }}
                         disabled={!eventName}
