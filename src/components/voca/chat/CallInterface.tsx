@@ -307,13 +307,13 @@ const CallInterfaceComponent = ({
         }
     }, [status]);
 
-    // Auto-hide controls after 3 seconds of inactivity
+    // Auto-hide controls after 10 seconds of inactivity
     useEffect(() => {
         if (!isControlsVisible) return;
 
         const timer = setTimeout(() => {
             setIsControlsVisible(false);
-        }, 3000);
+        }, 10000); // Increased from 3s to 10s
 
         return () => clearTimeout(timer);
     }, [isControlsVisible]);
