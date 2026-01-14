@@ -207,10 +207,20 @@ const CallInterfaceComponent = ({
             });
             remoteVideoRef.current.srcObject = remoteStream;
             remoteVideoRef.current.play().catch(e => console.error('❌ Error playing remote video from effect:', e));
-        } else if (remoteAudioRef.current && remoteStream && !isVideo) {
-            console.log('🔊 [EFFECT] Attaching remote stream to audio element');
-            remoteAudioRef.current.srcObject = remoteStream;
-            remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
+        }
+
+        // Always attach to audio element if it exists, as a fallback/primary audio source
+        // This ensures audio works even if video element fails or is minimized without video
+        if (remoteAudioRef.current && remoteStream) {
+            // Only if NOT playing through video element? 
+            // Actually, letting both play might cause echo/issues.
+            // Safer: Only play audio ref if !isVideo OR isMinimized (and video might be small/missing)
+            // But if isVideo=true, we rely on video element.
+            if (!isVideo) {
+                console.log('🔊 [EFFECT] Attaching remote stream to audio element');
+                remoteAudioRef.current.srcObject = remoteStream;
+                remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
+            }
         }
     }, [remoteStream, isVideo, isMinimized]); // Re-run when video UI appears OR minimizes
 
@@ -596,7 +606,7 @@ const CallInterfaceComponent = ({
                 animate={{ scale: 1, opacity: 1 }}
                 drag
                 dragMomentum={false}
-                className="fixed z-[9999] bottom-24 right-4 w-32 h-48 sm:w-40 sm:h-60 bg-black rounded-xl shadow-2xl border border-white/20 overflow-hidden cursor-grab active:cursor-grabbing"
+                className="fixed z-[9999] bottom-24 right-4 w-32 h-48 sm:w-40 sm:h-60 bg-black rounded-xl shadow-2xl border border-white/20 overflow-hidden cursor-grab active:cursor-grabbing pointer-events-auto"
             >
                 {/* Content */}
                 {isVideo ? (
@@ -861,16 +871,16 @@ const CallInterfaceComponent = ({
                     )}
                 </motion.div>
 
-                {/* Bottom Floating Glass Bar */}
+                {/* Bottom Floating Glass Bar - FIXED position relative to viewport */}
                 <AnimatePresence>
                     {isControlsVisible && (
                         <motion.div
                             initial={{ y: 100 }}
                             animate={{ y: 0 }}
                             exit={{ y: 100 }}
-                            className="absolute bottom-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+                            className="fixed bottom-8 left-0 right-0 z-[110] flex justify-center px-4"
                         >
-                            <div className="pointer-events-auto flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl max-w-full overflow-x-auto no-scrollbar">
+                            <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl max-w-full overflow-x-auto no-scrollbar pointer-events-auto">
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                                     onClick={() => setIsMinimized(true)}
