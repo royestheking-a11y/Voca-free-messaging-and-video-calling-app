@@ -976,7 +976,20 @@ const CallInterfaceComponent = ({
                         <span className="text-white text-xs font-medium tracking-wide">End</span>
                     </button>
 
-                    <button onClick={() => onMinimize?.()} className="flex flex-col items-center gap-2 group" title="Minimize to chat">
+                    <button
+                        onClick={() => {
+                            console.log('🟢 Voice call - Message button clicked!');
+                            console.log('🔹 onMinimize exists?', !!onMinimize);
+                            if (onMinimize) {
+                                console.log('🚀 Calling onMinimize...');
+                                onMinimize();
+                            } else {
+                                console.log('❌ onMinimize is undefined!');
+                            }
+                        }}
+                        className="flex flex-col items-center gap-2 group"
+                        title="Minimize to chat"
+                    >
                         <div className="p-6 rounded-full transition-all shadow-lg bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105">
                             <MessageSquare className="w-8 h-8" />
                         </div>
