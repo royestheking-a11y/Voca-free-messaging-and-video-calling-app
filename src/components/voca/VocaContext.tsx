@@ -1189,7 +1189,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         updateProfilePhoto,
         updateSettings,
 
-        sendMessage: (chatId: string, content: string, type?: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' | 'audio' | 'contact' | 'location', mediaUrl?: string, duration?: string, replyToId?: string) => Promise<Message | undefined>,
+        sendMessage,
         deleteMessage,
         starMessage,
         setActiveChatId,
