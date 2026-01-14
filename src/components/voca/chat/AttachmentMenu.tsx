@@ -18,19 +18,19 @@ const MENU_ITEMS = [
 
 export const AttachmentMenu: React.FC<AttachmentMenuProps> = ({ onSelect }) => {
     return (
-        <div className="p-4 bg-[var(--wa-panel-bg)] w-full flex justify-center">
+        <div className="p-3 bg-[var(--wa-panel-bg)]">
             <div
-                className="grid gap-y-4 gap-x-4 justify-center"
+                className="grid gap-y-4 gap-x-4 justify-items-center"
                 style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
             >
                 {MENU_ITEMS.map((item) => (
                     <button
                         key={item.id}
                         onClick={() => onSelect(item.id as any)}
-                        className="flex flex-col items-center gap-1.5 group w-full p-1 rounded-xl transition-colors hover:bg-white/5 active:bg-white/10"
+                        className="flex flex-col items-center gap-1.5 group w-full rounded-xl transition-colors hover:bg-white/5 active:bg-white/10 p-1"
                     >
                         <div
-                            className="w-16 h-16 rounded-[22px] flex items-center justify-center transition-transform shadow-sm group-active:scale-95"
+                            className="w-16 h-16 rounded-2xl flex items-center justify-center transition-transform shadow-sm group-active:scale-95 border border-white/5"
                             style={{
                                 backgroundColor: 'var(--wa-input-bg)', // Adapts to theme (dark/light) - Screenshots show dark square
                             }}
