@@ -34,7 +34,8 @@ const CallInterfaceComponent = ({
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoEnabled, setIsVideoEnabled] = useState(true);
     const [isScreenSharing, setIsScreenSharing] = useState(false);
-    const [showChat, setShowChat] = useState(false);
+    const [showChat, setShowChat] = useState(false); // Kept for logic, but UI will minimize
+    const [isMinimized, setIsMinimized] = useState(false);
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
@@ -195,7 +196,7 @@ const CallInterfaceComponent = ({
             // Explicitly play local video (it is muted so it should allow autoplay, but being safe)
             localVideoRef.current.play().catch(e => console.error('📹 Error playing local PiP:', e));
         }
-    }, [localStream]); // ONLY depend on localStream, not isIncoming/isVideo
+    }, [localStream, isVideo, isMinimized]); // Re-run when video UI appears OR minimizes
 
     // Attach remote stream to video/audio when available (do NOT depend on isIncoming/isVideo)
     useEffect(() => {
@@ -211,7 +212,7 @@ const CallInterfaceComponent = ({
             remoteAudioRef.current.srcObject = remoteStream;
             remoteAudioRef.current.play().catch(e => console.error('❌ Error playing remote audio from effect:', e));
         }
-    }, [remoteStream]); // ONLY depend on remoteStream
+    }, [remoteStream, isVideo, isMinimized]); // Re-run when video UI appears OR minimizes
 
     // Handle Ringtone
     useEffect(() => {
@@ -585,7 +586,66 @@ const CallInterfaceComponent = ({
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-    // --- RENDER ---
+
+
+    // --- RENDER MINIMIZED ---
+    if (isMinimized) {
+        return (
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                drag
+                dragMomentum={false}
+                className="fixed z-[9999] bottom-24 right-4 w-32 h-48 sm:w-40 sm:h-60 bg-black rounded-xl shadow-2xl border border-white/20 overflow-hidden cursor-grab active:cursor-grabbing"
+            >
+                {/* Content */}
+                {isVideo ? (
+                    <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-2">
+                        <Avatar className="w-12 h-12 mb-2">
+                            <AvatarImage src={participant.avatar} />
+                            <AvatarFallback>{participant.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs font-bold truncate w-full text-center">{participant.name}</span>
+                        <span className="text-[10px] text-green-400">{formatDuration(duration)}</span>
+                        {/* Audio Element */}
+                        <audio ref={remoteAudioRef} autoPlay playsInline />
+                    </div>
+                )}
+
+                {/* Overlay Controls */}
+                <div
+                    className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 hover:opacity-100"
+                    onClick={() => setIsMinimized(false)} // Click anywhere to restore
+                >
+                    <div className="p-2 rounded-full bg-white/20 backdrop-blur text-white">
+                        <Monitor className="w-5 h-5" /> {/* Use Expand Icon if available, or Monitor/Maximize */}
+                    </div>
+                </div>
+
+                {/* PiP Local Video (if video call) */}
+                {isVideo && localStream && (
+                    <div className="absolute bottom-2 right-2 w-10 h-14 bg-black border border-white/20 rounded-md overflow-hidden">
+                        <video
+                            ref={localVideoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                )}
+            </motion.div>
+        );
+    }
+
+    // --- RENDER FULL SCREEN ---
 
     // 1. INCOMING CALL SCREEN (Premium)
     if (isIncoming) {
@@ -690,24 +750,16 @@ const CallInterfaceComponent = ({
     if (isVideo) {
         return (
             <div
-                className="fixed inset-0 z-[100] bg-black"
-                style={{ opacity: 1 }} // Force opacity
+                className="fixed inset-0 z-[100] bg-black overflow-hidden"
+                style={{ height: '100dvh', width: '100dvw' }}
             >
                 {/* Remote Video */}
                 <video
                     ref={remoteVideoRef}
                     autoPlay
                     playsInline
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        zIndex: 0,
-                        backgroundColor: '#000'
-                    }}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    style={{ zIndex: 1 }}
                     onClick={() => setIsControlsVisible(!isControlsVisible)}
                     onLoadedMetadata={(e) => {
                         console.log('📹 Remote video metadata loaded:', {
@@ -816,13 +868,13 @@ const CallInterfaceComponent = ({
                             initial={{ y: 100 }}
                             animate={{ y: 0 }}
                             exit={{ y: 100 }}
-                            className="absolute bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+                            className="absolute bottom-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
                         >
                             <div className="pointer-events-auto flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl max-w-full overflow-x-auto no-scrollbar">
                                 <motion.button
                                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
-                                    onClick={() => setShowChat(!showChat)}
-                                    className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0", showChat ? "bg-white text-black" : "bg-white/10 text-white hover:bg-white/20")}
+                                    onClick={() => setIsMinimized(true)}
+                                    className={cn("p-3 sm:p-4 rounded-full transition-all flex-shrink-0 bg-white/10 text-white hover:bg-white/20")}
                                 >
                                     <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </motion.button>
@@ -960,24 +1012,14 @@ const CallInterfaceComponent = ({
                         <span className="text-white text-xs font-medium tracking-wide">End</span>
                     </button>
 
-                    <button onClick={() => setShowChat(!showChat)} className="flex flex-col items-center gap-2 group">
-                        <div className={cn("p-6 rounded-full transition-all shadow-lg", showChat ? "bg-white text-black hover:scale-105" : "bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
+                    <button onClick={() => setIsMinimized(true)} className="flex flex-col items-center gap-2 group">
+                        <div className={cn("p-6 rounded-full transition-all shadow-lg bg-white/10 text-white backdrop-blur-md border border-white/20 hover:bg-white/20 hover:scale-105")}>
                             <MessageSquare className="w-8 h-8" />
                         </div>
                         <span className="text-white text-xs font-medium tracking-wide">Chat</span>
                     </button>
                 </div>
             </motion.div>
-
-            {/* Call Chat Overlay (Voice) */}
-            <AnimatePresence>
-                {showChat && (
-                    <CallChatOverlay
-                        participantId={participantId}
-                        onClose={() => setShowChat(false)}
-                    />
-                )}
-            </AnimatePresence>
 
             {/* Hidden audio element for voice calls */}
             <audio ref={remoteAudioRef} autoPlay playsInline />
