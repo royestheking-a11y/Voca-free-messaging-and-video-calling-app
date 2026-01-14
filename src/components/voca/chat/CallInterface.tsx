@@ -1054,6 +1054,7 @@ export const CallInterface = React.memo(CallInterfaceComponent, (prevProps, next
         prevProps.participant.id === nextProps.participant.id &&
         prevProps.type === nextProps.type &&
         prevProps.isIncoming === nextProps.isIncoming &&
-        prevProps.participantId === nextProps.participantId
+        prevProps.participantId === nextProps.participantId &&
+        prevProps.isMinimized === nextProps.isMinimized
     );
 });
