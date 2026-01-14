@@ -67,11 +67,7 @@ app.set('io', io);
 
 // Health check endpoint for cron-job (keeps Render awake)
 app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString()
-    });
+    res.status(200).send('OK');
 });
 
 // API Routes
@@ -443,28 +439,26 @@ const seedData = async () => {
 // Connect to MongoDB and start server
 const startServer = async () => {
     try {
-        await connectDB();
-        await seedData();
-
+        // Start HTTP server FIRST so health checks pass immediately
         httpServer.listen(PORT, () => {
             console.log(`
   🚀 Voca Server Running
   ======================
   Port: ${PORT}
-  MongoDB: Connected
-  Cloudinary: Configured
   Socket.IO: Ready
-  
-  API Endpoints:
-  - POST   /api/auth/signup
-  - POST   /api/auth/login
-  - GET    /api/users
-  - GET    /api/chats
-  - POST   /api/upload/image
-  - GET    /api/posts
-  - GET    /api/admin/stats
+  Health Check: http://localhost:${PORT}/health
       `);
         });
+
+        // Then attempt DB connection (non-blocking for server start)
+        try {
+            await connectDB();
+            await seedData();
+            console.log('✅ Database connected and seeded');
+        } catch (dbError) {
+            console.error('⚠️ Database connection failed (Server still running for health checks):', dbError.message);
+        }
+
     } catch (error) {
         console.error('Failed to start server:', error);
         process.exit(1);
