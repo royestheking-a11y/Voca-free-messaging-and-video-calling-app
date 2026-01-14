@@ -57,6 +57,9 @@ export const ChatWindow = () => {
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
     // Search State
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const docInputRef = useRef<HTMLInputElement>(null);
     const [isSearching, setIsSearching] = useState(false);
 
     // Attachment Menu State
@@ -350,11 +353,11 @@ export const ChatWindow = () => {
         // Focus input would be nice here
     };
 
-    const handleFileUpload = async (type: 'image' | 'video' | 'doc') => {
+    const handleFileUpload = async (type: 'image' | 'video' | 'doc' | 'audio') => {
         const input = document.createElement('input');
         input.type = 'file';
         // Correctly filter mime types
-        input.accept = type === 'image' ? 'image/*' : type === 'video' ? 'video/*' : '*/*';
+        input.accept = type === 'image' ? 'image/*' : type === 'video' ? 'video/*' : type === 'audio' ? 'audio/*' : '*/*';
 
         input.onchange = async (e) => {
             const file = (e.target as HTMLInputElement).files?.[0];
@@ -380,15 +383,17 @@ export const ChatWindow = () => {
                     const { uploadAPI } = await import('../../../lib/api');
                     let cloudinaryUrl: string | undefined;
 
+                    if (type === 'audio') {
+                        cloudinaryUrl = (await uploadAPI.audio(file)).url;
+                    }
                     // Docs Logic - We know type is 'doc' here because of early return above
                     // For docs, you could add uploadAPI.document() if needed
                     // For now reusing generic upload or ignoring specific doc upload api
 
-                    const content = `Sent a file: ${file.name}`;
-                    // Mock upload or use a real endpoint if available. 
-                    // Since we don't have specific doc upload in snippet, we proceed.
+                    const content = type === 'audio' ? `Audio: ${file.name}` : `Sent a file: ${file.name}`;
+                    const itemsType = type === 'audio' ? 'audio' : 'doc';
 
-                    const message = await sendMessage(activeChat!.id, content, 'doc', cloudinaryUrl);
+                    const message = await sendMessage(activeChat!.id, content, itemsType, cloudinaryUrl);
                     if (message && otherParticipant) {
                         emitSocketMessage(otherParticipant.id, activeChat!.id, message);
                     }
@@ -987,10 +992,6 @@ export const ChatWindow = () => {
                                                     onSelect={(type) => {
                                                         setIsAttachmentMenuOpen(false);
                                                         switch (type) {
-                                                            case 'image': handleFileUpload('image'); break;
-                                                            case 'camera': setShowCamera(true); break;
-                                                            case 'document': handleFileUpload('doc'); break;
-                                                            case 'event': setShowEventDialog(true); break;
                                                             case 'poll': setShowPollDialog(true); break;
                                                             default: toast.info("Coming soon"); break;
                                                         }

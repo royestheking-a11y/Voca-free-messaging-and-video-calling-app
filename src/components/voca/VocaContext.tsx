@@ -24,7 +24,7 @@ interface VocaContextType {
     updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
 
     // Chat
-    sendMessage: (chatId: string, content: string, type?: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event', mediaUrl?: string, duration?: string, replyToId?: string) => Promise<Message | undefined>;
+    sendMessage: (chatId: string, content: string, type?: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' | 'audio', mediaUrl?: string, duration?: string, replyToId?: string) => Promise<Message | undefined>;
     deleteMessage: (chatId: string, messageId: string, forEveryone: boolean) => Promise<void>;
     starMessage: (chatId: string, messageId: string) => void;
     setActiveChatId: (id: string | null) => Promise<void>;
@@ -403,7 +403,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const sendMessage = useCallback(async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' = 'text', mediaUrl?: string, duration?: string, replyToId?: string): Promise<Message | undefined> => {
+    const sendMessage = useCallback(async (chatId: string, content: string, type: 'text' | 'image' | 'voice' | 'video' | 'doc' | 'call' | 'poll' | 'event' | 'audio' = 'text', mediaUrl?: string, duration?: string, replyToId?: string): Promise<Message | undefined> => {
         if (!currentUser) return undefined;
         try {
             // Optimistic update

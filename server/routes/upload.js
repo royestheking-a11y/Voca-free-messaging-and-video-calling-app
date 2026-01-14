@@ -92,6 +92,31 @@ router.post('/voice', protect, upload.single('file'), async (req, res) => {
     }
 });
 
+// @route   POST /api/upload/audio
+// @desc    Upload audio/music file to Cloudinary
+// @access  Private
+router.post('/audio', protect, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const result = await uploadToCloudinary(req.file.buffer, {
+            folder: 'Voca/audio',
+            resource_type: 'video' // Cloudinary handles audio as video
+        });
+
+        res.json({
+            url: result.secure_url,
+            publicId: result.public_id,
+            duration: result.duration
+        });
+    } catch (error) {
+        console.error('Audio upload error:', error);
+        res.status(500).json({ message: 'Upload failed', error: error.message });
+    }
+});
+
 // @route   POST /api/upload/avatar
 // @desc    Upload avatar/profile photo
 // @access  Private

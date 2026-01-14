@@ -40,6 +40,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
     const isDoc = message.type === 'doc';
     const isVoice = message.type === 'voice';
     const isVideo = message.type === 'video';
+    const isAudio = message.type === 'audio';
 
     // Check if message is deleted for me
     const isDeletedForMe = message.deletedFor?.includes(currentUser?.id || 'me');
@@ -56,7 +57,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
 
     // Handle Audio Playback
     useEffect(() => {
-        if (isVoice && message.mediaUrl) {
+        if ((isVoice || isAudio) && message.mediaUrl) {
             const audio = new Audio(message.mediaUrl);
             audioRef.current = audio;
 
@@ -81,7 +82,11 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                 audio.src = ""; // Clean up source to stop downloading
             };
         }
-    }, [isVoice, message.mediaUrl]);
+    }, [isVoice, isAudio, message.mediaUrl]);
+
+    // ... (rest of the code)
+
+
 
     const togglePlayback = async () => {
         if (!audioRef.current) return;
@@ -574,7 +579,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                     )}
 
                     {/* Voice Note Handling - Enhanced UI */}
-                    {isVoice && (
+                    {(isVoice || isAudio) && (
                         <div className="flex items-center gap-3 bg-transparent p-2 pr-4 rounded-md mb-1 min-w-[240px]">
                             <div className="relative cursor-pointer" onClick={togglePlayback}>
                                 <Avatar className="w-12 h-12">
@@ -588,8 +593,12 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                                     isMe ? "bg-[var(--wa-outgoing-bg)] text-[#53bdeb]" : "bg-[var(--wa-incoming-bg)] text-[#53bdeb]"
                                 )}>
                                     <div className="w-4 h-4 flex items-center justify-center">
-                                        {/* SVG Mic */}
-                                        <svg viewBox="0 0 16 20" height="10px" width="10px" className="fill-current"><path d="M8 0a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3zm0 15a5.005 5.005 0 0 0 4.9-4h1.1a6 6 0 1 1-12 0h1.1a5.005 5.005 0 0 0 4.9 4zm0 1a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-1-1z"></path></svg>
+                                        {/* SVG Mic or Music Note */}
+                                        {isAudio ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-music"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+                                        ) : (
+                                            <svg viewBox="0 0 16 20" height="10px" width="10px" className="fill-current"><path d="M8 0a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3zm0 15a5.005 5.005 0 0 0 4.9-4h1.1a6 6 0 1 1-12 0h1.1a5.005 5.005 0 0 0 4.9 4zm0 1a1 1 0 0 0-1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-1-1z"></path></svg>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -612,14 +621,14 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                                 <span className="text-xs text-[var(--wa-text-primary)]/80 font-mono flex justify-between">
                                     {message.starredBy?.includes(currentUser?.id || '') && (
                                         <Star className="w-3 h-3 text-[var(--wa-text-secondary)] fill-[var(--wa-text-secondary)] opacity-70" />
-                                    )}        <span>{message.duration || "0:05"}</span>
+                                    )}        <span>{message.duration || (isAudio ? "Audio" : "0:05")}</span>
                                 </span>
                             </div>
                         </div>
                     )}
 
                     {/* Text Content */}
-                    {message.content && !isVoice && (
+                    {message.content && !isVoice && !isAudio && (
                         <div className={cn(
                             "text-sm sm:text-[14.2px] leading-[19px] break-words text-[var(--wa-text-primary)] px-1 pb-1", // Added pb-1 for spacing above metadata
                             isImage && "pt-1"
