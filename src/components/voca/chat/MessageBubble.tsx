@@ -4,7 +4,7 @@ import { Message } from '../../../lib/data';
 import { cn } from '../../ui/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { format } from 'date-fns';
-import { Check, CheckCheck, FileText, Download, ChevronDown, Trash2, Star, Reply, Ban, Play, Pause, Edit2, Video, Phone } from 'lucide-react';
+import { Check, CheckCheck, FileText, Download, ChevronDown, Trash2, Star, Reply, Ban, Play, Pause, Edit2, Video, Phone, MessageCircle } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../ui/dropdown-menu';
 import { useVoca } from '../VocaContext';
@@ -264,7 +264,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
 
         return (
             <div className={cn("flex w-full mb-3 justify-center")}>
-                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl overflow-hidden min-w-[280px] max-w-[85%] select-none group/contact">
+                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl overflow-hidden min-w-[320px] max-w-[90%] select-none group/contact">
                     {/* Header */}
                     <div className="p-4 flex items-center gap-3 border-b border-[var(--wa-border)]/50">
                         <Avatar className="w-12 h-12">
@@ -281,10 +281,12 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                     <div className="bg-[var(--wa-hover)]/30 p-2">
                         <div
                             onClick={handleMessageContact}
-                            className="w-full flex items-center justify-center gap-2 py-2 text-[var(--wa-primary)] hover:bg-[var(--wa-hover)] rounded-lg cursor-pointer transition-colors font-medium text-sm"
+                            className="w-full flex items-center justify-center gap-2 py-3 text-[#006D77] bg-[#006D77]/5 hover:bg-[#006D77]/10 active:bg-[#006D77]/15 rounded-xl cursor-pointer transition-all duration-200 font-semibold text-base border border-[#006D77]/20"
                         >
-                            <span className="text-lg">💬</span>
-                            Message
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#006D77] to-[#83C5BE] flex items-center justify-center shadow-lg shadow-[#006D77]/20">
+                                <MessageCircle className="w-4 h-4 text-white fill-current" />
+                            </div>
+                            <span>Message</span>
                         </div>
                     </div>
                 </div>

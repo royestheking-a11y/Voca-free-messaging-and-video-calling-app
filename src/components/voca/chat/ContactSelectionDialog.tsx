@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useVoca } from '../VocaContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../ui/dialog';
 import { Input } from '../../ui/input';
-import { Search, X } from 'lucide-react';
+import { Search, X, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
 import { ScrollArea } from '../../ui/scroll-area';
 import { User } from '../../../lib/data';
+import { Button } from '../../ui/button';
 
 interface ContactSelectionDialogProps {
     isOpen: boolean;
@@ -14,13 +15,26 @@ interface ContactSelectionDialogProps {
 }
 
 export const ContactSelectionDialog = ({ isOpen, onClose, onSelect }: ContactSelectionDialogProps) => {
-    const { users, currentUser } = useVoca();
+    const { users, currentUser, chats } = useVoca();
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Get IDs of people user has interacted with (from chats)
+    const knownContactIds = React.useMemo(() => {
+        const ids = new Set<string>();
+        chats.forEach(chat => {
+            chat.participants.forEach(p => {
+                if (p.id !== currentUser?.id) ids.add(p.id);
+            });
+        });
+        currentUser?.favorites?.forEach(id => ids.add(id));
+        return ids;
+    }, [chats, currentUser]);
 
     const filteredUsers = users
         .filter(u =>
             u.id !== currentUser?.id &&
             !currentUser?.blockedUsers?.includes(u.id) &&
+            knownContactIds.has(u.id) && // Only show known contacts
             !u.blockedUsers?.includes(currentUser?.id || '') &&
             (u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 u.email.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -31,8 +45,11 @@ export const ContactSelectionDialog = ({ isOpen, onClose, onSelect }: ContactSel
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="bg-[var(--wa-panel-bg)] border-[var(--wa-border)] text-[var(--wa-text-primary)] max-w-md p-0 h-[85vh] md:h-[600px] overflow-hidden block">
                 <div className="flex flex-col h-full w-full">
-                    <DialogHeader className="p-4 bg-[var(--wa-header-bg)] border-b border-[var(--wa-border)] shrink-0">
-                        <DialogTitle>Share Contact</DialogTitle>
+                    <DialogHeader className="p-4 bg-[var(--wa-header-bg)] border-b border-[var(--wa-border)] shrink-0 flex-row items-center gap-3 space-y-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2 text-[var(--wa-text-primary)]" onClick={onClose}>
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                        <DialogTitle className="text-lg font-medium">Share Contact</DialogTitle>
                         <DialogDescription className="sr-only">Select a contact to share.</DialogDescription>
                     </DialogHeader>
 
