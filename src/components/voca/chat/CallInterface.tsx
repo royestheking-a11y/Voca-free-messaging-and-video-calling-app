@@ -57,8 +57,8 @@ const CallInterfaceComponent = ({
             const audioTrack = localStreamRef.current.getAudioTracks()[0];
             const videoTrack = newStream.getVideoTracks()[0];
 
-            const info = `Switched to ${facingMode === 'user' ? 'back' : 'front'} camera`;
-            toast.info(info);
+            // const info = `Switched to ${facingMode === 'user' ? 'back' : 'front'} camera`;
+            // toast.info(info);
 
             const combinedStream = new MediaStream([
                 ...(audioTrack ? [audioTrack] : []),
@@ -218,7 +218,7 @@ const CallInterfaceComponent = ({
                         console.error('Error playing ringtone (likely autoplay policy):', e);
                         // Optional: Show UI to ask user to interact
                         if (e.name === 'NotAllowedError') {
-                            toast('Creating incoming call...'); // Subtle prompt
+                            // toast('Creating incoming call...'); // Subtle prompt
                         }
                     });
                 }
@@ -280,13 +280,13 @@ const CallInterfaceComponent = ({
         });
 
         socket.on('call:rejected', () => {
-            toast.info('Call declined');
+            // toast.info('Call declined');
             handleEnd();
         });
 
         socket.on('call:ended', (data?: { duration?: string, status?: 'missed' | 'completed' }) => {
             console.log('📞 CallInterface: Received call:ended from remote user', data);
-            toast.info('Call ended');
+            // toast.info('Call ended');
             handleEnd(true, data?.duration, data?.status);
         });
 
