@@ -83,6 +83,23 @@ export const getUserMedia = async (constraints: { audio: boolean; video: boolean
 };
 
 /**
+ * Request display media (screen sharing)
+ */
+export const getDisplayMedia = async (): Promise<MediaStream> => {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: false // We typically handle audio via the microphone track separately
+        });
+        console.log('🖥️ Got display media (screen share):', stream.id);
+        return stream;
+    } catch (error) {
+        console.error('❌ Error getting display media:', error);
+        throw error;
+    }
+};
+
+/**
  * Create an SDP offer
  */
 export const createOffer = async (pc: RTCPeerConnection): Promise<RTCSessionDescriptionInit> => {
@@ -141,6 +158,37 @@ export const addIceCandidate = async (
 };
 
 /**
+ * Replace the video track in a peer connection (used for switching between Camera/Screen)
+ */
+export const replaceVideoTrack = async (
+    pc: RTCPeerConnection,
+    newStream: MediaStream
+): Promise<void> => {
+    try {
+        const newVideoTrack = newStream.getVideoTracks()[0];
+        if (!newVideoTrack) {
+            console.warn('⚠️ No video track found in new stream');
+            return;
+        }
+
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track?.kind === 'video');
+
+        if (videoSender) {
+            console.log('🔄 Replacing video track with:', newVideoTrack.label);
+            await videoSender.replaceTrack(newVideoTrack);
+        } else {
+            console.warn('⚠️ No video sender found to replace. This might be an audio-only call.');
+            // Note: If we want to upgrade audio-only to video/screen, we would need to addTrack + renegotiate (createOffer/Answer)
+            // For now, valid only for existing video calls or extensive renegotiation logic is needed.
+        }
+    } catch (error) {
+        console.error('❌ Error replacing video track:', error);
+        throw error;
+    }
+};
+
+/**
  * Toggle audio track enabled/disabled
  */
 export const toggleAudio = (stream: MediaStream, enabled: boolean): void => {
@@ -174,4 +222,81 @@ export const stopMediaStream = (stream: MediaStream): void => {
 export const closePeerConnection = (pc: RTCPeerConnection): void => {
     pc.close();
     console.log('🔌 Closed peer connection');
+};
+
+/**
+ * Switch Camera (Cycle through video inputs)
+ */
+export const switchCamera = async (
+    pc: RTCPeerConnection,
+    currentStream: MediaStream,
+    facingMode: 'user' | 'environment' = 'user'
+): Promise<MediaStream> => {
+    try {
+        // 1. Get current video track
+        const currentVideoTrack = currentStream.getVideoTracks()[0];
+
+        // 2. Stop current track to release device
+        if (currentVideoTrack) {
+            currentVideoTrack.stop();
+            currentStream.removeTrack(currentVideoTrack);
+        }
+
+        // 3. Request new stream with opposite facing mode
+        const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+        console.log(`🔄 Switching camera to ${newFacingMode}...`);
+
+        const newStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: { exact: newFacingMode }
+            },
+            audio: false
+        });
+
+        // 4. Replace sender track
+        await replaceVideoTrack(pc, newStream);
+
+        // 5. Return new stream
+        return newStream;
+
+    } catch (error) {
+        console.warn('⚠️ Could not switch to specific facingMode, trying generic toggle...', error);
+        try {
+            // Fallback: If exact facingMode fails (e.g. desktop), just request any video.
+            // Ideally we would enumerate and pick a different ID.
+            // For MVP, if "exact" fails, we just re-request video, which might be same or default.
+            // To be robust on desktop we need choose a different deviceId.
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            const currentTrack = currentStream.getVideoTracks()[0];
+            const currentLabel = currentTrack?.label;
+
+            // Find a device that is DIFFERENT from current
+            const nextDevice = videoDevices.find(d => d.label !== currentLabel) || videoDevices[0];
+
+            if (nextDevice) {
+                const newStream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: nextDevice.deviceId } },
+                    audio: false
+                });
+                await replaceVideoTrack(pc, newStream);
+                return newStream;
+            }
+
+            throw error;
+        } catch (e) {
+            console.error('❌ Failed to switch camera:', e);
+            throw e;
+        }
+    }
+};
+
+export const deviceHasMultipleCameras = async (): Promise<boolean> => {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        return videoDevices.length > 1;
+    } catch {
+        return false;
+    }
 };
