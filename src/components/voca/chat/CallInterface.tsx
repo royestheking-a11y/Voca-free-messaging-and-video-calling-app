@@ -603,6 +603,7 @@ const CallInterfaceComponent = ({
     };
 
     // --- RENDER ---
+    console.log('🖼️ CallInterface Render Block:', { isMinimized, isVideo, status, isIncoming: isIncoming });
 
     // 4. PIP MODE (Minimized)
     if (isMinimized) {
