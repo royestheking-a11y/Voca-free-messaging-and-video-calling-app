@@ -39,7 +39,10 @@ export const ChatLayout = () => {
     }, []);
 
     return (
-        <div className="flex h-screen bg-[var(--wa-app-bg)] overflow-hidden relative transition-colors duration-300">
+        <div
+            className="flex h-screen bg-[var(--wa-app-bg)] overflow-hidden relative transition-colors duration-300"
+            style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
             {/* Desktop Background band */}
             <div className="hidden xl:block absolute top-0 w-full h-32 bg-[#00a884] -z-10" />
 
