@@ -69,7 +69,6 @@ const AppContent = () => {
     // Handle Android Back Button coverage
     React.useEffect(() => {
         const handleBackButton = async () => {
-            // ... existing back button logic can stay or be merged, but for simplicity:
             await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
                 if (location.pathname === '/chat' || location.pathname === '/' || location.pathname === '/login') {
                     CapacitorApp.exitApp();
@@ -80,49 +79,81 @@ const AppContent = () => {
         };
         handleBackButton();
 
-        // Initialize Push Notifications
+        // Initialize Push Notifications with High Priority Channel
         const initPush = async () => {
-            // Check current status
             let permStatus = await PushNotifications.checkPermissions();
 
             if (permStatus.receive === 'prompt') {
                 permStatus = await PushNotifications.requestPermissions();
             }
 
-            if (permStatus.receive === 'granted') {
-                await PushNotifications.register();
+            if (permStatus.receive !== 'granted') {
+                console.error('User denied push permissions');
+                return;
             }
+
+            // Create High Importance Channel for "WhatsApp-like" behavior
+            // This ensures notifications pop up on screen
+            try {
+                await PushNotifications.createChannel({
+                    id: 'pop-notifications',
+                    name: 'Pop Notifications',
+                    description: 'Show notifications on top of screen',
+                    importance: 5, // MAX importance
+                    visibility: 1, // Public
+                    vibration: true,
+                    sound: 'beep.wav'
+                });
+            } catch (e) {
+                console.error('Error creating push channel', e);
+            }
+
+            await PushNotifications.register();
         };
 
-        // Listen for token registration
-        PushNotifications.addListener('registration', (token) => {
-            console.log('🔔 Push registration success, token: ' + token.value);
-            localStorage.setItem('fcm_token', token.value);
-            // Wait a moment for socket to connect before updating
-            setTimeout(() => {
-                updateFcmToken(token.value);
-            }, 2000);
-        });
+        // Setup Listeners
+        const setupListeners = async () => {
+            await PushNotifications.addListener('registration', (token) => {
+                console.log('🔔 Push registration success, token: ' + token.value);
+                localStorage.setItem('fcm_token', token.value);
+                // Wait a moment for socket to connect
+                setTimeout(() => updateFcmToken(token.value), 2000);
+            });
 
-        PushNotifications.addListener('registrationError', (error) => {
-            console.error('🔔 Push registration error: ' + JSON.stringify(error));
-        });
+            await PushNotifications.addListener('pushNotificationReceived', async (notification) => {
+                console.log('🔔 Push received: ', notification);
+                // Force a local notification for foreground visibility
+                try {
+                    const { LocalNotifications } = await import('@capacitor/local-notifications');
+                    await LocalNotifications.schedule({
+                        notifications: [{
+                            title: notification.title || 'New Message',
+                            body: notification.body || '',
+                            id: new Date().getTime(),
+                            schedule: { at: new Date(Date.now() + 100) },
+                            actionTypeId: '',
+                            extra: notification.data,
+                            channelId: 'pop-notifications' // Use the channel we created
+                        }]
+                    });
 
-        // Listen for notification arrival
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-            console.log('🔔 Push received: ', notification);
-        });
+                    // For Calls: Show a persistent/ongoing notification if possible (limited in standard plugin)
+                    // The backend push should have handled the full screen intent, this is just a backup foreground popup
+                } catch (e) {
+                    console.error('Error showing foreground notification', e);
+                }
+            });
 
-        // Listen for notification action
-        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-            console.log('🔔 Push action performed: ', notification);
-            const data = notification.notification.data;
-            if (data.type === 'call') {
-                navigate('/chat/calls');
-            }
-        });
+            await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+                console.log('🔔 Push action performed: ', notification);
+                const data = notification.notification.data;
+                if (data.type === 'call') navigate('/chat/calls');
+                else if (data.url) navigate(data.url);
+            });
+        };
 
         initPush();
+        setupListeners();
 
         return () => {
             CapacitorApp.removeAllListeners();

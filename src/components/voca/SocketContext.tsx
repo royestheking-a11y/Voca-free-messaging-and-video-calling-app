@@ -69,11 +69,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // Handle App State Changes (Background/Foreground)
         const setupAppStateListener = async () => {
-            await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+            await CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
                 console.log('📱 App State Changed:', isActive ? 'Foreground' : 'Background');
 
                 if (isActive) {
                     console.log('🔄 App Resumed: Ensuring socket is active...');
+
+                    // Clear notifications on resume
+                    try {
+                        const { LocalNotifications } = await import('@capacitor/local-notifications');
+                        await LocalNotifications.removeAllDeliveredNotifications();
+                    } catch (e) { console.error('Error clearing notifications', e); }
 
                     if (!newSocket.connected) {
                         console.log('🔌 Socket Disconnected, Reconnecting...');
@@ -118,7 +124,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
         // Listen for user online status changes
-        newSocket.on('user:online', (data: { userId: string; status: 'online'; lastSeen: string }) => {
+        newSocket.on('user:online', async (data: { userId: string; name?: string; status: 'online'; lastSeen: string }) => {
             console.log('👤 User online:', data);
             setOnlineUsers(prev => {
                 const updated = new Map(prev);

@@ -1,5 +1,22 @@
 {
   "appId": "voca.apk",
   "appName": "Voca",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": [
+        "profile",
+        "email"
+      ],
+      "serverClientId": "1020729373464-k2r75s12004avif8jj3u0g5l4nq5qo4a.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
+    }
+  }
 }

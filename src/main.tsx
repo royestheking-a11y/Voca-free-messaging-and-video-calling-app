@@ -5,7 +5,7 @@ import "./index.css";
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
-const GOOGLE_CLIENT_ID = "1020729373464-c8jmvuvervetgb2qt2238vikukrb001c.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "1020729373464-k2r75s12004avif8jj3u0g5l4nq5qo4a.apps.googleusercontent.com";
 
 // Register custom service worker for push notifications
 if ('serviceWorker' in navigator) {

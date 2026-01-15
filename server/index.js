@@ -130,6 +130,7 @@ webpush.setVapidDetails(
 // VoIP Push Helper
 const sendVoIPPush = async (token, title, body, data) => {
     try {
+        const isCall = data.type === 'call';
         const message = {
             token: token,
             notification: {
@@ -138,21 +139,40 @@ const sendVoIPPush = async (token, title, body, data) => {
             },
             data: {
                 ...data,
-                click_action: "FLUTTER_NOTIFICATION_CLICK" // Standard handler
+                click_action: "FCM_PLUGIN_ACTIVITY",
             },
             android: {
-                priority: 'high',
+                priority: "high", // Critical for wake lock
+                ttl: isCall ? 0 : 2419200, // 0 = Immediate for calls, standard for others
                 notification: {
-                    sound: 'default',
-                    priority: 'high',
-                    channelId: 'calls' // Important for Android 8+
+                    channelId: "pop-notifications", // Must match client channel ID
+                    priority: "max", // Max priority for heads-up
+                    defaultSound: true,
+                    defaultVibrateTimings: true,
+                    visibility: "public", // Show content on lock screen
+                    icon: "ic_stat_icon_config_sample",
+                    clickAction: "FCM_PLUGIN_ACTIVITY"
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        sound: "default",
+                        contentAvailable: true,
+                    },
+                },
+                headers: {
+                    "apns-priority": "10",
                 }
             }
         };
-        await admin.messaging().send(message);
-        console.log(`📞 FCM/VoIP Push sent to ${token.substring(0, 10)}...`);
+
+        const response = await admin.messaging().send(message);
+        console.log(`📞 FCM Push Sent (Call: ${isCall}):`, response);
+        return true;
     } catch (error) {
-        console.error('Error sending VoIP push:', error);
+        console.error('❌ Error sending FCM push:', error);
+        return false;
     }
 };
 

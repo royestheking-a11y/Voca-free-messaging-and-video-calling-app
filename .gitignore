@@ -35,4 +35,5 @@ yarn-error.log*
 
 # Firebase Secrets
 server/serviceAccountKey.json
+server/config/serviceAccountKey.json
 android/app/google-services.json

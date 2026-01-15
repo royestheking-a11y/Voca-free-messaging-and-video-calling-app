@@ -12,6 +12,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import { initEmail, generateOTP, sendRegistrationOTP, sendPasswordResetOTP } from '../../../lib/email';
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from '../../ui/input-otp';
+import { Capacitor } from '@capacitor/core';
+import { signInWithGoogleNative } from '../../../lib/googleAuth';
 
 interface LoginPageProps {
   initialMode?: 'login' | 'signup';
@@ -71,37 +73,71 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleGoogleLogin = useGoogleLogin({
+  // Platform-agnostic Google Login Handler
+  const handleNativeGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      // 1. Native Mobile Login
+      if (Capacitor.isNativePlatform()) {
+        const result = await signInWithGoogleNative();
+        if (result.success && result.user) {
+          await processLogin(result.user);
+        } else {
+          toast.error("Google Login Failed");
+        }
+      }
+      // 2. Web Login (Using the existing hook via button click)
+      else {
+        webGoogleLogin();
+      }
+    } catch (error) {
+      console.error('Google Login Error:', error);
+      toast.error("Authentication failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper to process the user data after auth (shared between web/native)
+  const processLogin = async (profileData: any) => {
+    // Normalize data structure if needed
+    const userData = {
+      googleId: profileData.googleId || profileData.sub,
+      email: profileData.email,
+      name: profileData.name,
+      avatar: profileData.avatar || profileData.picture
+    };
+
+    const result = await googleLogin(userData);
+    if (result.success) {
+      toast.success("Welcome to Voca");
+      if (result.isAdminPanel) {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/chat', { replace: true });
+      }
+    } else {
+      toast.error("Login Failed", { description: result.error });
+    }
+  };
+
+  // Web-only hook
+  const webGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
       try {
         const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }).then(res => res.json());
 
-        const profileData = {
+        await processLogin({
           googleId: userInfo.sub,
           email: userInfo.email,
           name: userInfo.name,
           avatar: userInfo.picture
-        };
-
-        const result = await googleLogin(profileData);
-        if (result.success) {
-          toast.success("Welcome to Voca");
-          if (result.isAdminPanel) {
-            navigate('/admin', { replace: true });
-          } else {
-            navigate('/chat', { replace: true });
-          }
-        } else {
-          toast.error("Login Failed", { description: result.error });
-        }
-      } catch (error) {
-        console.error('Google Auth Error:', error);
-        toast.error("Authentication failed");
-      } finally {
-        setIsLoading(false);
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to get user info");
       }
     },
     onError: () => toast.error("Google Login Failed"),
@@ -355,7 +391,7 @@ export const LoginPage = ({ initialMode = 'login' }: LoginPageProps) => {
       <div className="w-full">
         <button
           type="button"
-          onClick={() => handleGoogleLogin()}
+          onClick={() => handleNativeGoogleLogin()}
           className="w-full h-11 bg-white/5 hover:bg-white/10 text-white font-medium rounded-lg flex items-center justify-center gap-3 transition-all duration-300 backdrop-blur-sm border border-white/10 group hover:border-white/20 hover:scale-[1.02]"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
