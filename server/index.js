@@ -82,28 +82,64 @@ app.use('/api/calls', callsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ads', adsRoutes);
 
-// Web Push
+// Web Push (Legacy/Desktop)
 import webpush from 'web-push';
+
+// Firebase Admin (Mobile VoIP/Push)
+import admin from 'firebase-admin';
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const serviceAccount = require("./serviceAccountKey.json");
+
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+}
+
+// ... existing webpush config ...
 
 const publicVapidKey = 'BHgNtaH95BRApkIjFwoE1YuKCrFIYPlwHohRYjr8Q-xdhwpcrTH_NTT4TcHISgB7EGjKkI54ZyPogiuiRrnuhTc';
 const privateVapidKey = 'd1RQMcUyf25CpItxXGNICU7fzjgb1GMG3jADYALUR5s';
 
 webpush.setVapidDetails(
-    'mailto:admin@voca.app', // Updated contact
+    'mailto:admin@voca.app',
     publicVapidKey,
     privateVapidKey
 );
 
-// Notification Routes
-import notificationRoutes from './routes/notifications.js';
-app.use('/api/notifications', notificationRoutes);
+// VoIP Push Helper
+const sendVoIPPush = async (token, title, body, data) => {
+    try {
+        const message = {
+            token: token,
+            notification: {
+                title: title,
+                body: body,
+            },
+            data: {
+                ...data,
+                click_action: "FLUTTER_NOTIFICATION_CLICK" // Standard handler
+            },
+            android: {
+                priority: 'high',
+                notification: {
+                    sound: 'default',
+                    priority: 'high',
+                    channelId: 'calls' // Important for Android 8+
+                }
+            }
+        };
+        await admin.messaging().send(message);
+        console.log(`📞 FCM/VoIP Push sent to ${token.substring(0, 10)}...`);
+    } catch (error) {
+        console.error('Error sending VoIP push:', error);
+    }
+};
 
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// ... routes ...
 
-// Socket.IO for real-time features
+// Socket.IO
 const onlineUsers = new Map();
 const userSockets = new Map();
 
@@ -111,24 +147,34 @@ io.on('connection', (socket) => {
     console.log(`🔌 User connected: ${socket.id}`);
 
     socket.on('user:online', async (userData) => {
-        const { userId, name, avatar } = userData;
+        const { userId, name, avatar, fcmToken } = userData; // Receive FCM Token
+
+        // Update user in DB with FCM token if provided
+        if (fcmToken) {
+            try {
+                await User.findByIdAndUpdate(userId, {
+                    status: 'online',
+                    lastSeen: new Date(),
+                    fcmToken: fcmToken
+                });
+                console.log(`💾 FCM Token saved for user ${name}`);
+            } catch (error) {
+                console.error('Error saving FCM token:', error);
+            }
+        } else {
+            await User.findByIdAndUpdate(userId, { status: 'online', lastSeen: new Date() });
+        }
 
         onlineUsers.set(userId, {
             id: userId, name, avatar,
             lastSeen: new Date().toISOString(),
             socketId: socket.id,
-            status: 'online'
+            status: 'online',
+            fcmToken: fcmToken // Store in memory too
         });
 
         userSockets.set(userId, socket.id);
         socket.userId = userId;
-
-        // Update user status in database
-        try {
-            await User.findByIdAndUpdate(userId, { status: 'online', lastSeen: new Date() });
-        } catch (error) {
-            console.error('Error updating user status:', error);
-        }
 
         // Notify all connected users
         io.emit('user:online', {
@@ -136,8 +182,6 @@ io.on('connection', (socket) => {
             status: 'online',
             lastSeen: new Date().toISOString()
         });
-
-        // Online/offline push notifications disabled for privacy
 
         const onlineList = Array.from(onlineUsers.values()).map(u => ({
             userId: u.id, status: 'online', lastSeen: u.lastSeen
@@ -161,6 +205,36 @@ io.on('connection', (socket) => {
             const recipient = await User.findById(recipientId);
             const sender = await User.findById(socket.userId).select('name avatar');
 
+            // 1. Try FCM (Mobile App) first
+            if (recipient?.fcmToken) {
+                const msgBody = (() => {
+                    switch (message.type) {
+                        case 'image': return '📷 Photo';
+                        case 'video': return '🎥 Video';
+                        case 'audio': return '🎵 Audio';
+                        case 'voice': return '🎤 Voice Message';
+                        case 'doc': return '📄 Document';
+                        case 'poll': return '📊 Poll';
+                        case 'event': return '📅 Event';
+                        case 'contact': return '👤 Contact';
+                        case 'location': return '📍 Location';
+                        default: return message.content || 'New Message';
+                    }
+                })();
+
+                await sendVoIPPush(
+                    recipient.fcmToken,
+                    sender?.name || 'Voca User',
+                    msgBody,
+                    {
+                        type: 'message',
+                        chatId: chatId,
+                        url: `/chat/${chatId}`
+                    }
+                );
+            }
+
+            // 2. Try Web Push (Desktop/PWA) as backup or parallel
             if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
                 const payload = JSON.stringify({
                     title: sender?.name || 'Voca User',
@@ -263,12 +337,36 @@ io.on('connection', (socket) => {
             });
         }
 
+        // Send FCM (Mobile) Push if user has updated token
+        try {
+            const recipient = await User.findById(to);
+            const sender = await User.findById(socket.userId).select('name avatar');
+
+            if (recipient?.fcmToken) {
+                const isVideo = callType === 'video';
+                await sendVoIPPush(
+                    recipient.fcmToken,
+                    `Incoming ${isVideo ? 'Video' : 'Voice'} Call`,
+                    `${sender?.name || 'Voca User'} is calling...`,
+                    {
+                        type: 'call',
+                        callType: callType,
+                        callerId: socket.userId,
+                        callerName: sender?.name
+                    }
+                );
+            }
+        } catch (fcmErr) {
+            console.error('FCM Error:', fcmErr);
+        }
+
         // Always attempt to send Push Notification for calls (ensures locked devices get it)
         try {
             const recipient = await User.findById(to);
             const sender = await User.findById(socket.userId).select('name avatar'); // Re-fetch to be safe or use 'caller'
 
             if (recipient?.pushSubscription && recipient.pushSubscription.endpoint) {
+                // ... (Keep existing WebPush logic as backup/desktop)
                 const isVideo = callType === 'video';
                 const payload = JSON.stringify({
                     title: `Incoming ${isVideo ? 'Video' : 'Voice'} Call`,
@@ -289,7 +387,7 @@ io.on('connection', (socket) => {
                     ]
                 });
 
-                console.log(`📲 Sending call push to ${recipient.name} (${recipient._id})`);
+                console.log(`📲 Sending push to ${recipient.name} (${recipient._id})`);
                 console.log(`📬 Endpoint: ${recipient.pushSubscription.endpoint}`);
                 webpush.sendNotification(recipient.pushSubscription, payload)
                     .then(() => console.log(`✅ Call push sent to ${recipient.name}`))

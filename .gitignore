@@ -32,3 +32,7 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Firebase Secrets
+server/serviceAccountKey.json
+android/app/google-services.json

@@ -59,28 +59,69 @@ const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 import { App as CapacitorApp } from '@capacitor/app';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 const AppContent = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Handle Android Back Button
+    // Handle Android Back Button coverage
     React.useEffect(() => {
         const handleBackButton = async () => {
+            // ... existing back button logic can stay or be merged, but for simplicity:
             await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
                 if (location.pathname === '/chat' || location.pathname === '/' || location.pathname === '/login') {
-                    // Mininize/Exit if on root screens
                     CapacitorApp.exitApp();
                 } else {
-                    // Go back for nested screens (e.g. /chat/123, /profile)
                     navigate(-1);
                 }
             });
         };
         handleBackButton();
 
+        // Initialize Push Notifications
+        const initPush = async () => {
+            // Check current status
+            let permStatus = await PushNotifications.checkPermissions();
+
+            if (permStatus.receive === 'prompt') {
+                permStatus = await PushNotifications.requestPermissions();
+            }
+
+            if (permStatus.receive === 'granted') {
+                await PushNotifications.register();
+            }
+        };
+
+        // Listen for token registration
+        PushNotifications.addListener('registration', (token) => {
+            console.log('🔔 Push registration success, token: ' + token.value);
+            localStorage.setItem('fcm_token', token.value);
+        });
+
+        PushNotifications.addListener('registrationError', (error) => {
+            console.error('🔔 Push registration error: ' + JSON.stringify(error));
+        });
+
+        // Listen for notification arrival
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+            console.log('🔔 Push received: ', notification);
+        });
+
+        // Listen for notification action
+        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+            console.log('🔔 Push action performed: ', notification);
+            const data = notification.notification.data;
+            if (data.type === 'call') {
+                navigate('/chat/calls');
+            }
+        });
+
+        initPush();
+
         return () => {
             CapacitorApp.removeAllListeners();
+            PushNotifications.removeAllListeners();
         };
     }, [navigate, location]);
 

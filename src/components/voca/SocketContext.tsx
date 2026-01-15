@@ -87,7 +87,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             newSocket.emit('user:online', {
                 userId: currentUser.id,
                 name: currentUser.name,
-                avatar: currentUser.avatar
+                avatar: currentUser.avatar,
+                fcmToken: localStorage.getItem('fcm_token') // Send FCM token if available
             });
         });
 

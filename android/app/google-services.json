@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "1098885758801",
+        "project_id": "voca-apk",
+        "storage_bucket": "voca-apk.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:1098885758801:android:c616ea050d033e20931d70",
+                "android_client_info": {
+                    "package_name": "voca.apk"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyClyj3LsNHeNg2_lHPYxT1dtezsmp2AOn0"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}
