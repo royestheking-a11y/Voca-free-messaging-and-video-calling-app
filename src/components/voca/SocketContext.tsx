@@ -71,17 +71,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 console.log('📱 App State Changed:', isActive ? 'Foreground' : 'Background');
 
                 if (isActive) {
+                    console.log('🔄 App Resumed: Ensuring socket is active...');
+
                     if (!newSocket.connected) {
-                        console.log('🔄 App Resumed: Forcing Socket Reconnection...');
+                        console.log('🔌 Socket Disconnected, Reconnecting...');
                         newSocket.connect();
-                        // Re-emit online status immediately
-                        newSocket.emit('user:online', {
-                            userId: currentUser.id,
-                            name: currentUser.name,
-                            avatar: currentUser.avatar,
-                            fcmToken: localStorage.getItem('fcm_token')
-                        });
                     }
+
+                    // ALWAYS re-emit online status on resume to refresh server state/presence
+                    // (This fixes "Active Indicators" not showing after backgrounding)
+                    newSocket.emit('user:online', {
+                        userId: currentUser.id,
+                        name: currentUser.name,
+                        avatar: currentUser.avatar,
+                        fcmToken: localStorage.getItem('fcm_token')
+                    });
                 }
             });
         };
