@@ -89,12 +89,31 @@ import webpush from 'web-push';
 import admin from 'firebase-admin';
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const serviceAccount = require("./serviceAccountKey.json");
 
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
+let serviceAccount;
+try {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        // Production: Parse from Environment Variable
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        console.log('✅ Firebase Service Account loaded from Environment Variable');
+    } else {
+        // Local: Load from file
+        serviceAccount = require("./serviceAccountKey.json");
+        console.log('✅ Firebase Service Account loaded from local file');
+    }
+} catch (error) {
+    console.error('⚠️ Could not load Firebase Service Account. Mobile Push will not work.', error.message);
+}
+
+if (serviceAccount && !admin.apps.length) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        console.log('✅ Firebase Admin initialized');
+    } catch (error) {
+        console.error('❌ Firebase Init Error:', error);
+    }
 }
 
 // ... existing webpush config ...
