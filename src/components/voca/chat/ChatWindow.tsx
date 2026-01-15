@@ -552,6 +552,62 @@ export const ChatWindow = () => {
         setCancelOffset(0);
     };
 
+    // --- TOUCH HANDLERS (Mobile Fix) ---
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (isRecordingLockedRef.current) return;
+        if (e.cancelable) e.preventDefault();
+
+        touchStartY.current = e.touches[0].clientY;
+        touchStartX.current = e.touches[0].clientX;
+        startRecording();
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (e.cancelable) e.preventDefault();
+        if (!isRecordingRef.current || isRecordingLockedRef.current) return;
+
+        const touch = e.touches[0];
+        const diffY = touchStartY.current - touch.clientY;
+        const diffX = touchStartX.current - touch.clientX;
+
+        // Slide Up (Lock)
+        if (diffY > 0) {
+            setDragOffset(Math.min(diffY, 150));
+            if (diffY > 100) {
+                setIsRecordingLocked(true);
+                isRecordingLockedRef.current = true;
+                setDragOffset(0);
+                setCancelOffset(0);
+                return;
+            }
+        }
+        // Slide Left (Cancel)
+        if (diffX > 0 && diffY < 50) {
+            setCancelOffset(Math.min(diffX, 150));
+            if (diffX > 100) {
+                cancelRecording();
+                setDragOffset(0);
+                setCancelOffset(0);
+                return;
+            }
+        }
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (e.cancelable) e.preventDefault();
+        if (isRecordingLockedRef.current) return;
+
+        // Same quick-tap logic as pointer up
+        const elapsedMs = recordingStart ? Date.now() - recordingStart : 0;
+        if (elapsedMs < 1000) {
+            cancelRecording();
+        } else {
+            stopRecording();
+        }
+        setDragOffset(0);
+        setCancelOffset(0);
+    };
+
     const stopRecording = async () => {
         // Real recording mode
         if (mediaRecorderRef.current && isRecording) {
@@ -1056,11 +1112,16 @@ export const ChatWindow = () => {
                                                     "bg-[#00a884] hover:bg-[#008f72] text-white rounded-full h-12 w-12 shadow-md flex items-center justify-center transition-all select-none touch-none",
                                                     isRecording && "bg-red-500 hover:bg-red-600 scale-110",
                                                 )}
+                                                style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'none' }}
                                                 onContextMenu={(e: React.MouseEvent) => e.preventDefault()}
                                                 onPointerDown={handlePointerDown}
                                                 onPointerMove={handlePointerMove}
                                                 onPointerUp={handlePointerUp}
                                                 onPointerCancel={handlePointerUp}
+                                                onTouchStart={handleTouchStart}
+                                                onTouchMove={handleTouchMove}
+                                                onTouchEnd={handleTouchEnd}
+                                                onTouchCancel={handleTouchEnd}
                                             >
                                                 <Mic className={cn("w-6 h-6", isRecording && "animate-pulse")} />
                                             </Button>
