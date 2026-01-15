@@ -1297,7 +1297,7 @@ export const ChatSidebar = () => {
 
 
       {/* Bottom Navigation */}
-      <div className="h-20 bg-[var(--wa-app-bg)] border-t border-[var(--wa-border)] flex items-center justify-around absolute bottom-0 w-full z-20 pb-2">
+      <div className="h-20 bg-[var(--wa-app-bg)] border-t border-[var(--wa-border)] flex items-center justify-around absolute bottom-0 w-full z-20 pb-2" style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom))', height: 'calc(80px + env(safe-area-inset-bottom))' }}>
         <div
           onClick={() => navigate('/chat')}
           className={cn("flex flex-col items-center gap-1 cursor-pointer w-16 transition-colors", activeTab === 'chats' ? "text-[var(--wa-text-primary)]" : "text-[var(--wa-text-secondary)]")}

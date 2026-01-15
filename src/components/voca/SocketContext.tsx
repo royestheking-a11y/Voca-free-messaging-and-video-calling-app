@@ -4,6 +4,8 @@ import { useVoca } from './VocaContext';
 
 const SOCKET_SERVER_URL = (import.meta as any).env?.VITE_SOCKET_URL || 'http://localhost:3001';
 
+import { App as CapacitorApp } from '@capacitor/app';
+
 interface UserStatus {
     userId: string;
     status: 'online' | 'offline';
@@ -56,12 +58,25 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('🔌 Socket: Connecting to', SOCKET_SERVER_URL);
 
         const newSocket = io(SOCKET_SERVER_URL, {
-            transports: ['websocket', 'polling'],
+            transports: ['websocket'], // Force websocket only for better mobile performance
             reconnection: true,
-            reconnectionAttempts: 5,
+            reconnectionAttempts: Infinity, // Keep processing
             reconnectionDelay: 1000,
-            timeout: 10000
+            timeout: 20000
         });
+
+        // Handle App State Changes (Background/Foreground)
+        const setupAppStateListener = async () => {
+            await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+                if (isActive) {
+                    console.log('📱 App resumed: Reconnecting socket...');
+                    if (!newSocket.connected) {
+                        newSocket.connect();
+                    }
+                }
+            });
+        };
+        setupAppStateListener();
 
         newSocket.on('connect', () => {
             console.log('✅ Socket connected:', newSocket.id);
