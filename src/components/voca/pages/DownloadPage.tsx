@@ -112,9 +112,16 @@ export const DownloadPage = () => {
             Experience near-native performance without the App Store. Install Voca directly from your browser.
           </motion.p>
           <motion.div variants={itemVariants}>
-            <a href="/voca.apk" download className="inline-block mt-4">
-              <Button className="bg-[#3DDC84] hover:bg-[#32B36B] text-[#0f1c24] rounded-full px-8 py-6 text-lg font-bold shadow-xl shadow-[#3DDC84]/20 transition-transform hover:-translate-y-1">
-                <Download className="w-5 h-5 mr-2" />
+            <a href="/voca.apk" download className="inline-block mt-8">
+              <Button
+                className="rounded-full px-8 py-6 text-lg font-bold shadow-xl transition-transform hover:-translate-y-1"
+                style={{
+                  backgroundColor: '#3DDC84',
+                  color: '#0f1c24',
+                  boxShadow: '0 20px 25px -5px rgba(61, 220, 132, 0.2)'
+                }}
+              >
+                <Download className="w-6 h-6 mr-2" />
                 Download Android APK
               </Button>
             </a>
