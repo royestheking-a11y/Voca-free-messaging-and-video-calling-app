@@ -50,9 +50,9 @@ export const DownloadPage = () => {
       { icon: Check, title: "Confirm", desc: "Tap 'Add' in the top right corner." }
     ],
     android: [
-      { icon: MoreVertical, title: "Open Menu", desc: "Tap the three dots in Chrome's top right corner." },
-      { icon: Download, title: "Install App", desc: "Select 'Install app' or 'Add to Home screen'." },
-      { icon: Check, title: "Confirm", desc: "Follow the prompt to install securely." }
+      { icon: Download, title: "Download APK", desc: "Tap the 'Download APK' button above." },
+      { icon: MoreVertical, title: "Open File", desc: "Open the downloaded `voca.apk` file." },
+      { icon: Check, title: "Install", desc: "Allow installation from unknown sources if asked." }
     ],
     desktop: [
       { icon: Laptop, title: "Browser Install", desc: "Look for the install icon in your address bar." },
@@ -210,6 +210,27 @@ export const DownloadPage = () => {
                           >
                             Install Now
                           </Button>
+                        </motion.div>
+                      )}
+
+                      {/* Direct APK Download (Android Only) */}
+                      {activeTab === 'android' && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="mt-4"
+                        >
+                          <a href="/voca.apk" download className="block w-full">
+                            <Button
+                              className="w-full bg-[#3DDC84] hover:bg-[#32B36B] text-[#0f1c24] font-bold shadow-lg shadow-[#3DDC84]/20"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download APK
+                            </Button>
+                          </a>
+                          <p className="text-center text-xs text-gray-500 mt-2">
+                            Version 2.0 • Direct Download
+                          </p>
                         </motion.div>
                       )}
                     </div>
