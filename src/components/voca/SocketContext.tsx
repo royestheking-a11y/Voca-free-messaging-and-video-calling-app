@@ -68,10 +68,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Handle App State Changes (Background/Foreground)
         const setupAppStateListener = async () => {
             await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+                console.log('📱 App State Changed:', isActive ? 'Foreground' : 'Background');
+
                 if (isActive) {
-                    console.log('📱 App resumed: Reconnecting socket...');
                     if (!newSocket.connected) {
+                        console.log('🔄 App Resumed: Forcing Socket Reconnection...');
                         newSocket.connect();
+                        // Re-emit online status immediately
+                        newSocket.emit('user:online', {
+                            userId: currentUser.id,
+                            name: currentUser.name,
+                            avatar: currentUser.avatar,
+                            fcmToken: localStorage.getItem('fcm_token')
+                        });
                     }
                 }
             });
