@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import { VocaProvider, useVoca } from './components/voca/VocaContext';
 import { SocketProvider } from './components/voca/SocketContext';
@@ -58,7 +58,32 @@ const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
 };
 
+import { App as CapacitorApp } from '@capacitor/app';
+
 const AppContent = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Handle Android Back Button
+    React.useEffect(() => {
+        const handleBackButton = async () => {
+            await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+                if (location.pathname === '/chat' || location.pathname === '/' || location.pathname === '/login') {
+                    // Mininize/Exit if on root screens
+                    CapacitorApp.exitApp();
+                } else {
+                    // Go back for nested screens (e.g. /chat/123, /profile)
+                    navigate(-1);
+                }
+            });
+        };
+        handleBackButton();
+
+        return () => {
+            CapacitorApp.removeAllListeners();
+        };
+    }, [navigate, location]);
+
     return (
         <>
             <GlobalCallUI />
