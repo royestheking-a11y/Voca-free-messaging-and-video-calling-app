@@ -46,7 +46,7 @@ export const CreateEventDialog = ({ isOpen, onClose, onSend }: CreateEventDialog
 
     return (
         <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-            <DialogContent className="p-0 border-none bg-[#111b21] text-[#e9edef] max-w-md w-full rounded-2xl overflow-hidden shadow-2xl">
+            <DialogContent className="p-0 border-none bg-[#111b21] text-[#e9edef] max-w-md w-full rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center p-4 gap-4 border-b border-white/10">
                     <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
@@ -56,7 +56,7 @@ export const CreateEventDialog = ({ isOpen, onClose, onSend }: CreateEventDialog
                 </div>
 
                 {/* Scrollable Content */}
-                <div className="p-6 space-y-8 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
 
                     {/* Name & Desc */}
                     <div className="space-y-4">

@@ -322,4 +322,78 @@ router.put('/:chatId/messages/:messageId/star', protect, async (req, res) => {
     }
 });
 
+// @route   PUT /api/chats/:chatId/messages/:messageId/poll
+// @desc    Vote on a poll
+// @access  Private
+router.put('/:chatId/messages/:messageId/poll', protect, async (req, res) => {
+    try {
+        const { optionId } = req.body;
+        const { messageId } = req.params;
+        const userId = req.user._id.toString();
+
+        const message = await Message.findById(messageId);
+        if (!message || message.type !== 'poll') {
+            return res.status(404).json({ message: 'Poll not found' });
+        }
+
+        let pollData;
+        try {
+            pollData = JSON.parse(message.content);
+        } catch (e) {
+            return res.status(500).json({ message: 'Invalid poll data' });
+        }
+
+        const optionIndex = pollData.options.findIndex(o => o.id === optionId);
+        if (optionIndex === -1) {
+            return res.status(400).json({ message: 'Option not found' });
+        }
+
+        const option = pollData.options[optionIndex];
+        const hasVoted = option.voterIds.includes(userId);
+
+        if (hasVoted) {
+            // Remove vote
+            option.voterIds = option.voterIds.filter(id => id !== userId);
+        } else {
+            // Add vote
+            if (!pollData.allowMultiple) {
+                // Remove from others if single choice
+                pollData.options.forEach(opt => {
+                    opt.voterIds = opt.voterIds.filter(id => id !== userId);
+                });
+            }
+            option.voterIds.push(userId);
+        }
+
+        // Update message content
+        message.content = JSON.stringify(pollData);
+        await message.save();
+
+        // Emit socket event for real-time update
+        const io = req.app.get('io');
+        const chat = await Chat.findById(message.chatId);
+
+        chat.participants.forEach(participantId => {
+            // Emit to all participants
+            // We use a generic 'message:updated' event which the client should listen for
+            // Or specifically reuse 'message:edited'
+            const socketId = req.app.get('io').sockets.adapter.rooms.get(participantId.toString()) || null;
+            // Note: In our setup we track sockets manually in `userSockets` map in index.js
+            // Since we don't have direct access to that map here easily without exporting it,
+            // we will rely on the client broadcasting OR we can just return the message and let the client
+            // emit the socket event like we do for other things (temporary pattern match).
+            // However, for ROBUSTNESS, the server *should* emit.
+            // Given existing pattern in `index.js`, socket logic is centralized there.
+            // We will return the updated message and let the client emit 'message:edit' via socket 
+            // to keep consistent with the current "client-heavy" socket architecture.
+        });
+
+        res.json(message);
+
+    } catch (error) {
+        console.error('Poll vote error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
 export default router;

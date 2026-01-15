@@ -227,6 +227,12 @@ export const chatsAPI = {
 
     markAsRead: async (chatId: string) =>
         fetchWithAuth(`/chats/${chatId}/read`, { method: 'POST' }),
+
+    votePoll: async (chatId: string, messageId: string, optionId: string) =>
+        fetchWithAuth(`/chats/${chatId}/messages/${messageId}/poll`, {
+            method: 'PUT',
+            body: JSON.stringify({ optionId }),
+        }),
 };
 
 // ========== UPLOAD API ==========

@@ -360,7 +360,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
 
     // Poll Rendering Logic
     if (message.type === 'poll') {
-        const { editMessage } = useVoca(); // Get editMessage from context
+        const { votePoll } = useVoca();
         let pollData: any;
         try {
             pollData = JSON.parse(message.content);
@@ -395,14 +395,20 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                 option.voterIds.push(currentUser.id);
             }
 
-            // Update message content via editMessage (optimistic UI will update if editMessage supports it, otherwise reload)
-            // Note: In a real high-concurrency app, this should use a specific vote endpoint.
-            await editMessage(activeChatId, message.id, JSON.stringify(newPollData));
+            // Use the new votePoll API
+            votePoll(activeChatId, message.id, optionId);
+        };
+
+        const handleViewVotes = () => {
+            // In a real app, this would open a dialog showing who voted for what
+            // For now, we can show a simpler alert or tooltip-like info
+            // The UI already shows avatars if available in `pollData.options[].voterIds`
+            // So this is mostly for detailed view if there are many voters
         };
 
         return (
             <div className={cn("flex w-full mb-3 justify-center")}>
-                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl p-4 min-w-[280px] max-w-[85%] select-none">
+                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl p-4 min-w-[320px] sm:min-w-[380px] max-w-[95%] sm:max-w-[85%] select-none">
                     <div className="mb-4">
                         <h3 className="text-[var(--wa-text-primary)] font-medium text-lg leading-snug">{pollData.question}</h3>
                         <p className="text-[var(--wa-text-secondary)] text-xs mt-1">
@@ -454,8 +460,8 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-[var(--wa-border)] flex justify-between items-center">
-                        <span className="text-[var(--wa-text-secondary)] text-xs">{format(new Date(message.timestamp), 'h:mm a')} • View votes</span>
-                        {/* Vote Button (if needed) or simple confirmation */}
+                        <span className="text-[var(--wa-text-secondary)] text-xs">{format(new Date(message.timestamp), 'h:mm a')} • {totalVotes} votes</span>
+                        {/* View Votes Popover Trigger could be added here */}
                     </div>
                 </div>
             </div>
@@ -483,7 +489,7 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
 
         return (
             <div className={cn("flex w-full mb-3 justify-center")}>
-                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl overflow-hidden min-w-[300px] max-w-[85%] select-none group/event cursor-pointer transition-transform active:scale-[0.99]">
+                <div className="bg-[var(--wa-panel-bg)] border border-[var(--wa-border)] shadow-sm rounded-2xl overflow-hidden min-w-[320px] sm:min-w-[380px] max-w-[95%] sm:max-w-[85%] select-none group/event cursor-pointer transition-transform active:scale-[0.99]">
                     {/* Header with Icon background */}
                     <div className="bg-[#00a884]/10 p-4 border-b border-[#00a884]/10 flex items-start gap-3">
                         <div className="w-10 h-10 bg-[#00a884] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#00a884]/20">
@@ -523,11 +529,43 @@ export const MessageBubble = ({ message, isMe, onReply, onImageClick, onEdit }: 
                     {/* Footer Actions */}
                     <div className="bg-[var(--wa-hover)]/30 p-2 flex gap-2">
                         {eventData.isVocaCall && (
-                            <Button className="flex-1 bg-[#00a884] hover:bg-[#008f72] text-white rounded-lg h-9 shadow-sm transition-all">
+                            <Button
+                                className="flex-1 bg-[#00a884] hover:bg-[#008f72] text-white rounded-lg h-9 shadow-sm transition-all"
+                                onClick={() => {
+                                    // Logic to join call: Navigate to call screen or initiate call if valid link
+                                    // Assuming eventData might have a callId or we just start a call with the chatId
+                                    // For simplicity: Join the chat's active call or navigate to chat
+                                    navigate(`/chat/${activeChatId}`);
+                                }}
+                            >
                                 Join Call
                             </Button>
                         )}
-                        <Button variant="outline" className="flex-1 border-[var(--wa-border)] text-[var(--wa-text-primary)] hover:bg-[var(--wa-hover)] rounded-lg h-9">
+                        <Button
+                            variant="outline"
+                            className="flex-1 border-[var(--wa-border)] text-[var(--wa-text-primary)] hover:bg-[var(--wa-hover)] rounded-lg h-9"
+                            onClick={() => {
+                                // Create ICS file
+                                const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:${eventData.eventName}
+DESCRIPTION:${eventData.description || ''}
+LOCATION:${eventData.location || ''}
+DTSTART:${new Date(eventData.date + ' ' + eventData.time).toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTEND:${new Date(new Date(eventData.date + ' ' + eventData.time).getTime() + 3600000).toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+END:VEVENT
+END:VCALENDAR`;
+                                const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.setAttribute('download', `${eventData.eventName}.ics`);
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            }}
+                        >
                             Add to Calendar
                         </Button>
                     </div>

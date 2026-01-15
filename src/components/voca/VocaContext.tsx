@@ -54,6 +54,7 @@ interface VocaContextType {
     // Search helper
     searchMessages: (query: string, chatId?: string) => Message[];
     editMessage: (chatId: string, messageId: string, newContent: string) => Promise<void>;
+    votePoll: (chatId: string, messageId: string, optionId: string) => Promise<void>;
     getStarredMessages: () => { message: Message, chat: Chat }[];
 
     // Admin / User Management
@@ -1190,6 +1191,48 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         updateSettings,
 
         sendMessage,
+        votePoll: async (chatId: string, messageId: string, optionId: string) => {
+            // Optimistic Update
+            setChats(prev => prev.map(chat => {
+                if (chat.id === chatId) {
+                    return {
+                        ...chat,
+                        messages: chat.messages.map(m => {
+                            if (m.id === messageId) {
+                                // Parse existing content
+                                try {
+                                    const pollData = JSON.parse(m.content);
+                                    const userId = currentUser!.id;
+                                    const optionIndex = pollData.options.findIndex((o: any) => o.id === optionId);
+
+                                    if (optionIndex !== -1) {
+                                        const option = pollData.options[optionIndex];
+                                        const hasVoted = option.voterIds.includes(userId);
+
+                                        if (hasVoted) {
+                                            option.voterIds = option.voterIds.filter((id: string) => id !== userId);
+                                        } else {
+                                            if (!pollData.allowMultiple) {
+                                                pollData.options.forEach((opt: any) => {
+                                                    opt.voterIds = opt.voterIds.filter((id: string) => id !== userId);
+                                                });
+                                            }
+                                            option.voterIds.push(userId);
+                                        }
+                                        return { ...m, content: JSON.stringify(pollData) };
+                                    }
+                                } catch (e) { }
+                            }
+                            return m;
+                        })
+                    };
+                }
+                return chat;
+            }));
+
+            // API Call
+            await chatsAPI.votePoll(chatId, messageId, optionId);
+        },
         deleteMessage,
         starMessage,
         setActiveChatId,
