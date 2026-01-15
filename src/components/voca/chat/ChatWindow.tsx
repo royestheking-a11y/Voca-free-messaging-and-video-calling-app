@@ -1053,9 +1053,10 @@ export const ChatWindow = () => {
                                                 variant="ghost"
                                                 size="icon"
                                                 className={cn(
-                                                    "bg-[#00a884] hover:bg-[#008f72] text-white rounded-full h-12 w-12 shadow-md flex items-center justify-center transition-all",
+                                                    "bg-[#00a884] hover:bg-[#008f72] text-white rounded-full h-12 w-12 shadow-md flex items-center justify-center transition-all select-none touch-none",
                                                     isRecording && "bg-red-500 hover:bg-red-600 scale-110",
                                                 )}
+                                                onContextMenu={(e: React.MouseEvent) => e.preventDefault()}
                                                 onPointerDown={handlePointerDown}
                                                 onPointerMove={handlePointerMove}
                                                 onPointerUp={handlePointerUp}
