@@ -22,6 +22,7 @@ interface SocketContextType {
     markMessagesRead: (chatId: string, senderId: string, messageIds: string[]) => void;
     emitDeleteMessage: (chatId: string, messageId: string, recipientId: string, forEveryone: boolean) => void;
     emitEditMessage: (chatId: string, messageId: string, recipientId: string, newContent: string) => void;
+    updateFcmToken: (token: string) => void;
     typingUsers: Map<string, string>; // chatId -> userId who is typing
 }
 
@@ -35,6 +36,7 @@ const SocketContext = createContext<SocketContextType>({
     markMessagesRead: () => { },
     emitDeleteMessage: () => { },
     emitEditMessage: () => { },
+    updateFcmToken: () => { },
     typingUsers: new Map()
 });
 
@@ -267,6 +269,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [socket, isConnected]);
 
+    // Update FCM Token dynamically (for first launch)
+    const updateFcmToken = useCallback((token: string) => {
+        if (socket && isConnected) {
+            console.log('🔄 SocketContext: Updating FCM token', token);
+            socket.emit('user:update-fcm', { userId: currentUser?.id, fcmToken: token });
+        }
+    }, [socket, isConnected, currentUser]);
+
     const value = {
         socket,
         isConnected,
@@ -277,6 +287,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         markMessagesRead,
         emitDeleteMessage,
         emitEditMessage,
+        updateFcmToken, // Exposed
         typingUsers
     };
 

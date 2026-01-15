@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import { VocaProvider, useVoca } from './components/voca/VocaContext';
-import { SocketProvider } from './components/voca/SocketContext';
+import { SocketProvider, useSocket } from './components/voca/SocketContext';
 import { LoginPage } from './components/voca/auth/LoginPage';
 import { LandingPage } from './components/voca/LandingPage';
 import { ChatLayout } from './components/voca/chat/ChatLayout';
@@ -64,6 +64,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 const AppContent = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { updateFcmToken } = useSocket();
 
     // Handle Android Back Button coverage
     React.useEffect(() => {
@@ -97,6 +98,7 @@ const AppContent = () => {
         PushNotifications.addListener('registration', (token) => {
             console.log('🔔 Push registration success, token: ' + token.value);
             localStorage.setItem('fcm_token', token.value);
+            updateFcmToken(token.value);
         });
 
         PushNotifications.addListener('registrationError', (error) => {
