@@ -821,6 +821,7 @@ export const ChatWindow = () => {
                     <div
                         ref={scrollRef}
                         className="absolute inset-0 overflow-y-auto p-4 md:p-8 space-y-2 z-10 scroll-smooth custom-scrollbar"
+                        style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}
                     >
                         {/* Unknown Contact Card */}
                         {isUnknownContact && otherParticipant && (
@@ -861,7 +862,7 @@ export const ChatWindow = () => {
                 </div>
 
                 {/* Input Area */}
-                <div className="bg-[var(--wa-header-bg)] flex flex-col z-10 shadow-up-sm border-t border-[var(--wa-border)]">
+                <div className="bg-[var(--wa-header-bg)] flex flex-col z-10 shadow-up-sm border-t border-[var(--wa-border)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
 
                     {/* Reply Preview */}
                     {editingMessageId && (

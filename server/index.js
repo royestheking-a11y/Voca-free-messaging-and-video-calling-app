@@ -208,6 +208,23 @@ io.on('connection', (socket) => {
         socket.emit('users:online-list', onlineList);
     });
 
+    socket.on('user:update-fcm', async ({ userId, fcmToken }) => {
+        if (!userId || !fcmToken) return;
+
+        try {
+            await User.findByIdAndUpdate(userId, { fcmToken });
+            console.log(`💾 FCM Token updated dynamically for user ${userId}`);
+
+            // Update in memory map
+            const user = onlineUsers.get(userId);
+            if (user) {
+                onlineUsers.set(userId, { ...user, fcmToken });
+            }
+        } catch (error) {
+            console.error('Error updating FCM token:', error);
+        }
+    });
+
     socket.on('message:send', async (data) => {
         const { recipientId, chatId, message } = data;
         const recipientSocketId = userSockets.get(recipientId);

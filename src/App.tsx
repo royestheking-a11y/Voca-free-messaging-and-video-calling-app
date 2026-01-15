@@ -98,7 +98,10 @@ const AppContent = () => {
         PushNotifications.addListener('registration', (token) => {
             console.log('🔔 Push registration success, token: ' + token.value);
             localStorage.setItem('fcm_token', token.value);
-            updateFcmToken(token.value);
+            // Wait a moment for socket to connect before updating
+            setTimeout(() => {
+                updateFcmToken(token.value);
+            }, 2000);
         });
 
         PushNotifications.addListener('registrationError', (error) => {
@@ -125,7 +128,7 @@ const AppContent = () => {
             CapacitorApp.removeAllListeners();
             PushNotifications.removeAllListeners();
         };
-    }, [navigate, location]);
+    }, [navigate, location, updateFcmToken]);
 
     return (
         <>
