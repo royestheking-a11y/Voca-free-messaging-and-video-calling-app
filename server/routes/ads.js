@@ -8,7 +8,7 @@ const router = express.Router();
 // @access  Public
 router.get('/', async (req, res) => {
     try {
-        const ads = await Advertisement.find({ active: true }).sort({ createdAt: -1 });
+        const ads = await Advertisement.find({ active: true }).sort({ createdAt: -1 }).limit(20);
         res.json(ads);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

@@ -9,15 +9,21 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const userId = new mongoose.Types.ObjectId(req.user._id);
+        const { limit = 50, skip = 0 } = req.query;
+
         console.log('📞 GET /api/calls request:', {
             authUserId: req.user._id.toString(),
-            castUserId: userId
+            castUserId: userId,
+            limit,
+            skip
         });
 
         const calls = await Call.find({
             $or: [{ callerId: userId }, { receiverId: userId }]
         })
             .sort({ timestamp: -1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit))
             .populate('callerId', 'name avatar')
             .populate('receiverId', 'name avatar');
 

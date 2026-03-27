@@ -67,7 +67,7 @@ router.post('/', protect, async (req, res) => {
             }).populate('participants', 'name avatar status lastSeen isVocaTeam verified');
 
             if (existingChat) {
-                const messages = await Message.find({ chatId: existingChat._id }).sort({ timestamp: 1 });
+                const messages = await Message.find({ chatId: existingChat._id }).sort({ timestamp: 1 }).limit(50);
                 const chatObj = existingChat.toJSON();
                 chatObj.messages = messages.map(m => m.toJSON());
                 return res.json(chatObj);
