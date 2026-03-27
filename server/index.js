@@ -3,6 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import http from 'http';
 
 import connectDB from './config/db.js';
 
@@ -603,6 +604,32 @@ const seedData = async () => {
     }
 };
 
+
+// Self-ping system to keep Render's free tier awake
+const startSelfPing = () => {
+    const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes (Render sleeps after 15 mins)
+    const hostname = 'localhost';
+    
+    console.log(`📡 Self-ping system initialized - Pinging every 14 minutes`);
+    
+    setInterval(() => {
+        console.log(`[${new Date().toLocaleTimeString()}] 📡 Pinging self to stay alive...`);
+        
+        http.get(`http://${hostname}:${PORT}/health`, (res) => {
+            const { statusCode } = res;
+            if (statusCode === 200) {
+                console.log(`[${new Date().toLocaleTimeString()}] ✅ Self-ping successful: ${statusCode}`);
+            } else {
+                console.warn(`[${new Date().toLocaleTimeString()}] ⚠️ Self-ping returned status: ${statusCode}`);
+            }
+            // Consume response data to free up memory
+            res.resume();
+        }).on('error', (err) => {
+            console.error(`[${new Date().toLocaleTimeString()}] ❌ Self-ping error:`, err.message);
+        });
+    }, PING_INTERVAL);
+};
+
 // Connect to MongoDB and start server
 const startServer = async () => {
     try {
@@ -615,6 +642,9 @@ const startServer = async () => {
   Socket.IO: Ready
   Health Check: http://localhost:${PORT}/health
       `);
+            
+            // Start the self-ping mechanism after the server is up
+            startSelfPing();
         });
 
         // Then attempt DB connection (non-blocking for server start)

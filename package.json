@@ -71,15 +71,16 @@
             "@capacitor/cli": "^8.0.1",
             "@types/node": "^20.10.0",
             "@vitejs/plugin-react-swc": "^3.10.2",
+            "concurrently": "^9.2.1",
             "terser": "^5.45.0",
             "vite": "6.3.5",
             "vite-plugin-pwa": "^1.2.0"
       },
       "scripts": {
-            "dev": "vite",
+            "dev": "concurrently --kill-others-on-fail --names \"server,frontend\" --prefix-colors \"cyan,magenta\" \"cd server && node --watch index.js\" \"vite\"",
+            "dev:frontend": "vite",
+            "dev:server": "cd server && node --watch index.js",
             "build": "vite build",
-            "server": "cd server && node index.js",
-            "dev:all": "npm run server & npm run dev",
             "build:mobile": "vite build && npx cap sync"
       }
 }
