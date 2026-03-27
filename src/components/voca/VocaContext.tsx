@@ -401,6 +401,20 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         // Mark messages as read when opening chat
         if (chatId) {
             await markChatAsRead(chatId);
+
+            // Fetch messages if they aren't loaded yet
+            const currentChat = chats.find(c => c.id === chatId);
+            if (currentChat && currentChat.messages.length === 0) {
+                try {
+                    console.log('📬 VocaContext: Fetching messages for active chat...', chatId);
+                    const messages = await chatsAPI.getMessages(chatId);
+                    setChats(prev => prev.map(c => 
+                        c.id === chatId ? { ...c, messages } : c
+                    ));
+                } catch (err) {
+                    console.error('Failed to fetch messages for chat:', err);
+                }
+            }
         }
     };
 

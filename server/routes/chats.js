@@ -22,27 +22,17 @@ router.get('/', protect, async (req, res) => {
             })
             .sort({ lastMessageTime: -1 });
 
-        // Get messages for each chat
-        const chatsWithMessages = await Promise.all(
-            chats.map(async (chat) => {
-                console.log(`🔍 Fetching messages for Chat ID: ${chat._id} (type: ${typeof chat._id})`);
-                const messages = await Message.find({ chatId: chat._id })
-                    .sort({ timestamp: -1 })  // NEWEST first (fix for disappearing messages)
-                    .limit(100);
+        // Map chats to include unreadCount and initialize an empty messages array
+        const chatsWithMetadata = chats.map(chat => {
+            const chatObj = chat.toJSON();
+            chatObj.unreadCount = chatObj.unreadCount?.[req.user._id.toString()] || 0;
+            chatObj.messages = []; // Messages fetched on demand
+            return chatObj;
+        });
 
-                console.log(`📊 Found ${messages.length} messages for chat ${chat._id}`);
+        console.log(`✅ Returning ${chatsWithMetadata.length} chats to user ${req.user._id}`);
 
-                const chatObj = chat.toJSON();
-                // Reverse to display oldest-to-newest in UI
-                chatObj.messages = messages.reverse().map(m => m.toJSON());
-                chatObj.unreadCount = chatObj.unreadCount?.[req.user._id.toString()] || 0;
-                return chatObj;
-            })
-        );
-
-        console.log(`✅ Returning ${chatsWithMessages.length} chats to user ${req.user._id}`);
-
-        res.json(chatsWithMessages);
+        res.json(chatsWithMetadata);
     } catch (error) {
         console.error('Get chats error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });

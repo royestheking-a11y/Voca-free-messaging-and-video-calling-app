@@ -46,9 +46,13 @@ const applyPrivacyFilter = (targetUser, requestingUser) => {
 // @access  Private
 router.get('/', protect, async (req, res) => {
     try {
+        const { limit = 50, skip = 0 } = req.query;
+        
         const users = await User.find({ _id: { $ne: req.user._id } })
             .select('-password')
-            .sort({ name: 1 });
+            .sort({ name: 1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit));
 
         // Apply privacy filters to each user
         const filteredUsers = users.map(user => applyPrivacyFilter(user, req.user));

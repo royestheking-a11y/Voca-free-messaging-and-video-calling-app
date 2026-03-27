@@ -9,11 +9,15 @@ const router = express.Router();
 // @access  Private
 router.get('/', protect, async (req, res) => {
     try {
+        const { limit = 30, skip = 0 } = req.query;
+
         const statuses = await Status.find({
             expiresAt: { $gt: new Date() }
         })
             .populate('userId', 'name avatar verified')
-            .sort({ timestamp: -1 });
+            .sort({ timestamp: -1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit));
 
         // Filter out statuses from blocked users
         const filteredStatuses = statuses.filter(status => {
