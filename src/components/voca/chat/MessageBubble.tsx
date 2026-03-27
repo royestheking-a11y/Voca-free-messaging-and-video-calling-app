@@ -9,6 +9,7 @@ import { Button } from '../../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../ui/dropdown-menu';
 import { useVoca } from '../VocaContext';
 import { useSocket } from '../SocketContext';
+import { getOptimizedImageUrl, IMAGE_PRESETS } from '../../../lib/images';
 
 interface MessageBubbleProps {
     message: Message;
@@ -629,7 +630,17 @@ END:VCALENDAR`;
                             <div className="flex flex-col text-xs overflow-hidden">
                                 <span className="text-[var(--wa-primary)] font-medium mb-0.5">{replySenderName}</span>
                                 <span className="text-[var(--wa-text-primary)]/80 truncate">
-                                    {replyMessage.type === 'image' ? '📷 Photo' : replyMessage.type === 'doc' ? '📄 Document' : replyMessage.type === 'voice' ? '🎤 Voice Message' : replyMessage.content}
+                                    {replyMessage.type === 'image' ? (
+                                        <div className="flex items-center gap-1">
+                                            <img 
+                                                src={getOptimizedImageUrl(replyMessage.mediaUrl, IMAGE_PRESETS.THUMBNAIL)} 
+                                                className="w-8 h-8 object-cover rounded" 
+                                                alt="Reply"
+                                                loading="lazy"
+                                            />
+                                            <span>📷 Photo</span>
+                                        </div>
+                                    ) : replyMessage.type === 'doc' ? '📄 Document' : replyMessage.type === 'voice' ? '🎤 Voice Message' : replyMessage.content}
                                 </span>
                             </div>
                         </div>
@@ -651,9 +662,10 @@ END:VCALENDAR`;
                             {message.mediaUrl ? (
                                 <>
                                     <img
-                                        src={message.mediaUrl}
+                                        src={getOptimizedImageUrl(message.mediaUrl, IMAGE_PRESETS.CHAT_IMAGE)}
                                         alt="Attached"
                                         className={cn("max-h-[300px] w-full object-cover cursor-pointer hover:opacity-95 transition-opacity", message.isUploading && "blur-[1px]")}
+                                        loading="lazy"
                                         onClick={() => onImageClick?.(message.mediaUrl!)}
                                     />
                                     <a

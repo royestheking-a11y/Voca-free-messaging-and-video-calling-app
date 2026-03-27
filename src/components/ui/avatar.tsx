@@ -4,6 +4,7 @@ import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar@1.1.3";
 
 import { cn } from "./utils";
+import { getOptimizedImageUrl, IMAGE_PRESETS } from "../../lib/images";
 
 function Avatar({
   className,
@@ -23,12 +24,20 @@ function Avatar({
 
 function AvatarImage({
   className,
+  src,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  const optimizedSrc = React.useMemo(() => 
+    getOptimizedImageUrl(src, IMAGE_PRESETS.AVATAR), 
+    [src]
+  );
+
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
+      src={optimizedSrc}
       className={cn("aspect-square size-full", className)}
+      loading="lazy"
       {...props}
     />
   );

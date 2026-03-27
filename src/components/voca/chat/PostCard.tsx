@@ -9,6 +9,7 @@ import { cn } from '../../ui/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../ui/dropdown-menu';
 import { Input } from '../../ui/input';
 import { toast } from 'sonner';
+import { getOptimizedImageUrl, IMAGE_PRESETS } from '../../../lib/images';
 
 interface PostCardProps {
     post: Post;
@@ -101,9 +102,10 @@ export const PostCard = ({ post }: PostCardProps) => {
             {post.imageUrl && (
                 <div className="w-full">
                     <img
-                        src={post.imageUrl}
+                        src={getOptimizedImageUrl(post.imageUrl, IMAGE_PRESETS.POST_IMAGE)}
                         alt="Post"
                         className="w-full max-h-[400px] object-cover"
+                        loading="lazy"
                     />
                 </div>
             )}
