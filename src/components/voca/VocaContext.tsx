@@ -13,6 +13,7 @@ interface VocaContextType {
     statuses: StatusUpdate[];
     calls: Call[];
     loading: boolean;
+    loadingMessages: Set<string>;
     error: string | null;
 
     // Auth
@@ -117,6 +118,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
     const [activeChatId, setActiveChatIdInternal] = useState<string | null>(null);
     const [activeCall, setActiveCall] = useState<{ type: 'voice' | 'video', isIncoming: boolean, participant?: User, offer?: RTCSessionDescriptionInit } | null>(null);
     const [loading, setLoading] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState<Set<string>>(new Set());
     const [error, setError] = useState<string | null>(null);
 
     const isAdmin = currentUser?.role === 'admin';
@@ -224,7 +226,18 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
             ]);
 
             setUsers(usersData);
-            setChats(chatsData);
+            
+            // Merge chatsData with existing messages in state
+            setChats(prev => {
+                return chatsData.map((newChat: Chat) => {
+                    const existingChat = prev.find(c => c.id === newChat.id);
+                    if (existingChat && existingChat.messages.length > 0) {
+                        return { ...newChat, messages: existingChat.messages };
+                    }
+                    return newChat;
+                });
+            });
+
             setPosts(postsData);
             setStatuses(statusesData);
             console.log('Fetching calls data:', callsData);
@@ -404,8 +417,9 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
 
             // Fetch messages if they aren't loaded yet
             const currentChat = chats.find(c => c.id === chatId);
-            if (currentChat && currentChat.messages.length === 0) {
+            if (currentChat && currentChat.messages.length === 0 && !loadingMessages.has(chatId)) {
                 try {
+                    setLoadingMessages(prev => new Set(prev).add(chatId));
                     console.log('📬 VocaContext: Fetching messages for active chat...', chatId);
                     const messages = await chatsAPI.getMessages(chatId);
                     setChats(prev => prev.map(c => 
@@ -413,6 +427,12 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
                     ));
                 } catch (err) {
                     console.error('Failed to fetch messages for chat:', err);
+                } finally {
+                    setLoadingMessages(prev => {
+                        const next = new Set(prev);
+                        next.delete(chatId);
+                        return next;
+                    });
                 }
             }
         }
@@ -1195,6 +1215,7 @@ export const VocaProvider = ({ children }: { children: ReactNode }) => {
         statuses,
         calls,
         loading,
+        loadingMessages,
         error,
 
         login,

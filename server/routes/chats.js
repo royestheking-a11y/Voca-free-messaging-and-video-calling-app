@@ -18,7 +18,7 @@ router.get('/', protect, async (req, res) => {
             .populate('participants', 'name avatar status lastSeen isVocaTeam verified')
             .populate({
                 path: 'lastMessage',
-                select: 'content type timestamp senderId status'
+                select: 'id _id content type timestamp senderId status mediaUrl'
             })
             .sort({ lastMessageTime: -1 });
 

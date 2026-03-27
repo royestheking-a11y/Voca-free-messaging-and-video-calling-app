@@ -438,7 +438,9 @@ export const ChatSidebar = () => {
         const otherParticipant = chat.participants.find(p => p.id !== currentUser?.id);
         const chatName = chat.isGroup ? chat.name : otherParticipant?.name;
         const chatImage = chat.isGroup ? chat.groupImage : otherParticipant?.avatar;
-        const lastMessage = chat.messages[chat.messages.length - 1];
+        const lastMessage = chat.messages.length > 0 
+          ? chat.messages[chat.messages.length - 1] 
+          : chat.lastMessage;
         const isActive = chat.id === activeChatId;
         const isTyping = typingUsers.get(chat.id) === otherParticipant?.id;
 

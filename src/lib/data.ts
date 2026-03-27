@@ -76,6 +76,7 @@ export interface Chat {
   id: string;
   participants: User[];
   messages: Message[];
+  lastMessage?: Message;
   unreadCount: number;
   isGroup: boolean;
   name?: string; // For groups

@@ -28,7 +28,7 @@ const COMMON_EMOJIS = ["😀", "😂", "😍", "🥺", "🔥", "👍", "👎", "
 
 export const ChatWindow = () => {
     const { id: chatIdParam } = useParams<{ id: string }>();
-    const { chats, activeChatId, setActiveChatId, currentUser, sendMessage, startCall, editMessage, systemSettings, toggleFavoriteContact, blockUser, unblockUser, deleteChat, markChatAsRead } = useVoca();
+    const { chats, activeChatId, setActiveChatId, currentUser, sendMessage, startCall, editMessage, systemSettings, toggleFavoriteContact, blockUser, unblockUser, deleteChat, markChatAsRead, loadingMessages } = useVoca();
 
     // Sync URL param with Context
     useEffect(() => {
@@ -841,6 +841,18 @@ export const ChatWindow = () => {
                                 Today
                             </span>
                         </div>
+
+                        {/* Loading Indicator */}
+                        {loadingMessages.has(activeChatId!) && displayedMessages.length === 0 && (
+                            <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                                <motion.div 
+                                    animate={{ rotate: 360 }}
+                                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                                    className="w-8 h-8 border-2 border-[var(--wa-primary)] border-t-transparent rounded-full"
+                                />
+                                <p className="text-[var(--wa-text-secondary)] text-sm animate-pulse">Loading messages...</p>
+                            </div>
+                        )}
 
                         {displayedMessages.map(msg => (
                             <MessageBubble
